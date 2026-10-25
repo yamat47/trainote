@@ -65,7 +65,7 @@
 - このリポジトリは `site` プロファイル。public、main は PR と署名コミットのみ、merge commit 運用
 - Actions 環境 `deploy` があり、使えるブランチは main だけ。Cloudflare のデプロイ用トークンはここに `CLOUDFLARE_API_TOKEN` として手で入れる (権限は Workers Scripts Edit と D1 Edit、アカウントは yamat47 のみ)。2026-10-25 時点でまだ入れていない
 - Actions 変数 `CLOUDFLARE_ACCOUNT_ID` = `24a305c930f17853bb811c18bee6074a`
-- `required_checks` は未設定。CI のジョブ名が決まったら infra-github の `terraform/owners/yamat47/locals.tf` の trainote エントリに足す。最初のコミットが入ったら同じエントリの `manage_default_branch = false` を外す
+- `required_checks` は未設定。CI のジョブ名が決まったら infra-github の `terraform/owners/yamat47/locals.tf` の trainote エントリに足す (default branch の管理は infra-github #33 で済んでいる)
 
 ### Cloudflare (yamat47/infra-yamat47 の `terraform/accounts/yamat47/cloudflare` で管理)
 
