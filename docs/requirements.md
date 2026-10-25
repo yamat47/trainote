@@ -72,7 +72,7 @@
 - D1 データベース `trainote` (apac)。`prevent_destroy` つき
 - Access アプリ `trainote` (self_hosted、`trainote.yamat47.workers.dev`、セッション 24h) と、上記メール 1 件を allow するポリシー
 - Terraform の outputs に `trainote_d1_database_id`、`trainote_access_aud`、`trainote_access_team_domain` がある。値は infra-yamat47 の apply ログか `terraform output` で読み、`wrangler.jsonc` に書く。どれも secret ではない
-- Zero Trust の Google ログイン方法は手で登録済み。IdP の id は `0a257bc8-2462-4567-b5c6-0943cb816183` と見ている (SCIM URL の末尾から読んだもので、API で確認はしていない)
+- Zero Trust の Google ログイン方法は手で登録済み。IdP の id は `0a257bc8-2462-4567-b5c6-0943cb816183` (ダッシュボードの編集画面 URL の末尾)。Access アプリは `allowed_idps` にこの 1 件だけを持ち、ログイン画面を飛ばして Google に直行する
 - Worker 名は `trainote`。workers.dev のサブドメインは `yamat47.workers.dev`。Zero Trust のチームドメインは `yamat47.cloudflareaccess.com`
 
 ### 使うスキル (yamat47/github-toolkit)
