@@ -63,7 +63,8 @@
 ### GitHub (yamat47/infra-github で管理)
 
 - このリポジトリは `site` プロファイル。public、main は PR と署名コミットのみ、merge commit 運用
-- Actions 環境 `deploy` があり、使えるブランチは main だけ。Cloudflare のデプロイ用トークンはここに `CLOUDFLARE_API_TOKEN` として手で入れる (権限は Workers Scripts Edit と D1 Edit、アカウントは yamat47 のみ)。2026-10-25 時点でまだ入れていない
+- Actions 環境 `deploy` があり、使えるブランチは main だけ。Cloudflare のデプロイ用トークンが環境 secret `CLOUDFLARE_API_TOKEN` として入っている。権限は公式テンプレート「Edit Cloudflare Workers」に D1 Edit を足したもので、アカウントは yamat47 のみ。最初のデプロイが通ったら、使っていない権限を外してこの行を実際の構成に合わせる
+- デプロイのワークフローは `deploy` 環境を名乗り、トークンを `secrets.CLOUDFLARE_API_TOKEN`、アカウント ID を `vars.CLOUDFLARE_ACCOUNT_ID` (secret ではなく変数) から読む
 - Actions 変数 `CLOUDFLARE_ACCOUNT_ID` = `24a305c930f17853bb811c18bee6074a`
 - `required_checks` は未設定。CI のジョブ名が決まったら infra-github の `terraform/owners/yamat47/locals.tf` の trainote エントリに足す (default branch の管理は infra-github #33 で済んでいる)
 
@@ -84,8 +85,7 @@ typescript-idioms、react-patterns、api-design、frontend-design、github-actio
 
 ## 最初の一歩
 
-1. デプロイ用トークンを発行し、`deploy` 環境の secret に入れる
-2. `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
-3. `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev` を書く
-4. Drizzle のスキーマと最初のマイグレーション
-5. CI (lint、typecheck、test、main で migrate と deploy)。ジョブ名が決まったら infra-github に `required_checks` を足す
+1. `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
+2. `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev` を書く
+3. Drizzle のスキーマと最初のマイグレーション
+4. CI (lint、typecheck、test、main で migrate と deploy)。ジョブ名が決まったら infra-github に `required_checks` を足す
