@@ -71,7 +71,10 @@
 
 - D1 データベース `trainote` (apac)。`prevent_destroy` つき
 - Access アプリ `trainote` (self_hosted、`trainote.yamat47.workers.dev`、セッション 24h) と、上記メール 1 件を allow するポリシー
-- Terraform の outputs に `trainote_d1_database_id`、`trainote_access_aud`、`trainote_access_team_domain` がある。値は infra-yamat47 の apply ログか `terraform output` で読み、`wrangler.jsonc` に書く。どれも secret ではない
+- Terraform の outputs は次の 3 つ。`wrangler.jsonc` と Worker のコードにそのまま書く。どれも secret ではない
+  - `trainote_d1_database_id` = `7f0a88bc-9c70-414e-84f8-0964400dab4b` (D1 バインディングの `database_id`)
+  - `trainote_access_aud` = `462b3c5e4250c32653c929bb5f47600eb544d6e11b0c1747ea66bbe0615ab294` (Access の JWT を検証するときの audience)
+  - `trainote_access_team_domain` = `yamat47.cloudflareaccess.com` (同じく issuer と証明書の取得先)
 - Zero Trust の Google ログイン方法は手で登録済み。IdP の id は `0a257bc8-2462-4567-b5c6-0943cb816183` (ダッシュボードの編集画面 URL の末尾)。Access アプリは `allowed_idps` にこの 1 件だけを持ち、ログイン画面を飛ばして Google に直行する
 - Worker 名は `trainote`。workers.dev のサブドメインは `yamat47.workers.dev`。Zero Trust のチームドメインは `yamat47.cloudflareaccess.com`
 
@@ -81,9 +84,8 @@ typescript-idioms、react-patterns、api-design、frontend-design、github-actio
 
 ## 最初の一歩
 
-1. infra-yamat47 #64 の apply を待ち、outputs の値を控える
-2. デプロイ用トークンを発行し、`deploy` 環境の secret に入れる
-3. `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
-4. `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev` を書く
-5. Drizzle のスキーマと最初のマイグレーション
-6. CI (lint、typecheck、test、main で migrate と deploy)。ジョブ名が決まったら infra-github に `required_checks` を足す
+1. デプロイ用トークンを発行し、`deploy` 環境の secret に入れる
+2. `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
+3. `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev` を書く
+4. Drizzle のスキーマと最初のマイグレーション
+5. CI (lint、typecheck、test、main で migrate と deploy)。ジョブ名が決まったら infra-github に `required_checks` を足す
