@@ -102,6 +102,14 @@
 - Zero Trust の Google ログイン方法は手で登録済み。IdP の id は `0a257bc8-2462-4567-b5c6-0943cb816183` (ダッシュボードの編集画面 URL の末尾)。Access アプリは `allowed_idps` にこの 1 件だけを持ち、ログイン画面を飛ばして Google に直行する
 - Worker 名は `trainote`。workers.dev のサブドメインは `yamat47.workers.dev`。Zero Trust のチームドメインは `yamat47.cloudflareaccess.com`
 
+### デザイン (claude.ai の Design System アーティファクト)
+
+- デザインシステム `trainote` = https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k (非公開。所有者だけが開ける)
+  - 上の「見た目」の色と書体をトークンにし、ダークモードの値を仮置きした (地 `#0F1522`、インク `#E6EBF3`、罫線 `#28334A`、赤ペン `#EC6F75`)。承認されたら未決から消す
+  - 罫線のピッチは 44px。行、記入欄、タップ領域はすべてその倍数
+  - 部品は TabBar、Row、Field、Mark、Stat、Button の 6 つ。グラフ、チャット、構造化プレビューは画面を描きながら決めて後から足す
+  - 見た目の値はここが一次。実装では `project/tokens.json` を読んで CSS 変数にする。文書の「見た目」の行と食い違ったら文書を直す
+
 ### 使うスキル (yamat47/github-toolkit)
 
 typescript-idioms、react-patterns、api-design、frontend-design、github-actions-workflows、writing-conventions、create-pr、review-pr。コミットメッセージと PR 本文は英語、Conventional Commits。AI の痕跡 (Co-Authored-By、session URL、Generated with) は残さない。
@@ -125,5 +133,5 @@ typescript-idioms、react-patterns、api-design、frontend-design、github-actio
 - 体重グラフの期間切替。同じ日に再入力したときの扱い。体脂肪率をグラフに出すか
 - スレッドのタイトルの付け方。スレッドの削除
 - 初回でデータがないときの表示。Claude API 失敗時とオフライン時の表示
-- ダークモードの色
+- ダークモードの色 (デザインシステムに仮の値あり。承認で消す)
 - 初回に開くタブ
