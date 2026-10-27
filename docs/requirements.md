@@ -32,7 +32,8 @@
 
 ### 振り返り
 
-- 行動の一覧は日付降順で、日ごとにまとめる。各件は原文と種別の印 (Win は +、Slip は −) を出し、運動なら取れた種目の数値も添える。Win と Slip の言葉は絞り込みと週の集計にだけ出す。先頭に今週の件数 (2 種それぞれ) と連続記録日数を出す
+- 行動の一覧は日付降順で、日ごとにまとめる。各件は原文と種別の印 (Win は +、Slip は −) を出し、運動なら取れた種目の数値も添える。Win と Slip の言葉は絞り込みと週の文にだけ出す
+  - 先頭に今週を月曜から日曜の 7 列で出す。各日に Win の数 (+2) と Slip の数 (−1) を並べ、何もない日は空ける。今日の曜日だけ tint。その下に「9 wins and 2 slips this week, 6 days in a row.」のような 1 文。これが Notes の顔
   - 連続記録日数は「何かしら記録した日」が続いた数。頑張れなかったことだけの日でも途切れない。記録すること自体を習慣にする
   - 種別とカテゴリで絞れる。種目で絞ると推移が出る
 - 週に 1 回、「Weekly review」を定型の相談として用意する
@@ -60,7 +61,7 @@
 - OOUI。オブジェクトは行動、体重、相談スレッド、プロフィール。そのまま下タブ Notes、Weight、Coach、Profile にし、最後に開いたタブを記憶する
   - 各コレクションの先頭にインライン作成を置く。モーダルもウィザードも作らない
   - Notes は「振り返り」の節の通り
-  - Weight はリストとグラフ (目標線つき) をセグメンテッドコントロールで切り替える
+  - Weight は iOS のヘルスケアと同じ構成。先頭に今日の入力行、期間のセグメンテッドコントロール (W、M、6M、Y)、今日の値と 1 週間の増減、グラフ (目標線つき)、目標までの 1 文、直近の数行、最後に「Show all entries」で全件のリストへ。リストとグラフの切替はこれで代える
   - Coach はスレッド一覧から単一ビュー (チャット) へ。一覧の先頭に Weekly review の入口を置く
 - 見た目は iOS の標準 (Human Interface Guidelines) に揃える。部品は平らな一般的なもので、Liquid Glass は真似しない
   - 書体はシステムフォント。iOS では英数字が SF Pro、日本語が Hiragino Sans になる。Web フォントは読み込まない。サイズは iOS のテキストスタイル (本文 17、大見出し 34 など)。数字はタブラー
@@ -72,6 +73,8 @@
   - 記入欄はリストの行に置く。下線や枠線の入力欄は作らない。Weight のリストとグラフの切替はセグメンテッドコントロール
   - Coach のチャットは Messages 風の吹き出し。自分が tint、Claude がグレー
   - 主役は数字と推移である。数字以外は黙らせる。独自の装飾、グラデーション、影、ラベルの全大文字、データの等幅フォントは使わない。グループ見出しも全大文字にしない (iOS の慣例からの唯一の逸脱)
+  - 文言は文で書く。中黒やダッシュで項目をつなぐ定型 (「9 wins · 2 slips」) は使わない。日付の見出しは Today、Yesterday、その先は Friday, Oct 24。ボタンは起きることをそのまま言う (Save 3 entries、Edit text、Show all entries)
+  - 見た目は github-toolkit の frontend-design スキルに沿って見直す。上記の決定はその結果
 
 ### 技術スタック
 
@@ -113,11 +116,11 @@
 
 - デザインシステム `trainote` = https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k (非公開。所有者だけが開ける)
   - iOS のシステムカラー、システムフォントのテキストスタイル、余白と角丸をトークンにしてある。ライトとダークの値は Apple のものをそのまま使う
-  - 部品は TabBar、NavBar、Row、Group、Field、Mark、Stat、Button、Segmented、Bubble の 10 個。グラフと構造化プレビューは画面を描きながら決めて後から足す
+  - 部品は TabBar、NavBar、Row、Week、Group、Field、Mark、Stat、Button、Segmented、Bubble の 11 個。グラフと構造化プレビューは画面を描きながら決めて後から足す
   - 見た目の値はここが一次。実装では `project/tokens.json` を読んで CSS 変数にする。文書の「見た目」の行と食い違ったら文書を直す
   - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `project/fonts/` に同梱している。実装では npm の `framework7-icons` から同じファイルを使う
 - 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
-  - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight のグラフ、Weight のリスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
+  - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
 
 ### 使うスキル (yamat47/github-toolkit)
