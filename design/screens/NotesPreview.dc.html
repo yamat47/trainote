@@ -13,7 +13,7 @@
 <helmet>
 <style>
 body{margin:0}
-a{color:#007aff}a:hover{color:#0a84ff}
+a{color:var(--tint)}
 
 </style>
 </helmet>
@@ -23,9 +23,9 @@ a{color:#007aff}a:hover{color:#0a84ff}
   <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column">
     <x-import component-from-global-scope="Trainote.Week" days="{{week}}"></x-import>
     <p style="margin: 0; padding: 6px 16px 10px; font-size: 13px; line-height: 18px; color: var(--secondary-label)">9 wins and 2 slips this week, 6 days in a row.</p>
-    <x-import component-from-global-scope="Trainote.Field" multiline="{{yes}}" rows="{{two}}" value="ベンチ60kg10回3セット、お菓子我慢した、夜更かしした" aria-label="New entry"></x-import>
-    <h2 style="margin: 0; padding: 24px 16px 4px; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--secondary-label)">Read as 3 entries</h2>
-    <div style="margin: 4px 16px 0; border-radius: 10px; background: var(--grouped-background); overflow: hidden">
+    <x-import component-from-global-scope="Trainote.Field" multiline="{{yes}}" rows="{{two}}" default-value="ベンチ60kg10回3セット、お菓子我慢した、夜更かしした" aria-label="New entry"></x-import>
+    <x-import component-from-global-scope="Trainote.ListHeader">Read as 3 entries</x-import>
+    <div style="margin: 4px 16px 0; border-radius: 10px; background: var(--secondary-background); overflow: hidden">
       <x-import component-from-global-scope="Trainote.Row" kind="win" detail="Exercise" sub="ベンチプレス 60 kg × 10 × 3">ベンチプレス</x-import>
       <x-import component-from-global-scope="Trainote.Row" kind="win" detail="Food">お菓子を我慢した</x-import>
       <x-import component-from-global-scope="Trainote.Row" kind="slip" detail="Sleep">夜更かしした</x-import>
@@ -35,7 +35,7 @@ a{color:#007aff}a:hover{color:#0a84ff}
       <x-import component-from-global-scope="Trainote.Button" variant="plain">Edit text</x-import>
       <div style="flex: 1; display: flex"><x-import component-from-global-scope="Trainote.Button" variant="prominent" block="{{yes}}">Save 3 entries</x-import></div>
     </div>
-    <h2 style="margin: 0; padding: 24px 16px 4px; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--secondary-label)">Today</h2>
+    <x-import component-from-global-scope="Trainote.ListHeader">Today</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win">昼をサラダにした</x-import>
   </div>
   <div style="flex: none; padding-bottom: 34px; background: var(--system-background)">

@@ -13,7 +13,7 @@
 <helmet>
 <style>
 body{margin:0}
-a{color:#007aff}a:hover{color:#0a84ff}
+a{color:var(--tint)}
 .tn-navbar{background:var(--grouped-background)}
 </style>
 </helmet>
@@ -22,21 +22,21 @@ a{color:#007aff}a:hover{color:#0a84ff}
   <x-import component-from-global-scope="Trainote.NavBar" title="Profile"></x-import>
   <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column">
     <x-import component-from-global-scope="Trainote.Group" header="About you">
-      <x-import component-from-global-scope="Trainote.Field" label="Height" numeric="{{yes}}" unit="cm" value="172"></x-import>
-      <x-import component-from-global-scope="Trainote.Field" label="Born" numeric="{{yes}}" value="1990"></x-import>
+      <x-import component-from-global-scope="Trainote.Field" label="Height" numeric="{{yes}}" unit="cm" default-value="172"></x-import>
+      <x-import component-from-global-scope="Trainote.Field" label="Born" numeric="{{yes}}" default-value="1990"></x-import>
       <x-import component-from-global-scope="Trainote.Row" detail="Male" accessory="disclosure">Sex</x-import>
     </x-import>
     <x-import component-from-global-scope="Trainote.Group" header="Goal">
-      <x-import component-from-global-scope="Trainote.Field" label="Goal weight" numeric="{{yes}}" unit="kg" value="60.0"></x-import>
+      <x-import component-from-global-scope="Trainote.Field" label="Goal weight" numeric="{{yes}}" unit="kg" default-value="60.0"></x-import>
       <x-import component-from-global-scope="Trainote.Row" detail="Mar 31, 2027" accessory="disclosure">Target date</x-import>
     </x-import>
     <x-import component-from-global-scope="Trainote.Group" header="Training">
       <x-import component-from-global-scope="Trainote.Row" detail="Gym" accessory="disclosure">Where</x-import>
-      <x-import component-from-global-scope="Trainote.Field" label="Days a week" numeric="{{yes}}" value="3"></x-import>
+      <x-import component-from-global-scope="Trainote.Field" label="Days a week" numeric="{{yes}}" default-value="3"></x-import>
       <x-import component-from-global-scope="Trainote.Row" detail="バーベル、ダンベル、ケーブル" accessory="disclosure">Equipment</x-import>
     </x-import>
     <x-import component-from-global-scope="Trainote.Group" header="Notes for your coach" footer="Your coach reads everything on this screen before every reply.">
-      <x-import component-from-global-scope="Trainote.Field" multiline="{{yes}}" rows="{{two}}" value="膝が弱いので深いスクワットは避ける。平日は 21 時以降に食べがち。" aria-label="Notes for your coach"></x-import>
+      <x-import component-from-global-scope="Trainote.Field" multiline="{{yes}}" rows="{{two}}" default-value="膝が弱いので深いスクワットは避ける。平日は 21 時以降に食べがち。" aria-label="Notes for your coach"></x-import>
     </x-import>
   </div>
   <div style="flex: none; padding-bottom: 34px; background: var(--system-background)">

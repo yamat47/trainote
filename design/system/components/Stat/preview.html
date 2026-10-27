@@ -1,4 +1,4 @@
-<!-- @dsCard group="Numbers" height=96 subtitle="The weekly tally and today" -->
+<!-- @dsCard group="Numbers" height=96 subtitle="Today's weight" -->
 <!doctype html>
 <html>
 <head><meta charset="utf-8"><title>preview</title>
@@ -10,10 +10,8 @@
   var T = window.Trainote, h = React.createElement;
   ReactDOM.createRoot(document.getElementById("root")).render(
     h(React.Fragment, null,
-      h(T.Stat, { value: "9", label: "wins" }),
-      h(T.Stat, { value: "2", label: "slips" }),
-      h(T.Stat, { value: "5", unit: "days", label: "streak" }),
-      h(T.Stat, { value: "64.2", unit: "kg", label: "today" })
+      h(T.Stat, { value: "64.2", unit: "kg", label: "Sunday, Oct 25" }),
+      h("span", { style: { alignSelf: "flex-end", paddingBottom: "22px", fontSize: "15px", lineHeight: "20px", color: "var(--secondary-label)" } }, "−0.8 kg this week")
     )
   );
 </script>

@@ -13,7 +13,7 @@
 <helmet>
 <style>
 body{margin:0}
-a{color:#007aff}a:hover{color:#0a84ff}
+a{color:var(--tint)}
 
 </style>
 </helmet>
@@ -24,15 +24,15 @@ a{color:#007aff}a:hover{color:#0a84ff}
     <x-import component-from-global-scope="Trainote.Week" days="{{week}}"></x-import>
     <p style="margin: 0; padding: 6px 16px 10px; font-size: 13px; line-height: 18px; color: var(--secondary-label)">9 wins and 2 slips this week, 6 days in a row.</p>
     <x-import component-from-global-scope="Trainote.Field" multiline="{{yes}}" placeholder="What did you do today?" aria-label="New entry"></x-import>
-    <h2 style="margin: 0; padding: 24px 16px 4px; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--secondary-label)">Today</h2>
+    <x-import component-from-global-scope="Trainote.ListHeader">Today</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win" sub="ベンチプレス 60 kg × 10 × 3、スクワット 80 kg × 8 × 3">ジムで胸と脚</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win">お菓子を我慢した</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="slip">夜更かしした</x-import>
-    <h2 style="margin: 0; padding: 24px 16px 4px; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--secondary-label)">Yesterday</h2>
+    <x-import component-from-global-scope="Trainote.ListHeader">Yesterday</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win">23 時に寝た</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win">昼をサラダにした</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="slip">ジムをサボった</x-import>
-    <h2 style="margin: 0; padding: 24px 16px 4px; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--secondary-label)">Friday, Oct 24</h2>
+    <x-import component-from-global-scope="Trainote.ListHeader">Friday, Oct 23</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win" sub="ウォーキング 2.5 km">駅まで歩いた</x-import>
     <x-import component-from-global-scope="Trainote.Row" kind="win">飲み会でビールを 1 杯にした</x-import>
   </div>

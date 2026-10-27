@@ -7,6 +7,7 @@
   --system-background: #ffffff;
   --grouped-background: #f2f2f7;
   --grouped-cell: #ffffff;
+  --secondary-background: #f2f2f7;
   --fill: #78788033;
   --tertiary-fill: #7676801f;
   --segment-selected: #ffffff;
@@ -25,6 +26,7 @@
   --system-background: #000000;
   --grouped-background: #000000;
   --grouped-cell: #1c1c1e;
+  --secondary-background: #1c1c1e;
   --fill: #7878805c;
   --tertiary-fill: #7676803d;
   --segment-selected: #636366;
@@ -54,8 +56,8 @@
   --radius-capsule: 999px;
   --stroke-separator: 0.5px;
   --stroke-plot: 2px;
-  --font-icons: "Framework7 Icons";
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-icons: "Framework7 Icons";
 }
 .large-title { font-family: var(--font-sans); font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.01em; }
 .title-2 { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 700; }
@@ -64,5 +66,6 @@
 .subheadline { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 400; }
 .footnote { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 400; }
 .caption-1 { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 400; }
+.caption-2 { font-family: var(--font-sans); font-size: 11px; line-height: 13px; font-weight: 400; }
 .tab-label { font-family: var(--font-sans); font-size: 10px; line-height: 12px; font-weight: 500; }
 @font-face { font-family: "Framework7 Icons"; src: url("fonts/Framework7Icons-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: block; }

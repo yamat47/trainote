@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"Trainote","components":[{"name":"NavBar"},{"name":"TabBar"},{"name":"Row"},{"name":"Week"},{"name":"Group"},{"name":"Field"},{"name":"Mark"},{"name":"Stat"},{"name":"Button"},{"name":"Segmented"},{"name":"Bubble"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Trainote","components":[{"name":"NavBar"},{"name":"TabBar"},{"name":"Row"},{"name":"Week"},{"name":"ListHeader"},{"name":"Group"},{"name":"Field"},{"name":"Mark"},{"name":"Stat"},{"name":"Button"},{"name":"Segmented"},{"name":"Bubble"}]} */
 (function () {
   function h() { var R = window.React; return R.createElement.apply(R, arguments); }
   function cx() { return Array.prototype.filter.call(arguments, Boolean).join(' '); }
@@ -45,11 +45,15 @@
     return h('div', { className: 'tn-week', role: 'list', 'aria-label': props.label || 'This week' },
       days.map(function (d, i) {
         return h('div', { key: i, role: 'listitem', className: cx('tn-week-day', d.today && 'tn-week-today'),
-          'aria-label': d.label + (d.wins ? ', ' + d.wins + ' wins' : '') + (d.slips ? ', ' + d.slips + ' slips' : '') },
+          'aria-label': d.label + (d.wins ? ', ' + d.wins + (d.wins === 1 ? ' win' : ' wins') : '') + (d.slips ? ', ' + d.slips + (d.slips === 1 ? ' slip' : ' slips') : '') },
           h('span', { className: 'tn-week-label', 'aria-hidden': 'true' }, d.label),
           h('span', { className: 'tn-week-wins', 'aria-hidden': 'true' }, d.wins ? '+' + d.wins : ''),
           h('span', { className: 'tn-week-slips', 'aria-hidden': 'true' }, d.slips ? '\u2212' + d.slips : ''));
       }));
+  }
+
+  function ListHeader(props) {
+    return h('h2', { className: 'tn-list-header' }, props.children);
   }
 
   function Group(props) {
@@ -64,7 +68,7 @@
     var attrs = {
       className: 'tn-field-input',
       placeholder: props.placeholder,
-      'aria-label': props.ariaLabel || props.label,
+      'aria-label': props.ariaLabel || props['aria-label'] || props.label,
       onChange: function (e) { if (props.onChange) props.onChange(e.target.value); }
     };
     if (props.value !== undefined) attrs.value = props.value; else attrs.defaultValue = props.defaultValue;
@@ -115,6 +119,6 @@
   }
 
   window.Trainote = Object.assign(window.Trainote || {}, {
-    NavBar: NavBar, TabBar: TabBar, Row: Row, Week: Week, Group: Group, Field: Field, Mark: Mark, Stat: Stat, Button: Button, Segmented: Segmented, Bubble: Bubble
+    NavBar: NavBar, TabBar: TabBar, Row: Row, Week: Week, ListHeader: ListHeader, Group: Group, Field: Field, Mark: Mark, Stat: Stat, Button: Button, Segmented: Segmented, Bubble: Bubble
   });
 })();

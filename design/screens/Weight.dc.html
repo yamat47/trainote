@@ -13,7 +13,7 @@
 <helmet>
 <style>
 body{margin:0}
-a{color:#007aff}a:hover{color:#0a84ff}
+a{color:var(--tint)}
 
 </style>
 </helmet>
@@ -24,8 +24,8 @@ a{color:#007aff}a:hover{color:#0a84ff}
     <x-import component-from-global-scope="Trainote.Field" label="Today" numeric="{{yes}}" unit="kg" placeholder="0.0" aria-label="Weight today"></x-import>
     <div style="padding: 16px 16px 12px"><x-import component-from-global-scope="Trainote.Segmented" items="{{periods}}" value="m" label="Period"></x-import></div>
     <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 16px 4px">
-      <x-import component-from-global-scope="Trainote.Stat" value="64.2" unit="kg" label="Sunday, Oct 26"></x-import>
-      <span style="font-size: 15px; line-height: 20px; color: var(--secondary-label)">−0.6 kg this week</span>
+      <x-import component-from-global-scope="Trainote.Stat" value="64.2" unit="kg" label="Sunday, Oct 25"></x-import>
+      <span style="font-size: 15px; line-height: 20px; color: var(--secondary-label)">−0.8 kg this week</span>
     </div>
     <figure style="margin: 0; padding: 8px 16px 0">
       <svg viewBox="0 0 358 236" width="358" height="236" role="img" aria-label="Weight over the last month, falling from 65.2 to 64.2 kilograms, with the goal of 60 drawn as a dashed line">
@@ -42,13 +42,13 @@ a{color:#007aff}a:hover{color:#0a84ff}
           <text x="330" y="124">62</text>
           <text x="330" y="174">60</text>
           <text x="330" y="224">58</text>
-          <text x="0" y="235">Sep 28</text>
-          <text x="161" y="235" text-anchor="middle">Oct 12</text>
-          <text x="322" y="235" text-anchor="end">Oct 26</text>
+          <text x="0" y="235">Sep 27</text>
+          <text x="161" y="235" text-anchor="middle">Oct 11</text>
+          <text x="322" y="235" text-anchor="end">Oct 25</text>
         </g>
         <line x1="0" y1="170" x2="322" y2="170" style="stroke: var(--red); stroke-width: 2; stroke-dasharray: 6 5"></line>
         <text x="322" y="164" text-anchor="end" style="fill: var(--red); font-family: var(--font-sans); font-size: 11px">Goal 60.0</text>
-        <polyline fill="none" style="stroke: var(--tint); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round" points="0,40 23,42.5 46,37.5 69,45 92,47.5 115,42.5 138,47.5 161,50 184,52.5 207,47.5 230,55 253,57.5 276,52.5 299,57.5 322,65"></polyline>
+        <polyline fill="none" style="stroke: var(--tint); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round" points="0,40 23,42.5 46,37.5 69,45 92,47.5 115,42.5 138,47.5 161,50 184,52.5 207,47.5 230,55 253,57.5 276,52.5 299,57.5 322,65"></polyline>
         <circle cx="322" cy="65" r="4.5" style="fill: var(--tint); stroke: var(--system-background); stroke-width: 2"></circle>
       </svg>
     </figure>

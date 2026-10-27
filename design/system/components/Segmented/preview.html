@@ -1,4 +1,4 @@
-<!-- @dsCard group="Entry" height=56 subtitle="List / Graph" -->
+<!-- @dsCard group="Entry" height=56 subtitle="W, M, 6M, Y" -->
 <!doctype html>
 <html>
 <head><meta charset="utf-8"><title>preview</title>
@@ -9,7 +9,7 @@
 <script>
   var T = window.Trainote, h = React.createElement;
   ReactDOM.createRoot(document.getElementById("root")).render(
-    h(T.Segmented, { label: "View", value: "graph", items: [{ key: "list", label: "List" }, { key: "graph", label: "Graph" }] })
+    h(T.Segmented, { label: "Period", value: "m", items: [{ key: "w", label: "W" }, { key: "m", label: "M" }, { key: "6m", label: "6M" }, { key: "y", label: "Y" }] })
   );
 </script>
 </body>
