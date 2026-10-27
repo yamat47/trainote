@@ -37,7 +37,7 @@
   - 種別とカテゴリで絞れる。種目で絞ると推移が出る
 - 週に 1 回、「Weekly review」を定型の相談として用意する
   - Coach タブのスレッド一覧に入口を置く。押すと新しいスレッドができ、定型の最初の発言 (今週の行動と体重を読んで、できたこと、つまずき、来週の方針を 1 つにまとめて) が送られ、Claude の返答がそのまま流れる
-  - 毎週日曜 20:00 JST にプッシュ通知で知らせる。通知を押すと上と同じことが起きる
+  - 毎週日曜 20:00 JST にプッシュ通知 (「Time for your weekly review?」) で知らせる。通知を押すと上と同じことが起きる
     - Web Push を使う。Worker の Cron Trigger (`triggers.crons` に UTC で `0 11 * * 0`) が scheduled ハンドラで送る。購読は `push_subscriptions` (endpoint、p256dh、auth) に保存する。VAPID の秘密鍵は Worker の secret、公開鍵は環境変数
     - `web-push` パッケージは Node の crypto に依存して Worker で動かないので、WebCrypto で動くライブラリを使う
     - iOS を想定する。アプリを PWA にし (manifest、アイコン、service worker)、ホーム画面に追加して使う。iOS ではホーム画面に追加したときだけ通知が届く。service worker は push だけを扱い、fetch には触らない。Access のログインリダイレクトを邪魔しないため
@@ -115,6 +115,10 @@
   - iOS のシステムカラー、システムフォントのテキストスタイル、余白と角丸をトークンにしてある。ライトとダークの値は Apple のものをそのまま使う
   - 部品は TabBar、NavBar、Row、Group、Field、Mark、Stat、Button、Segmented、Bubble の 10 個。グラフと構造化プレビューは画面を描きながら決めて後から足す
   - 見た目の値はここが一次。実装では `project/tokens.json` を読んで CSS 変数にする。文書の「見た目」の行と食い違ったら文書を直す
+  - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `project/fonts/` に同梱している。実装では npm の `framework7-icons` から同じファイルを使う
+- 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
+  - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight のグラフ、Weight のリスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
+  - 各画面の Tweaks でライトとダークを切り替えられる
 
 ### 使うスキル (yamat47/github-toolkit)
 
