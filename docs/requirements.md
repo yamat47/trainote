@@ -34,7 +34,7 @@
 
 - 行動の一覧は日付降順で、日ごとにまとめる。各件は原文と種別の印 (Win は +、Slip は −) を出し、運動なら取れた種目の数値も添える。Win と Slip の言葉は絞り込みと週の文にだけ出す
   - 先頭に今週を月曜から日曜の 7 列で出す。各日に Win の数 (+2) と Slip の数 (−1) を並べ、何もない日は空ける。今日の曜日だけ tint。その下に「9 wins and 2 slips this week, 6 days in a row.」のような 1 文。これが Notes の顔
-  - 連続記録日数は「何かしら記録した日」が続いた数。頑張れなかったことだけの日でも途切れない。記録すること自体を習慣にする
+  - 連続記録日数は「行動を 1 件でも書いた日」が続いた数。体重だけの日は数えない。Slip だけの日でも途切れない。記録すること自体を習慣にする
   - 種別とカテゴリで絞れる。種目で絞ると推移が出る
 - 週に 1 回、「Weekly review」を定型の相談として用意する
   - Coach タブのスレッド一覧に入口を置く。押すと新しいスレッドができ、定型の最初の発言 (今週の行動と体重を読んで、できたこと、つまずき、来週の方針を 1 つにまとめて) が送られ、Claude の返答がそのまま流れる
@@ -64,16 +64,16 @@
   - Weight は iOS のヘルスケアと同じ構成。先頭に今日の入力行、期間のセグメンテッドコントロール (W、M、6M、Y)、今日の値と 1 週間の増減、グラフ (目標線つき)、目標までの 1 文、直近の数行、最後に「Show all entries」で全件のリストへ。リストとグラフの切替はこれで代える
   - Coach はスレッド一覧から単一ビュー (チャット) へ。一覧の先頭に Weekly review の入口を置く
 - 見た目は iOS の標準 (Human Interface Guidelines) に揃える。部品は平らな一般的なもので、Liquid Glass は真似しない
-  - 書体はシステムフォント。iOS では英数字が SF Pro、日本語が Hiragino Sans になる。Web フォントは読み込まない。サイズは iOS のテキストスタイル (本文 17、大見出し 34 など)。数字はタブラー
+  - 書体はシステムフォント。iOS では英数字が SF Pro、日本語が Hiragino Sans になる。テキストの Web フォントは読み込まない (読み込むのはアイコンフォントだけ)。サイズは iOS のテキストスタイル (本文 17、大見出し 34 など)。数字はタブラー
   - 色は iOS のシステムカラー (label、secondaryLabel、separator、systemBackground など) をライトもダークも Apple の値のまま使う。ダークモードは OS 設定に追従する
   - アクセント (tint) は iOS 標準の青 `#007AFF` (ダーク `#0A84FF`) の 1 色。ボタン、リンク、選択中のタブ、グラフの線に使う
   - 赤は systemRed。使うのはグラフの目標線 (破線) と破壊的操作 (Delete) だけ。修正 (Edit) は tint の文字ボタン。Slip は secondaryLabel の文字と − の印で区別し、赤は使わない
   - 各画面の上に大きなタイトル (large title)。下にアイコン + ラベルのタブバー。アイコンは Framework7 Icons (SF Symbols は Apple プラットフォーム外で使えない)
-  - リストは Notes と Weight が plain (全幅の行と区切り線)、Profile が inset grouped (設定アプリ風)。行の高さは 44
-  - 記入欄はリストの行に置く。下線や枠線の入力欄は作らない。Weight のリストとグラフの切替はセグメンテッドコントロール
+  - リストは Notes、Weight、Coach が plain (全幅の行と区切り線)、Profile が inset grouped (設定アプリ風)。行の高さは 44
+  - 記入欄はリストの行に置く。下線や枠線の入力欄は作らない。例外は Coach のスレッド下部の返信欄で、Messages と同じカプセル型にする
   - Coach のチャットは Messages 風の吹き出し。自分が tint、Claude がグレー
-  - 主役は数字と推移である。数字以外は黙らせる。独自の装飾、グラデーション、影、ラベルの全大文字、データの等幅フォントは使わない。グループ見出しも全大文字にしない (iOS の慣例からの唯一の逸脱)
-  - 文言は文で書く。中黒やダッシュで項目をつなぐ定型 (「9 wins · 2 slips」) は使わない。日付の見出しは Today、Yesterday、その先は Friday, Oct 24。ボタンは起きることをそのまま言う (Save 3 entries、Edit text、Show all entries)
+  - 主役は数字と推移である。数字以外は黙らせる。独自の装飾、グラデーション、ラベルの全大文字、データの等幅フォントは使わない。影はセグメンテッドコントロールの選択中の区画にだけ。グループ見出しも全大文字にしない (iOS の慣例からの唯一の逸脱)
+  - 文言は文で書く。中黒やダッシュで項目をつなぐ定型 (「9 wins · 2 slips」) は使わない。日付の見出しは Today、Yesterday、その先は Friday, Oct 23。ボタンは起きることをそのまま言う (Save 3 entries、Edit text、Show all entries)
   - 見た目は github-toolkit の frontend-design スキルに沿って見直す。上記の決定はその結果
 
 ### 技術スタック
@@ -117,8 +117,8 @@
 - デザインシステム `trainote` = https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k (非公開。所有者だけが開ける)
   - iOS のシステムカラー、システムフォントのテキストスタイル、余白と角丸をトークンにしてある。ライトとダークの値は Apple のものをそのまま使う
   - 部品は TabBar、NavBar、Row、Week、Group、Field、Mark、Stat、Button、Segmented、Bubble の 11 個。グラフと構造化プレビューは画面を描きながら決めて後から足す
-  - 見た目の値はここが一次。実装では `project/tokens.json` を読んで CSS 変数にする。文書の「見た目」の行と食い違ったら文書を直す
-  - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `project/fonts/` に同梱している。実装では npm の `framework7-icons` から同じファイルを使う
+  - 見た目の値はここが一次。実装は写しの `design/system/tokens.json` を読んで CSS 変数にする。文書の「見た目」の行と食い違ったら文書を直す
+  - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `fonts/` に同梱している (写しは `design/system/fonts/`)。これはキャンバスとプレビュー用で、アプリは npm の `framework7-icons@5.0.5` から同じファイルを配る
 - 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
@@ -144,7 +144,8 @@ typescript-idioms、react-patterns、api-design、frontend-design、github-actio
 - 行動の保存後の編集と削除
 - 種目で絞ったときの推移の指標 (最大重量、総量、有酸素は距離か時間か)
 - 過去日付の記録を入れられるか
-- 体重グラフの期間切替。同じ日に再入力したときの扱い。体脂肪率をグラフに出すか
+- 同じ日に再入力したときの扱い。体脂肪率をグラフに出すか
 - スレッドのタイトルの付け方。スレッドの削除
 - 初回でデータがないときの表示。Claude API 失敗時とオフライン時の表示
 - 初回に開くタブ
+- 週の文と通知の本文の、0 件や 1 件のときの言い回し (「1 win and 0 slips this week」でよいか)
