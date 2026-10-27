@@ -122,6 +122,7 @@
 - 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
+- どちらもリポジトリの `design/` に写しを置く (`design/system/`、`design/screens/`)。見た目はアーティファクトで直し、変えたら写しも更新する。実装が読むのは写しのほう
 
 ### 使うスキル (yamat47/github-toolkit)
 

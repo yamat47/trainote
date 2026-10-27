@@ -1,0 +1,68 @@
+/* trainote — generated from tokens.json */
+:root, [data-theme="light"] {
+  --label: #000000;
+  --secondary-label: #3c3c4399;
+  --tertiary-label: #3c3c434d;
+  --separator: #3c3c434a;
+  --system-background: #ffffff;
+  --grouped-background: #f2f2f7;
+  --grouped-cell: #ffffff;
+  --fill: #78788033;
+  --tertiary-fill: #7676801f;
+  --segment-selected: #ffffff;
+  --tint: #007aff;
+  --tint-soft: #007aff26;
+  --on-tint: #ffffff;
+  --red: #ff3b30;
+  --bubble: #e9e9eb;
+  --shadow-segment: 0 3px 8px rgba(0,0,0,0.12);
+}
+[data-theme="dark"] {
+  --label: #ffffff;
+  --secondary-label: #ebebf599;
+  --tertiary-label: #ebebf54d;
+  --separator: #54545899;
+  --system-background: #000000;
+  --grouped-background: #000000;
+  --grouped-cell: #1c1c1e;
+  --fill: #7878805c;
+  --tertiary-fill: #7676803d;
+  --segment-selected: #636366;
+  --tint: #0a84ff;
+  --tint-soft: #0a84ff33;
+  --on-tint: #ffffff;
+  --red: #ff453a;
+  --bubble: #262629;
+  --shadow-segment: 0 3px 8px rgba(0,0,0,0.32);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --margin: 16px;
+  --row: 44px;
+  --nav-bar: 44px;
+  --tab-bar: 49px;
+  --radius-control: 9px;
+  --radius-group: 10px;
+  --radius-button: 12px;
+  --radius-bubble: 18px;
+  --radius-capsule: 999px;
+  --stroke-separator: 0.5px;
+  --stroke-plot: 2px;
+  --font-icons: "Framework7 Icons";
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+}
+.large-title { font-family: var(--font-sans); font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.01em; }
+.title-2 { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 700; }
+.headline { font-family: var(--font-sans); font-size: 17px; line-height: 22px; font-weight: 600; }
+.body { font-family: var(--font-sans); font-size: 17px; line-height: 22px; font-weight: 400; }
+.subheadline { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 400; }
+.footnote { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 400; }
+.caption-1 { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 400; }
+.tab-label { font-family: var(--font-sans); font-size: 10px; line-height: 12px; font-weight: 500; }
+@font-face { font-family: "Framework7 Icons"; src: url("fonts/Framework7Icons-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: block; }

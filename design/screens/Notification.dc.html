@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Push notification</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/trainote/tokens.css">
+<link rel="stylesheet" href="ds/trainote/components/bundle.css">
+<script src="ds/trainote/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#007aff}a:hover{color:#0a84ff}
+
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 160px; box-sizing: border-box; display: flex; align-items: center; padding: 0 8px; background: var(--grouped-background); color: var(--label); font-family: var(--font-sans)">
+  <div style="display: flex; gap: 12px; align-items: flex-start; box-sizing: border-box; width: 374px; padding: 12px 14px; border-radius: 20px; background: var(--grouped-cell); box-shadow: var(--shadow-segment)">
+    <div style="flex: none; width: 38px; height: 38px; border-radius: 9px; background: var(--tint)" aria-hidden="true"></div>
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+      <div style="display: flex; justify-content: space-between; gap: 8px">
+        <span style="font-size: 15px; line-height: 20px; font-weight: 600">trainote</span>
+        <span style="font-size: 13px; line-height: 20px; color: var(--secondary-label)">now</span>
+      </div>
+      <span style="font-size: 15px; line-height: 20px">Time for your weekly review?</span>
+      <span style="font-size: 15px; line-height: 20px; color: var(--secondary-label)">9 wins and 2 slips this week. Open to look back with your coach.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Appearance"},"$preview":{"width":390,"height":160}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      yes: true,
+      two: 2,
+      tabs: [
+        { key: 'notes', label: 'Notes', icon: 'doc_text', iconActive: 'doc_text_fill' },
+        { key: 'weight', label: 'Weight', icon: 'chart_bar', iconActive: 'chart_bar_fill' },
+        { key: 'coach', label: 'Coach', icon: 'bubble_left_bubble_right', iconActive: 'bubble_left_bubble_right_fill' },
+        { key: 'profile', label: 'Profile', icon: 'person_crop_circle', iconActive: 'person_crop_circle_fill' }
+      ],
+      periods: [{ key: 'w', label: 'W' }, { key: 'm', label: 'M' }, { key: '6m', label: '6M' }, { key: 'y', label: 'Y' }],
+      week: [
+        { label: 'Mon' }, { label: 'Tue', wins: 1 }, { label: 'Wed', wins: 1 }, { label: 'Thu', wins: 1 },
+        { label: 'Fri', wins: 2 }, { label: 'Sat', wins: 2, slips: 1 }, { label: 'Sun', wins: 2, slips: 1, today: true }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

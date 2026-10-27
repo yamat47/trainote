@@ -1,0 +1,19 @@
+<!-- @dsCard group="Entry" height=100 subtitle="The Notes entry and the weight entry" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>preview</title>
+<style>body{margin:0;background:var(--system-background);font-family:var(--font-sans)}.phone{width:390px}.pad{padding:12px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}</style>
+</head>
+<body>
+<div id="root" class="phone"></div>
+<script>
+  var T = window.Trainote, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    h(React.Fragment, null,
+      h(T.Field, { multiline: true, placeholder: "What did you do today?", ariaLabel: "New entry" }),
+      h(T.Field, { label: "Today", numeric: true, unit: "kg", placeholder: "0.0", ariaLabel: "Weight" })
+    )
+  );
+</script>
+</body>
+</html>

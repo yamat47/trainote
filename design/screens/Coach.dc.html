@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Coach</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/trainote/tokens.css">
+<link rel="stylesheet" href="ds/trainote/components/bundle.css">
+<script src="ds/trainote/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#007aff}a:hover{color:#0a84ff}
+
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; background: var(--system-background); color: var(--label); font-family: var(--font-sans)">
+  <div style="height: 54px; flex: none"></div>
+  <x-import component-from-global-scope="Trainote.NavBar" title="Coach"></x-import>
+  <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column">
+    <x-import component-from-global-scope="Trainote.Field" multiline="{{yes}}" placeholder="Ask your coach" aria-label="New thread"></x-import>
+    <x-import component-from-global-scope="Trainote.Row" tone="tint" accessory="disclosure" detail="Sundays, 20:00">Start weekly review</x-import>
+    <div style="height: 24px; flex: none"></div>
+    <x-import component-from-global-scope="Trainote.Row" detail="Oct 19" accessory="disclosure" sub="来週は睡眠を 1 つ増やしましょう。">Weekly review</x-import>
+    <x-import component-from-global-scope="Trainote.Row" detail="Oct 17" accessory="disclosure" sub="スクワットは 80 kg × 8 × 3 のまま、ルーマニアンデッドリフトを足す">脚の日のメニュー</x-import>
+    <x-import component-from-global-scope="Trainote.Row" detail="Oct 12" accessory="disclosure" sub="体重は 65.8 kg から 65.2 kg へ。">Weekly review</x-import>
+    <x-import component-from-global-scope="Trainote.Row" detail="Oct 12" accessory="disclosure" sub="最初の一杯だけビール、あとはハイボールか炭酸水">外食が続くとき</x-import>
+    <x-import component-from-global-scope="Trainote.Row" detail="Oct 5" accessory="disclosure" sub="運動が週 2 回に戻りました。">Weekly review</x-import>
+  </div>
+  <div style="flex: none; padding-bottom: 34px; background: var(--system-background)">
+    <x-import component-from-global-scope="Trainote.TabBar" items="{{tabs}}" active="coach"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Appearance"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      yes: true,
+      two: 2,
+      tabs: [
+        { key: 'notes', label: 'Notes', icon: 'doc_text', iconActive: 'doc_text_fill' },
+        { key: 'weight', label: 'Weight', icon: 'chart_bar', iconActive: 'chart_bar_fill' },
+        { key: 'coach', label: 'Coach', icon: 'bubble_left_bubble_right', iconActive: 'bubble_left_bubble_right_fill' },
+        { key: 'profile', label: 'Profile', icon: 'person_crop_circle', iconActive: 'person_crop_circle_fill' }
+      ],
+      periods: [{ key: 'w', label: 'W' }, { key: 'm', label: 'M' }, { key: '6m', label: '6M' }, { key: 'y', label: 'Y' }],
+      week: [
+        { label: 'Mon' }, { label: 'Tue', wins: 1 }, { label: 'Wed', wins: 1 }, { label: 'Thu', wins: 1 },
+        { label: 'Fri', wins: 2 }, { label: 'Sat', wins: 2, slips: 1 }, { label: 'Sun', wins: 2, slips: 1, today: true }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
