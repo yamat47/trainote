@@ -1,0 +1,5 @@
+# pnpm refuses to run dependency install scripts unless they are allowed here.
+# esbuild and workerd only verify that their platform binary is in place.
+allowBuilds:
+  esbuild: true
+  workerd: true

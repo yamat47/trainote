@@ -88,6 +88,9 @@
 - ローカルは `vite dev` (Cloudflare プラグイン経由でローカル D1 つき)
 - 日付は Asia/Tokyo 固定。Cron の時刻は UTC で書くので JST から引き直す。単位は kg、km、分
 - パッケージマネージャは pnpm。テストは vitest (API のツール関数と構造化の JSON スキーマが主な対象)
+  - lint は oxlint。型を使う規則は tsgolint が TypeScript 7 の上で動かす。TypeScript 7 は typescript-eslint が読み込む compiler API を持たないので ESLint は使わない。整形は Prettier
+  - テストから D1 を使うときは wrangler の `getPlatformProxy` でローカル D1 を起こす。`@cloudflare/vitest-pool-workers` は vitest 4 までしか動かないため。vitest 5 で動くようになったら切り替える
+  - Node は 26、pnpm は 12。依存は Dependabot で最新に追従する。公開から 7 日待ってから取り込む
 
 ## すでに用意されているもの
 
@@ -99,7 +102,7 @@
 - Actions 環境 `deploy` があり、使えるブランチは main だけ。Cloudflare のデプロイ用トークンが環境 secret `CLOUDFLARE_API_TOKEN` として入っている。権限は公式テンプレート「Edit Cloudflare Workers」に D1 Edit を足したもので、アカウントは yamat47 のみ。最初のデプロイが通ったら、使っていない権限を外してこの行を実際の構成に合わせる
 - デプロイのワークフローは `deploy` 環境を名乗り、トークンを `secrets.CLOUDFLARE_API_TOKEN`、アカウント ID を `vars.CLOUDFLARE_ACCOUNT_ID` (secret ではなく変数) から読む
 - Actions 変数 `CLOUDFLARE_ACCOUNT_ID` = `24a305c930f17853bb811c18bee6074a`
-- `required_checks` は未設定。CI のジョブ名が決まったら infra-github の `terraform/owners/yamat47/locals.tf` の trainote エントリに足す (default branch の管理は infra-github #33 で済んでいる)
+- `required_checks` は未設定。CI のジョブ名は lint、typecheck、test、build、zizmor に決まった。infra-github の `terraform/owners/yamat47/locals.tf` の trainote エントリに足す作業は infra-github #34 (default branch の管理は infra-github #33 で済んでいる)
 
 ### Cloudflare (yamat47/infra-yamat47 の `terraform/accounts/yamat47/cloudflare` で管理)
 
@@ -130,10 +133,10 @@ typescript-idioms、react-patterns、api-design、frontend-design、github-actio
 
 ## 最初の一歩
 
-1. `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
-2. `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev`、`triggers.crons` を書く
-3. Drizzle のスキーマと最初のマイグレーション
-4. CI (lint、typecheck、test、main で migrate と deploy)。ジョブ名が決まったら infra-github に `required_checks` を足す
+1. (済) `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
+2. (済) `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev`、`triggers.crons` を書く
+3. (済) Drizzle のスキーマと最初のマイグレーション
+4. (済) CI (lint、typecheck、test、main で migrate と deploy)。infra-github に `required_checks` を足す作業は infra-github #34
 5. PWA (manifest、アイコン、service worker) と Web Push の購読と送信
 
 ## 未決

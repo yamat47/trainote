@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "trainote",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-23",
+  "upload_source_maps": true,
+  "observability": {
+    "enabled": true,
+  },
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "trainote",
+      "database_id": "7f0a88bc-9c70-414e-84f8-0964400dab4b",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "yamat47.cloudflareaccess.com",
+    "ACCESS_AUD": "462b3c5e4250c32653c929bb5f47600eb544d6e11b0c1747ea66bbe0615ab294",
+  },
+  "triggers": {
+    // Sunday 20:00 in Asia/Tokyo, written in UTC.
+    "crons": ["0 11 * * 0"],
+  },
+  // Local dev only: wrangler fakes the Access identity so ctx.access.getIdentity()
+  // returns the owner without a login.
+  "access": {
+    "dev": {
+      "aud": "462b3c5e4250c32653c929bb5f47600eb544d6e11b0c1747ea66bbe0615ab294",
+      "identity": {
+        "email": "yamat47.thirddown@gmail.com",
+      },
+    },
+  },
+}

@@ -1,0 +1,25 @@
+# Keeps the app on the latest releases. A release waits seven days before it is
+# proposed, so a compromised package has time to be caught by others first.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # Minor and patch bumps arrive as one pull request; a major bump gets its own.
+      npm-minor-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    cooldown:
+      default-days: 7
