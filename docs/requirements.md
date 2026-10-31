@@ -39,7 +39,7 @@
 - 週に 1 回、「Weekly review」を定型の相談として用意する
   - Coach タブのスレッド一覧に入口を置く。押すと新しいスレッドができ、定型の最初の発言 (今週の行動と体重を読んで、できたこと、つまずき、来週の方針を 1 つにまとめて) が送られ、Claude の返答がそのまま流れる
   - 毎週日曜 20:00 JST にプッシュ通知 (「Time for your weekly review?」) で知らせる。通知を押すと上と同じことが起きる
-    - Web Push を使う。Worker の Cron Trigger (`triggers.crons` に UTC で `0 11 * * 0`) が scheduled ハンドラで送る。購読は `push_subscriptions` (endpoint、p256dh、auth) に保存する。VAPID の秘密鍵は Worker の secret、公開鍵は環境変数
+    - Web Push を使う。Worker の Cron Trigger (`triggers.crons` に UTC で `0 11 * * SUN`。Cloudflare の cron は曜日を 1 から 7 で数えるので 0 は通らない) が scheduled ハンドラで送る。購読は `push_subscriptions` (endpoint、p256dh、auth) に保存する。VAPID の秘密鍵は Worker の secret、公開鍵は環境変数
     - `web-push` パッケージは Node の crypto に依存して Worker で動かないので、WebCrypto で動くライブラリを使う
     - iOS を想定する。アプリを PWA にし (manifest、アイコン、service worker)、ホーム画面に追加して使う。iOS ではホーム画面に追加したときだけ通知が届く。service worker は push だけを扱い、fetch には触らない。Access のログインリダイレクトを邪魔しないため
     - 通知はこの用途だけ。他の通知は v1 では送らない
