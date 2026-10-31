@@ -56,13 +56,5 @@
     "react/set-state-in-render": "error",
     "react/unsupported-syntax": "error",
     "react/button-has-type": "error"
-  },
-  "overrides": [
-    {
-      "files": ["**/*.test.ts"],
-      "rules": {
-        "typescript/unbound-method": "off"
-      }
-    }
-  ]
+  }
 }
