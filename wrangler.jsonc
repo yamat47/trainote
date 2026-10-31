@@ -24,8 +24,9 @@
     "ACCESS_AUD": "462b3c5e4250c32653c929bb5f47600eb544d6e11b0c1747ea66bbe0615ab294",
   },
   "triggers": {
-    // Sunday 20:00 in Asia/Tokyo, written in UTC.
-    "crons": ["0 11 * * 0"],
+    // Sunday 20:00 in Asia/Tokyo, written in UTC. Cloudflare numbers the days 1 to 7,
+    // so the day is spelled out.
+    "crons": ["0 11 * * SUN"],
   },
   // Local dev only: wrangler fakes the Access identity so ctx.access.getIdentity()
   // returns the owner without a login.
