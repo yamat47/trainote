@@ -67,9 +67,11 @@ async function verifyAssertion(
     });
     return typeof payload.email === 'string' ? { email: payload.email } : undefined;
   } catch (error) {
+    if (!(error instanceof errors.JOSEError)) throw error;
+    // A key set that could not be fetched is an outage, not a bad token.
+    if (error instanceof errors.JWKSTimeout || error.code === 'ERR_JOSE_GENERIC') throw error;
     // An expired, forged or foreign token is a request without an identity, not a crash.
-    if (error instanceof errors.JOSEError) return undefined;
-    throw error;
+    return undefined;
   }
 }
 

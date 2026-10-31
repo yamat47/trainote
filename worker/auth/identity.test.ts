@@ -1,4 +1,4 @@
-import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
+import { createLocalJWKSet, errors, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { describe, expect, it } from 'vitest';
 import { accessIdentity, issuer, type AccessConfig } from './identity.ts';
 
@@ -96,6 +96,18 @@ describe('accessIdentity', () => {
     );
 
     expect(identity).toBeUndefined();
+  });
+
+  it('lets a certificate outage surface instead of answering with no identity', async () => {
+    const { sign } = await accessSigner();
+    const resolve = accessIdentity(() => () => {
+      throw new errors.JWKSTimeout();
+    });
+    const token = await sign({ email: 'jwt@example.com' });
+
+    await expect(
+      resolve(request({ 'cf-access-jwt-assertion': token }), config, undefined),
+    ).rejects.toBeInstanceOf(errors.JWKSTimeout);
   });
 
   it('returns no identity for a request that carries no token', async () => {
