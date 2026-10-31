@@ -1,3 +1,4 @@
+import { parse as parseCookie } from 'hono/utils/cookie';
 import { createRemoteJWKSet, errors, jwtVerify, type JWTVerifyGetKey } from 'jose';
 
 export type Identity = { readonly email: string };
@@ -75,17 +76,8 @@ async function verifyAssertion(
 function assertion(request: Request): string | undefined {
   const header = request.headers.get(ASSERTION_HEADER);
   if (header !== null && header !== '') return header;
-  return cookie(request.headers.get('cookie'), ASSERTION_COOKIE);
-}
-
-function cookie(header: string | null, name: string): string | undefined {
-  if (header === null) return undefined;
-  for (const part of header.split(';')) {
-    const [key, ...rest] = part.trim().split('=');
-    if (key === name) {
-      const value = rest.join('=');
-      return value === '' ? undefined : value;
-    }
-  }
-  return undefined;
+  const cookies = request.headers.get('cookie');
+  if (cookies === null) return undefined;
+  const token = parseCookie(cookies, ASSERTION_COOKIE)[ASSERTION_COOKIE];
+  return token === undefined || token === '' ? undefined : token;
 }
