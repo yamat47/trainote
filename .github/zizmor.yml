@@ -1,0 +1,7 @@
+rules:
+  # yamat47/github-toolkit wraps every upstream action behind a SHA pin and is
+  # referenced at @main on purpose, so one reviewed bump there covers this repository.
+  unpinned-uses:
+    config:
+      policies:
+        yamat47/*: ref-pin
