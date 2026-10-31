@@ -1,8 +1,9 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { hc } from 'hono/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
-import { createApp } from './app.ts';
+import { createApp, type AppType } from './app.ts';
 import type { IdentityResolver } from './auth/identity.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -37,33 +38,38 @@ describe('GET /api/me', () => {
 
   afterAll(() => proxy.dispose());
 
-  it('creates the user on first sight and returns the same row afterwards', async () => {
-    const app = createApp(identityOf('first@example.com'));
+  // The same typed client the page uses, pointed at the app instead of the network.
+  const clientAs = (email: string | undefined) => {
+    const app = createApp(identityOf(email));
+    return hc<AppType>('https://trainote.test', {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+        Promise.resolve(app.request(input, init, proxy.env)),
+    });
+  };
 
-    const first = await app.request('/api/me', undefined, proxy.env);
-    const again = await app.request('/api/me', undefined, proxy.env);
+  it('creates the user on first sight and returns the same row afterwards', async () => {
+    const client = clientAs('first@example.com');
+
+    const first = await client.api.me.$get();
+    const again = await client.api.me.$get();
 
     expect(first.status).toBe(200);
-    const created: unknown = await first.json();
+    const created = await first.json();
     expect(created).toMatchObject({ email: 'first@example.com' });
     expect(await again.json()).toEqual(created);
   });
 
-  it('keeps users apart by email', async () => {
-    const one = await (
-      await createApp(identityOf('one@example.com')).request('/api/me', undefined, proxy.env)
-    ).json();
-    const two = await (
-      await createApp(identityOf('two@example.com')).request('/api/me', undefined, proxy.env)
-    ).json();
+  it('gives each email its own user', async () => {
+    const one = await (await clientAs('one@example.com').api.me.$get()).json();
+    const two = await (await clientAs('two@example.com').api.me.$get()).json();
 
-    expect(one).not.toEqual(two);
+    expect(one.email).toBe('one@example.com');
+    expect(two.email).toBe('two@example.com');
+    expect(one.id).not.toBe(two.id);
   });
 
   it('answers 401 as problem details when Access gave no identity', async () => {
-    const app = createApp(identityOf(undefined));
-
-    const response = await app.request('/api/me', undefined, proxy.env);
+    const response = await clientAs(undefined).api.me.$get();
 
     expect(response.status).toBe(401);
     expect(response.headers.get('content-type')).toBe('application/problem+json');
