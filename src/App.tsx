@@ -5,7 +5,12 @@ import type { AppType } from '../worker/app.ts';
 const client = hc<AppType>('/');
 
 // Created once at module scope: a promise made during render never settles for `use`.
-const me = client.api.me.$get().then((response) => response.json());
+const me = client.api.me.$get().then((response) => {
+  // The 401 comes from the auth middleware, so the route type carries only the 200.
+  const { ok, status }: { ok: boolean; status: number } = response;
+  if (!ok) throw new Error(`GET /api/me answered ${status}`);
+  return response.json();
+});
 
 export function App() {
   return (
