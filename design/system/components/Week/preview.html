@@ -1,0 +1,19 @@
+<!-- @dsCard group="Numbers" height=96 subtitle="Seven days of wins and slips" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Week — preview</title>
+<style>body{margin:0;background:var(--system-background);font-family:var(--font-sans)}.phone{width:390px;padding:12px 0}</style>
+</head>
+<body>
+<div id="root" class="phone"></div>
+<script>
+  var T = window.Trainote, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    h(T.Week, { days: [
+      { label: "Mon" }, { label: "Tue", wins: 1 }, { label: "Wed", wins: 1 }, { label: "Thu", wins: 1 },
+      { label: "Fri", wins: 2 }, { label: "Sat", wins: 2, slips: 1 }, { label: "Sun", wins: 2, slips: 1, today: true }
+    ] })
+  );
+</script>
+</body>
+</html>
