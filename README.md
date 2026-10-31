@@ -23,6 +23,7 @@ pnpm lint        # oxlint with type-aware rules, then prettier --check
 pnpm typecheck   # tsc -b over the app, the Worker and the config files
 pnpm test        # vitest
 pnpm build       # vite build
+pnpm db:check    # the committed migrations match worker/db/schema.ts
 ```
 
 After changing `worker/db/schema.ts`, run `pnpm db:generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `pnpm cf-typegen` and commit `worker-configuration.d.ts`.
