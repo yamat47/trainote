@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A pull request only needs its latest run; a push to main must finish deploying.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: yamat47/github-toolkit/actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: yamat47/github-toolkit/actions/setup-node-with-pnpm@main
+        with:
+          node-version-file: .node-version
+      - run: pnpm lint
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: yamat47/github-toolkit/actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: yamat47/github-toolkit/actions/setup-node-with-pnpm@main
+        with:
+          node-version-file: .node-version
+      - run: pnpm typecheck
+
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: yamat47/github-toolkit/actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: yamat47/github-toolkit/actions/setup-node-with-pnpm@main
+        with:
+          node-version-file: .node-version
+      - run: pnpm test
+      - name: The committed migrations match the schema
+        run: pnpm db:check
+
+  build:
+    name: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: yamat47/github-toolkit/actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: yamat47/github-toolkit/actions/setup-node-with-pnpm@main
+        with:
+          node-version-file: .node-version
+      - run: pnpm build
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: yamat47/github-toolkit/actions/checkout@main
+        with:
+          persist-credentials: false
+      # Annotations instead of SARIF, so the job needs no security-events permission.
+      - uses: yamat47/github-toolkit/actions/zizmor@main
+        with:
+          advanced-security: 'false'
+          annotations: 'true'
+
+  deploy:
+    name: deploy
+    needs: [lint, typecheck, test, build, zizmor]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: deploy
+    steps:
+      - uses: yamat47/github-toolkit/actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: yamat47/github-toolkit/actions/setup-node-with-pnpm@main
+        with:
+          node-version-file: .node-version
+      - run: pnpm build
+      - run: pnpm db:migrate:remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

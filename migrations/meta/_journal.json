@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793439861347,
+      "tag": "0000_tranquil_omega_sentinel",
+      "breakpoints": true
+    }
+  ]
+}
