@@ -19,10 +19,13 @@ export const MESSAGE_ROLES = ['user', 'assistant'] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
 
 // RFC 3339 in UTC with milliseconds, so rows sort by time as text.
-const timestamp = () =>
-  text()
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`);
+const NOW = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
+
+const timestamp = () => text().notNull().default(NOW);
+
+// Set by SQLite on insert and by drizzle on db.update(). An upsert's onConflictDoUpdate
+// bypasses $onUpdate, so its `set` has to name updatedAt itself.
+const updatedAt = () => timestamp().$onUpdate(() => NOW);
 
 const oneOf = (values: readonly string[]) => sql.raw(values.map((v) => `'${v}'`).join(', '));
 
@@ -46,7 +49,7 @@ export const profiles = sqliteTable('profiles', {
   equipment: text(),
   weeklySessions: integer(),
   constraints: text(),
-  updatedAt: timestamp(),
+  updatedAt: updatedAt(),
 });
 
 export const entries = sqliteTable(
@@ -100,7 +103,7 @@ export const weights = sqliteTable(
     weightKg: real().notNull(),
     bodyFatPct: real(),
     createdAt: timestamp(),
-    updatedAt: timestamp(),
+    updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex('weights_user_id_date_idx').on(t.userId, t.date)],
 );
@@ -114,7 +117,7 @@ export const threads = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text(),
     createdAt: timestamp(),
-    updatedAt: timestamp(),
+    updatedAt: updatedAt(),
   },
   (t) => [index('threads_user_id_updated_at_idx').on(t.userId, t.updatedAt)],
 );
