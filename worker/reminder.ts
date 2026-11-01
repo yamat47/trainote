@@ -25,6 +25,9 @@ export function weeklyReminder(wins: number, slips: number): Reminder {
     wins === 0 && slips === 0
       ? invitation
       : `${plural(wins, 'win')} and ${plural(slips, 'slip')} this week. ${invitation}`;
+  // TODO: the Coach tab does not exist yet, so a tap opens the remembered tab; the
+  // weekly-review entry of the Coach work (docs/requirements.md, 振り返り) takes this
+  // URL and starts the review thread.
   return {
     title: 'Time for your weekly review?',
     body,

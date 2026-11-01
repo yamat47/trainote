@@ -167,7 +167,7 @@ importers:
   .:
     dependencies:
       '@block65/webcrypto-web-push':
-        specifier: 2.0.0
+        specifier: ^2.0.0
         version: 2.0.0
       drizzle-orm:
         specifier: ^0.45.4

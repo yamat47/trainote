@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Group } from '../components/Group.tsx';
 import { Row } from '../components/Row.tsx';
-import { reminderState, sendTestReminder, turnOff, turnOn, type ReminderState } from '../push.ts';
+import {
+  reminderState,
+  sendTestReminder,
+  turnOff,
+  turnOn,
+  type ReminderState,
+  type TestOutcome,
+} from '../push.ts';
 
 type State = ReminderState | 'loading';
-type Failure = 'change' | 'test';
+type Failure = 'change' | 'test' | 'unsubscribed';
 type Reminder = { state: State; busy: boolean; failed: Failure | undefined };
 type Change = () => Promise<ReminderState>;
 
@@ -50,8 +57,8 @@ export function Profile() {
     if (reminder.busy) return;
     setReminder((current) => ({ ...current, busy: true, failed: undefined }));
     try {
-      await sendTestReminder();
-      setReminder((current) => ({ ...current, busy: false }));
+      const outcome = await sendTestReminder();
+      setReminder((current) => ({ ...current, busy: false, failed: afterTest(outcome) }));
     } catch {
       setReminder((current) => ({ ...current, busy: false, failed: 'test' }));
     }
@@ -65,11 +72,7 @@ export function Profile() {
         onChange={(action) => void change(action)}
       />
       {reminder.state === 'on' ? (
-        <Row
-          tone="tint"
-          sub={failure(reminder.failed === 'test', 'Could not send a reminder. Try again.')}
-          onClick={() => void test()}
-        >
+        <Row tone="tint" sub={testFailure(reminder.failed)} onClick={() => void test()}>
           Send a reminder now
         </Row>
       ) : null}
@@ -80,6 +83,19 @@ export function Profile() {
 // The error line sits directly under the row it concerns, as its second line.
 const failure = (failed: boolean, words: string) =>
   failed ? <span className="app-error">{words}</span> : undefined;
+
+const afterTest = (outcome: TestOutcome): Failure | undefined => {
+  if (outcome === 'sent') return undefined;
+  return outcome === 'failed' ? 'test' : 'unsubscribed';
+};
+
+const testFailure = (failed: Failure | undefined) => {
+  if (failed === 'test') return failure(true, 'Could not send a reminder. Try again.');
+  if (failed === 'unsubscribed') {
+    return failure(true, 'This device is not subscribed. Turn the reminder off and on.');
+  }
+  return undefined;
+};
 
 type ReminderRowProps = { state: State; failed: boolean; onChange: (action: Change) => void };
 

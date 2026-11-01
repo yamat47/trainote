@@ -54,12 +54,17 @@ export async function turnOn(): Promise<ReminderState> {
   return 'on';
 }
 
-// The reminder, now, to this browser and the owner's other devices.
-export async function sendTestReminder(): Promise<void> {
+export type TestOutcome = 'sent' | 'nothing-to-send' | 'failed';
+
+// The reminder, now, to this browser and the owner's other devices. "Nothing to send"
+// is the server holding no row for this device, which no retry fixes: the device
+// subscribes again by turning the reminder off and on.
+export async function sendTestReminder(): Promise<TestOutcome> {
   const response = await client.api.push.test.$post();
   if (!response.ok) throw new Error(`POST /api/push/test answered ${String(response.status)}`);
-  const { sent } = await response.json();
-  if (sent === 0) throw new Error('the push service took none of the subscriptions');
+  const { sent, failed } = await response.json();
+  if (sent > 0) return 'sent';
+  return failed === 0 ? 'nothing-to-send' : 'failed';
 }
 
 export async function turnOff(): Promise<ReminderState> {
