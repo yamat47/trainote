@@ -23,8 +23,10 @@ export async function turnOn(): Promise<ReminderState> {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return permission === 'denied' ? 'denied' : 'off';
 
-  const config = await client.api.push.$get();
-  if (!config.ok) throw new Error(`GET /api/push answered ${String(config.status)}`);
+  const config = await client.api.push['vapid-public-key'].$get();
+  if (!config.ok) {
+    throw new Error(`GET /api/push/vapid-public-key answered ${String(config.status)}`);
+  }
   const { vapidPublicKey } = await config.json();
 
   const registration = await navigator.serviceWorker.ready;

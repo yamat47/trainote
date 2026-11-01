@@ -3,26 +3,27 @@ import { NavBar } from './components/NavBar.tsx';
 import { TabBar, type TabItem } from './components/TabBar.tsx';
 import { Profile } from './tabs/Profile.tsx';
 
-const tabs = [
-  { key: 'notes', label: 'Notes', icon: 'doc_text', iconActive: 'doc_text_fill' },
-  { key: 'weight', label: 'Weight', icon: 'chart_bar', iconActive: 'chart_bar_fill' },
-  {
-    key: 'coach',
+const TAB_KEYS = ['notes', 'weight', 'coach', 'profile'] as const;
+type TabKey = (typeof TAB_KEYS)[number];
+
+const tabs: Record<TabKey, Omit<TabItem<TabKey>, 'key'>> = {
+  notes: { label: 'Notes', icon: 'doc_text', iconActive: 'doc_text_fill' },
+  weight: { label: 'Weight', icon: 'chart_bar', iconActive: 'chart_bar_fill' },
+  coach: {
     label: 'Coach',
     icon: 'bubble_left_bubble_right',
     iconActive: 'bubble_left_bubble_right_fill',
   },
-  {
-    key: 'profile',
+  profile: {
     label: 'Profile',
     icon: 'person_crop_circle',
     iconActive: 'person_crop_circle_fill',
   },
-] as const satisfies readonly TabItem<string>[];
+};
 
-type TabKey = (typeof tabs)[number]['key'];
+const items: TabItem<TabKey>[] = TAB_KEYS.map((key) => ({ key, ...tabs[key] }));
 
-const isTabKey = (value: string | null): value is TabKey => tabs.some((tab) => tab.key === value);
+const isTabKey = (value: string | null): value is TabKey => TAB_KEYS.some((key) => key === value);
 
 const TAB_STORAGE_KEY = 'tab';
 
@@ -51,16 +52,15 @@ export function App() {
     setTab(key);
     rememberTab(key);
   };
-  const title = tabs.find((item) => item.key === tab)?.label ?? 'Notes';
 
   return (
     <div className={tab === 'profile' ? 'app app-grouped' : 'app'}>
       <main className="app-content">
-        <NavBar title={title} />
+        <NavBar title={tabs[tab].label} />
         {tab === 'profile' ? <Profile /> : null}
       </main>
       <div className="app-tabbar">
-        <TabBar items={tabs} active={tab} onChange={select} />
+        <TabBar items={items} active={tab} onChange={select} />
       </div>
     </div>
   );

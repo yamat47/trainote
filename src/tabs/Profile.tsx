@@ -10,7 +10,7 @@ type Change = () => Promise<ReminderState>;
 const footers: Record<State, string> = {
   loading: 'A reminder at 20:00 on Sundays to look back at the week with your coach.',
   off: 'A reminder at 20:00 on Sundays to look back at the week with your coach.',
-  on: 'Sent at 20:00 on Sundays.',
+  on: 'The Sunday reminder is on.',
   unsupported: 'Add trainote to your Home Screen to get the Sunday reminder.',
   denied: 'Notifications for trainote are turned off in Settings.',
 };
@@ -46,30 +46,33 @@ export function Profile() {
   };
 
   return (
-    <>
-      <Group header="Notifications" footer={footers[reminder.state]}>
-        <ReminderRow state={reminder.state} onChange={(action) => void change(action)} />
-      </Group>
-      {reminder.failed ? (
-        <p className="app-error">Could not change the reminder. Try again.</p>
-      ) : null}
-    </>
+    <Group header="Notifications" footer={footers[reminder.state]}>
+      <ReminderRow
+        state={reminder.state}
+        failed={reminder.failed}
+        onChange={(action) => void change(action)}
+      />
+    </Group>
   );
 }
 
-type ReminderRowProps = { state: State; onChange: (action: Change) => void };
+type ReminderRowProps = { state: State; failed: boolean; onChange: (action: Change) => void };
 
-function ReminderRow({ state, onChange }: ReminderRowProps) {
+function ReminderRow({ state, failed, onChange }: ReminderRowProps) {
+  // The error line sits directly under the row it concerns, as its second line.
+  const error = failed ? (
+    <span className="app-error">Could not change the reminder. Try again.</span>
+  ) : undefined;
   if (state === 'off') {
     return (
-      <Row tone="tint" onClick={() => onChange(turnOn)}>
+      <Row tone="tint" sub={error} onClick={() => onChange(turnOn)}>
         Turn on the Sunday reminder
       </Row>
     );
   }
   if (state === 'on') {
     return (
-      <Row tone="tint" onClick={() => onChange(turnOff)}>
+      <Row tone="tint" sub={error} onClick={() => onChange(turnOff)}>
         Turn off the Sunday reminder
       </Row>
     );

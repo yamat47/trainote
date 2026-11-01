@@ -1,4 +1,4 @@
-export type EntryKind = 'win' | 'slip';
+import type { EntryKind } from '../../worker/db/schema.ts';
 
 type MarkProps = { kind: EntryKind };
 

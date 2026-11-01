@@ -38,10 +38,8 @@ body {
   background: var(--grouped-background);
 }
 
-/* The error line directly under the row it concerns. */
+/* The error line directly under the row it concerns: caption-1 in red. */
 .app-error {
-  margin: 0;
-  padding: var(--space-2) calc(var(--margin) * 2) 0;
   font-size: 12px;
   line-height: 16px;
   color: var(--red);

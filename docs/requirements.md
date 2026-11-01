@@ -67,7 +67,7 @@
   - 書体はシステムフォント。iOS では英数字が SF Pro、日本語が Hiragino Sans になる。テキストの Web フォントは読み込まない (読み込むのはアイコンフォントだけ)。サイズは iOS のテキストスタイル (本文 17、大見出し 34 など)。数字はタブラー
   - 色は iOS のシステムカラー (label、secondaryLabel、separator、systemBackground など) をライトもダークも Apple の値のまま使う。ダークモードは OS 設定に追従する
   - アクセント (tint) は iOS 標準の青 `#007AFF` (ダーク `#0A84FF`) の 1 色。ボタン、リンク、選択中のタブ、グラフの線に使う
-  - 赤は systemRed。使うのはグラフの目標線 (破線) と破壊的操作 (Delete) だけ。修正 (Edit) は tint の文字ボタン。Slip は secondaryLabel の文字と − の印で区別し、赤は使わない
+  - 赤は systemRed。使うのはグラフの目標線 (破線) と破壊的操作 (Delete)、それに行の直下に出すエラーの 1 行 (caption-1) だけ。修正 (Edit) は tint の文字ボタン。Slip は secondaryLabel の文字と − の印で区別し、赤は使わない
   - 各画面の上に大きなタイトル (large title)。下にアイコン + ラベルのタブバー。アイコンは Framework7 Icons (SF Symbols は Apple プラットフォーム外で使えない)
   - リストは Notes、Weight、Coach が plain (全幅の行と区切り線)、Profile が inset grouped (設定アプリ風)。行の高さは 44
   - 記入欄はリストの行に置く。下線や枠線の入力欄は作らない。例外は Coach のスレッド下部の返信欄で、Messages と同じカプセル型にする

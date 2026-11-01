@@ -37,7 +37,7 @@ const endpointParam = validator('param', (value, c) => {
 // URL-encoded. Storing it again with new keys is how a browser rotates them.
 export function pushRoutes() {
   return new Hono<AppEnv>()
-    .get('/', (c) => {
+    .get('/vapid-public-key', (c) => {
       // Widened from the literal that `wrangler types` writes for the var.
       const vapidPublicKey: string = c.env.VAPID_PUBLIC_KEY;
       return c.json({ vapidPublicKey });
