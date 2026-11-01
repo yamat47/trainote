@@ -1,0 +1,21 @@
+<!-- @dsCard group="Actions" subtitle="Fill, End, With Error" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Actions</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Actions, null, h(React.Fragment, null, h(T.Button, { "onClick": function () {} }, "Edit text"), h(T.Button, { "variant": "prominent", "onClick": function () {} }, "Save 3 entries"))),
+    h(T.Actions, { "align": "end" }, h(T.Button, { "onClick": function () {} }, "Read as entries")),
+    h(T.Actions, { "align": "end", "error": "Could not read your note. Try again." }, h(T.Button, { "onClick": function () {} }, "Read as entries"))
+  )
+);
+</script>
+</body>
+</html>

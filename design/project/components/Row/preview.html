@@ -1,0 +1,25 @@
+<!-- @dsCard group="Lists" subtitle="Win With Numbers, Win, Slip, With Detail, Navigable, Action, With Error" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Row</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Row, { "kind": "win", "sub": "ベンチプレス 60 kg × 10 × 3" }, "ベンチ"),
+    h(T.Row, { "kind": "win" }, "お菓子を我慢した"),
+    h(T.Row, { "kind": "slip" }, "夜更かしした"),
+    h(T.Row, { "detail": "64.2 kg" }, "Sun, Oct 26"),
+    h(T.Row, { "accessory": "disclosure", "onClick": function () {} }, "Weekly review"),
+    h(T.Row, { "tone": "tint", "accessory": "disclosure", "onClick": function () {} }, "Show all entries"),
+    h(T.Row, { "tone": "tint", "onClick": function () {}, "error": "Could not change the reminder. Try again." }, "Turn on the Sunday reminder")
+  )
+);
+</script>
+</body>
+</html>

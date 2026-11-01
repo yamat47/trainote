@@ -6,7 +6,11 @@ const meta = {
   title: 'Lists/Mark',
   component: Mark,
   tags: ['autodocs'],
-  parameters: { docs: { description: { component: readme } }, layout: 'padded' },
+  parameters: {
+    docs: { description: { component: readme } },
+    layout: 'padded',
+    card: { layout: 'row' },
+  },
 } satisfies Meta<typeof Mark>;
 
 export default meta;

@@ -7,7 +7,7 @@ const meta = {
   title: 'Actions/Button',
   component: Button,
   tags: ['autodocs'],
-  parameters: { docs: { description: { component: readme } } },
+  parameters: { docs: { description: { component: readme } }, card: { layout: 'row' } },
   args: { onClick: fn() },
 } satisfies Meta<typeof Button>;
 

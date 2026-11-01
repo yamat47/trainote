@@ -1,0 +1,19 @@
+<!-- @dsCard group="Lists" subtitle="Preview" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Inset</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Inset, { "header": "Read as 3 entries" }, h(React.Fragment, null, h(T.Row, { "kind": "win", "detail": "Exercise", "sub": "ベンチプレス 60 kg × 10 × 3" }, "ベンチ"), h(T.Row, { "kind": "win", "detail": "Food" }, "お菓子を我慢した"), h(T.Row, { "kind": "slip", "detail": "Sleep" }, "夜更かしした")))
+  )
+);
+</script>
+</body>
+</html>

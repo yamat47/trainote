@@ -14,6 +14,7 @@
     "dist-storybook",
     ".wrangler",
     "design/system",
+    "design/project",
     "design/screens",
     "migrations",
     "worker-configuration.d.ts"

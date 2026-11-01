@@ -1,0 +1,21 @@
+<!-- @dsCard group="Lists" subtitle="Footnote, Subheadline, With Error" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Text</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Text, { "variant": "footnote" }, "9 wins and 2 slips this week, 6 days in a row."),
+    h(T.Text, { "variant": "subheadline" }, "お菓子を我慢できたのは大きいです。"),
+    h(T.Text, { "variant": "caption-1", "tone": "error" }, "Could not save. Try again.")
+  )
+);
+</script>
+</body>
+</html>

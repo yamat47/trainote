@@ -1,0 +1,21 @@
+<!-- @dsCard group="Lists" subtitle="Win, Slip" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mark</title>
+<style>#root { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Mark, { "kind": "win" }),
+    h(T.Mark, { "kind": "slip" })
+  )
+);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!-- @dsCard group="Numbers" subtitle="This Week, Nothing Yet" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Week</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Week, { "days": [{ "label": "Mon", "wins": 0, "slips": 0, "today": false }, { "label": "Tue", "wins": 1, "slips": 0, "today": false }, { "label": "Wed", "wins": 1, "slips": 0, "today": false }, { "label": "Thu", "wins": 1, "slips": 0, "today": false }, { "label": "Fri", "wins": 2, "slips": 0, "today": false }, { "label": "Sat", "wins": 2, "slips": 1, "today": false }, { "label": "Sun", "wins": 2, "slips": 1, "today": true }] }),
+    h(T.Week, { "days": [{ "label": "Mon", "wins": 0, "slips": 0, "today": false }, { "label": "Tue", "wins": 0, "slips": 0, "today": false }, { "label": "Wed", "wins": 0, "slips": 0, "today": false }, { "label": "Thu", "wins": 0, "slips": 0, "today": false }, { "label": "Fri", "wins": 0, "slips": 0, "today": false }, { "label": "Sat", "wins": 0, "slips": 0, "today": false }, { "label": "Sun", "wins": 0, "slips": 0, "today": false }] })
+  )
+);
+</script>
+</body>
+</html>

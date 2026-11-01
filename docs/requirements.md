@@ -135,18 +135,18 @@
 
 - デザインシステム `trainote` = https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k (非公開。所有者だけが開ける)
   - iOS のシステムカラー、システムフォントのテキストスタイル、余白と角丸をトークンにしてある。ライトとダークの値は Apple のものをそのまま使う
-  - 部品は TabBar、NavBar、Row、Week、Group、Field、Mark、Stat、Button、Segmented、Bubble の 11 個。グラフと構造化プレビューは画面を描きながら決めて後から足す
+  - 公開している部品は `design/src/index.ts` の 15 個 (Screen、NavBar、TabBar、ListHeader、List、Inset、Group、Row、Mark、Text、Field、Button、Actions、Week、Icon)。Stat、Segmented、Bubble とグラフは Weight と Coach を作るときに足す
   - 2026-11-01 から正本はリポジトリの `design/` (トークンは `design/system/tokens.json`、部品は `design/src/`)。このアーティファクトはそこから公開する写しになる。運用は `docs/design.md`。文書の「見た目」の行と食い違ったら文書を直す
   - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `fonts/` に同梱している (写しは `design/system/fonts/`)。これはキャンバスとプレビュー用で、アプリは npm の `framework7-icons@5.0.5` から同じファイルを配る
 - 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
-- `design/system/` と `design/screens/` は 2026-10 にアーティファクトから手で写したもの。部品は Storybook (`make storybook`) で見る。部品とトークンの変更はリポジトリで行い、アーティファクトへは公開手順で届ける (`docs/design.md`)
-  - アーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン、Field の multiline が折り返しでも伸びる仕組み。最初の公開で揃う。画面のアーティファクトには Notifications グループと Read as entries ボタンを足す
+- 部品は Storybook (`make storybook`) で見る。部品とトークンの変更はリポジトリで行い、`make project` が作る `design/project/` を `design-publish` スキルでアーティファクトへ届ける (`docs/design.md`)。`design/screens/` は 2026-10 に画面のアーティファクトから手で写したもの
+  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は Stat、Segmented、Bubble を移植するまで古いまま (`docs/design.md`)
 
 ### 使うスキル (yamat47/github-toolkit)
 
-`.claude/skills/` に `gh skill install yamat47/github-toolkit <name>` で入れてある: typescript-idioms、react-patterns、api-design、github-actions-workflows、writing-conventions、create-pr、review-pr、test-audit、review-dependency-bump、review-skill-update。frontend-design は同じものが Claude Code のプラグインとして入っているので、リポジトリには入れない (両方あると二重に効く)。更新は update-skills ワークフローが毎週 PR を開き、review-skill-update で見る。デザインシステムをアーティファクトに公開するスキル `design-publish` も github-toolkit に置いてここに入れる (未作成。`docs/design.md`)。コミットメッセージと PR 本文は英語、Conventional Commits。AI の痕跡 (Co-Authored-By、session URL、Generated with) は残さない。
+`.claude/skills/` に `gh skill install yamat47/github-toolkit <name>` で入れてある: typescript-idioms、react-patterns、api-design、github-actions-workflows、writing-conventions、create-pr、review-pr、test-audit、review-dependency-bump、review-skill-update。frontend-design は同じものが Claude Code のプラグインとして入っているので、リポジトリには入れない (両方あると二重に効く)。更新は update-skills ワークフローが毎週 PR を開き、review-skill-update で見る。デザインシステムをアーティファクトに公開する `design-publish` も github-toolkit に置き、リリースが出たらここに入れる (`docs/design.md`)。コミットメッセージと PR 本文は英語、Conventional Commits。AI の痕跡 (Co-Authored-By、session URL、Generated with) は残さない。
 
 ## 最初の一歩
 

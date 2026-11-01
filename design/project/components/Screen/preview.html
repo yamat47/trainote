@@ -1,0 +1,21 @@
+<!-- @dsCard group="Navigation" height=640 width=812 subtitle="Plain, Grouped" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Screen</title>
+<style>#root { display: flex; gap: 16px; align-items: flex-start; } #root > div { width: 390px; flex: none; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h("div", null, h(T.Screen, { "tone": "plain", "tabBar": h(T.TabBar, { "items": [{ "key": "notes", "label": "Notes", "icon": "doc_text", "iconActive": "doc_text_fill" }, { "key": "weight", "label": "Weight", "icon": "chart_bar", "iconActive": "chart_bar_fill" }, { "key": "coach", "label": "Coach", "icon": "bubble_left_bubble_right", "iconActive": "bubble_left_bubble_right_fill" }, { "key": "profile", "label": "Profile", "icon": "person_crop_circle", "iconActive": "person_crop_circle_fill" }], "active": "notes", "onChange": function () {} }) }, h(React.Fragment, null, h(T.NavBar, { "title": "Notes" }), h(T.List, { "header": "Today" }, h(T.Row, { "kind": "win" }, "お菓子を我慢した"), h(T.Row, { "kind": "slip" }, "夜更かしした"))))),
+    h("div", null, h(T.Screen, { "tone": "grouped", "tabBar": h(T.TabBar, { "items": [{ "key": "notes", "label": "Notes", "icon": "doc_text", "iconActive": "doc_text_fill" }, { "key": "weight", "label": "Weight", "icon": "chart_bar", "iconActive": "chart_bar_fill" }, { "key": "coach", "label": "Coach", "icon": "bubble_left_bubble_right", "iconActive": "bubble_left_bubble_right_fill" }, { "key": "profile", "label": "Profile", "icon": "person_crop_circle", "iconActive": "person_crop_circle_fill" }], "active": "profile", "onChange": function () {} }) }, h(React.Fragment, null, h(T.NavBar, { "title": "Profile" }), h(T.Group, { "header": "Notifications", "footer": "The Sunday reminder arrives at 20:00." }, h(T.Row, { "tone": "tint", "onClick": function () {} }, "Turn off the Sunday reminder")))))
+  )
+);
+</script>
+</body>
+</html>

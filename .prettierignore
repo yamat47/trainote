@@ -4,6 +4,7 @@ design/screens
 # Generated.
 worker-configuration.d.ts
 design/src/tokens.css
+design/project
 migrations
 pnpm-lock.yaml
 dist

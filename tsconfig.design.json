@@ -1,0 +1,16 @@
+{
+  // The declarations of design/src, which scripts/project.ts merges into the one
+  // index.d.ts the artifact reads. The app's options, so design/src is never compiled two
+  // ways; not referenced from tsconfig.json, since tsc -b type-checks design/src through
+  // tsconfig.app.json and this file only emits.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "noCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "design/src"
+  },
+  "include": ["design/src/index.ts"],
+  "references": []
+}
