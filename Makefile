@@ -14,7 +14,7 @@ else
 endif
 
 .PHONY: help build install dev down logs shell lint typecheck test dist db-check tokens-check check \
-  migrate-local db-generate typegen tokens icons whoami secret pnpm wrangler
+  migrate-local db-generate typegen tokens whoami secret pnpm wrangler
 
 help: ## This list
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed -E 's/^([a-z-]+):.*## /\1\t/' | sort | column -t -s "$$(printf '\t')"
@@ -68,9 +68,6 @@ typegen: ## Regenerate worker-configuration.d.ts from wrangler.jsonc
 
 tokens: ## Regenerate src/tokens.css from design/system/tokens.json
 	$(IN) pnpm tokens
-
-icons: ## Regenerate the home-screen icons under public/icons/
-	$(IN) pnpm icons
 
 whoami: ## Which Cloudflare account the token in .env reaches
 	$(IN) pnpm exec wrangler whoami

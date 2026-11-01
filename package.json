@@ -18,7 +18,6 @@
     "cf-typegen": "wrangler types",
     "tokens": "node scripts/tokens.ts",
     "tokens:check": "pnpm tokens && test -z \"$(git status --porcelain -- src/tokens.css)\"",
-    "icons": "node scripts/icons.ts",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit generate && test -z \"$(git status --porcelain -- migrations)\"",
     "db:migrate:local": "wrangler d1 migrations apply trainote --local",
