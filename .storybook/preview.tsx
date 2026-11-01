@@ -2,9 +2,6 @@ import type { Preview } from '@storybook/react-vite';
 import 'framework7-icons/css/framework7-icons.css';
 import '../design/src/tokens.css';
 import '../design/src/components.css';
-// TODO: stage 2 of docs/design.md moves the body reset and the error line into the design
-// system (base CSS, Row's error prop); this import goes with it.
-import '../src/index.css';
 import { Themed, type Theme } from './Themed.tsx';
 
 const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark';

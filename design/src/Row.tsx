@@ -7,6 +7,8 @@ type RowProps = {
   kind?: EntryKind;
   tone?: 'tint';
   sub?: ReactNode;
+  // The red caption directly under the row's text when what the row did failed.
+  error?: string | undefined;
   detail?: ReactNode;
   accessory?: 'disclosure';
   muted?: boolean;
@@ -16,7 +18,17 @@ type RowProps = {
 
 const classes = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
-export function Row({ kind, tone, sub, detail, accessory, muted, onClick, children }: RowProps) {
+export function Row({
+  kind,
+  tone,
+  sub,
+  error,
+  detail,
+  accessory,
+  muted,
+  onClick,
+  children,
+}: RowProps) {
   const className = classes(
     'tn-row',
     kind !== undefined && 'tn-row-with-mark',
@@ -34,6 +46,7 @@ export function Row({ kind, tone, sub, detail, accessory, muted, onClick, childr
       <span className="tn-row-text">
         {children}
         {sub === undefined ? null : <span className="tn-row-sub">{sub}</span>}
+        {error === undefined ? null : <output className="tn-row-error">{error}</output>}
       </span>
       {detail === undefined ? null : <span className="tn-row-detail">{detail}</span>}
       {accessory === 'disclosure' ? (

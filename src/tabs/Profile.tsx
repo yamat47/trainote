@@ -72,7 +72,7 @@ export function Profile() {
         onChange={(action) => void change(action)}
       />
       {reminder.state === 'on' ? (
-        <Row tone="tint" sub={testFailure(reminder.failed)} onClick={() => void test()}>
+        <Row tone="tint" error={testFailure(reminder.failed)} onClick={() => void test()}>
           Send a reminder now
         </Row>
       ) : null}
@@ -80,19 +80,16 @@ export function Profile() {
   );
 }
 
-// The error line sits directly under the row it concerns, as its second line.
-const failure = (failed: boolean, words: string) =>
-  failed ? <output className="app-error">{words}</output> : undefined;
-
 const afterTest = (outcome: TestOutcome): Failure | undefined => {
   if (outcome === 'sent') return undefined;
   return outcome === 'failed' ? 'test' : 'unsubscribed';
 };
 
-const testFailure = (failed: Failure | undefined) => {
-  if (failed === 'test') return failure(true, 'Could not send a reminder. Try again.');
+// The words of the error line under the test row, when there is one.
+const testFailure = (failed: Failure | undefined): string | undefined => {
+  if (failed === 'test') return 'Could not send a reminder. Try again.';
   if (failed === 'unsubscribed') {
-    return failure(true, 'This device is not subscribed. Turn the reminder off and on.');
+    return 'This device is not subscribed. Turn the reminder off and on.';
   }
   return undefined;
 };
@@ -100,17 +97,17 @@ const testFailure = (failed: Failure | undefined) => {
 type ReminderRowProps = { state: State; failed: boolean; onChange: (action: Change) => void };
 
 function ReminderRow({ state, failed, onChange }: ReminderRowProps) {
-  const error = failure(failed, 'Could not change the reminder. Try again.');
+  const error = failed ? 'Could not change the reminder. Try again.' : undefined;
   if (state === 'off') {
     return (
-      <Row tone="tint" sub={error} onClick={() => onChange(turnOn)}>
+      <Row tone="tint" error={error} onClick={() => onChange(turnOn)}>
         Turn on the Sunday reminder
       </Row>
     );
   }
   if (state === 'on') {
     return (
-      <Row tone="tint" sub={error} onClick={() => onChange(turnOff)}>
+      <Row tone="tint" error={error} onClick={() => onChange(turnOff)}>
         Turn off the Sunday reminder
       </Row>
     );

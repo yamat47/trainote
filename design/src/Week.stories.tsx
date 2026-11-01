@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import readme from '../system/components/Week/README.md?raw';
+import readme from './Week.md?raw';
 import { Week } from './Week.tsx';
 
 const meta = {

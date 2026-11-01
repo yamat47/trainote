@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import readme from '../system/components/Button/README.md?raw';
+import readme from './Button.md?raw';
 import { Button } from './Button.tsx';
 
 const meta = {

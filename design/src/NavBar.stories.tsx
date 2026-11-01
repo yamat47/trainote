@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import readme from '../system/components/NavBar/README.md?raw';
+import readme from './NavBar.md?raw';
 import { Button } from './Button.tsx';
 import { NavBar } from './NavBar.tsx';
 

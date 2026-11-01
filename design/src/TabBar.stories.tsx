@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import readme from '../system/components/TabBar/README.md?raw';
+import readme from './TabBar.md?raw';
 import { TabBar } from './TabBar.tsx';
 
 const items = [

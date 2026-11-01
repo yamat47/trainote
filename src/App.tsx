@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavBar } from '../design/src/NavBar.tsx';
+import { Screen } from '../design/src/Screen.tsx';
 import { TabBar, type TabItem } from '../design/src/TabBar.tsx';
 import { Notes } from './tabs/Notes.tsx';
 import { Profile } from './tabs/Profile.tsx';
@@ -55,15 +56,13 @@ export function App() {
   };
 
   return (
-    <div className={tab === 'profile' ? 'app app-grouped' : 'app'}>
-      <main className="app-content">
-        <NavBar title={tabs[tab].label} />
-        {tab === 'notes' ? <Notes /> : null}
-        {tab === 'profile' ? <Profile /> : null}
-      </main>
-      <div className="app-tabbar">
-        <TabBar items={items} active={tab} onChange={select} />
-      </div>
-    </div>
+    <Screen
+      tone={tab === 'profile' ? 'grouped' : 'plain'}
+      tabBar={<TabBar items={items} active={tab} onChange={select} />}
+    >
+      <NavBar title={tabs[tab].label} />
+      {tab === 'notes' ? <Notes /> : null}
+      {tab === 'profile' ? <Profile /> : null}
+    </Screen>
   );
 }

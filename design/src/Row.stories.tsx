@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import readme from '../system/components/Row/README.md?raw';
+import readme from './Row.md?raw';
 import { Row } from './Row.tsx';
 
 const meta = {
@@ -29,7 +29,7 @@ export const WithError: Story = {
   args: {
     tone: 'tint',
     onClick: fn(),
-    sub: <output className="app-error">Could not change the reminder. Try again.</output>,
+    error: 'Could not change the reminder. Try again.',
     children: 'Turn on the Sunday reminder',
   },
 };

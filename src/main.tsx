@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 import '../design/src/tokens.css';
 import '../design/src/components.css';
-import './index.css';
 
 const root = document.getElementById('root');
 if (root === null) throw new Error('index.html has no #root element');

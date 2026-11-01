@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import readme from '../system/components/Group/README.md?raw';
+import readme from './Group.md?raw';
 import { Group } from './Group.tsx';
 import { Row } from './Row.tsx';
 

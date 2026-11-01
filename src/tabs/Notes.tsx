@@ -3,10 +3,14 @@ import type { Category } from '../../worker/db/schema.ts';
 import { MAX_NOTE_LENGTH } from '../../worker/note.ts';
 import { addDays, WEEKDAYS } from '../../worker/week.ts';
 import { plural, weekPhrase } from '../../worker/words.ts';
+import { Actions } from '../../design/src/Actions.tsx';
 import { Button } from '../../design/src/Button.tsx';
 import { Field } from '../../design/src/Field.tsx';
+import { Inset } from '../../design/src/Inset.tsx';
+import { List } from '../../design/src/List.tsx';
 import { ListHeader } from '../../design/src/ListHeader.tsx';
 import { Row } from '../../design/src/Row.tsx';
+import { Text } from '../../design/src/Text.tsx';
 import { Week, type WeekDay } from '../../design/src/Week.tsx';
 import {
   loadNotes,
@@ -216,18 +220,20 @@ export function Notes() {
         disabled={busy}
       />
       {draft.status === 'writing' || draft.status === 'reading' ? (
-        <div className="app-note-actions">
-          {draft.status === 'writing' && draft.failed ? (
-            <output className="app-error app-note-error">
-              Could not read your note. Try again.
-            </output>
-          ) : null}
+        <Actions
+          align="end"
+          error={
+            draft.status === 'writing' && draft.failed
+              ? 'Could not read your note. Try again.'
+              : undefined
+          }
+        >
           {hasText ? (
             <Button disabled={draft.status === 'reading'} onClick={() => void read()}>
               Read as entries
             </Button>
           ) : null}
-        </div>
+        </Actions>
       ) : (
         <PreviewBlock
           preview={draft.preview}
@@ -239,14 +245,13 @@ export function Notes() {
       )}
       {shown.status === 'ready'
         ? byDay(shown.entries).map((group) => (
-            <section key={group[0].date}>
-              <ListHeader>{dayLabel(group[0].date, shown.week.today)}</ListHeader>
+            <List key={group[0].date} header={dayLabel(group[0].date, shown.week.today)}>
               {group.map((entry) => (
                 <Row key={entry.id} kind={entry.kind} sub={measures(entry.items)}>
                   {entry.body}
                 </Row>
               ))}
-            </section>
+            </List>
           ))
         : null}
     </>
@@ -260,10 +265,12 @@ function WeekBlock({ shown, onRetry }: WeekBlockProps) {
     return (
       <>
         <Week days={BLANK_WEEK} />
-        <output className="app-error app-week-error">Could not load your notes.</output>
-        <div className="app-note-actions">
+        <Text variant="caption-1" tone="error">
+          Could not load your notes.
+        </Text>
+        <Actions align="end">
           <Button onClick={onRetry}>Try again</Button>
-        </div>
+        </Actions>
       </>
     );
   }
@@ -271,7 +278,7 @@ function WeekBlock({ shown, onRetry }: WeekBlockProps) {
   return (
     <>
       <Week days={week === undefined ? BLANK_WEEK : weekDays(week)} />
-      <p className="app-week-sentence">{week === undefined ? '' : weekSentence(week)}</p>
+      <Text variant="footnote">{week === undefined ? '' : weekSentence(week)}</Text>
     </>
   );
 }
@@ -288,9 +295,10 @@ function PreviewBlock({ preview, saving, failed, onEdit, onSave }: PreviewBlockP
   const count = preview.entries.length;
   return (
     <>
-      <ListHeader>{count === 0 ? 'Nothing to save' : `Read as ${entriesWord(count)}`}</ListHeader>
-      {count === 0 ? null : (
-        <div className="app-preview">
+      {count === 0 ? (
+        <ListHeader>Nothing to save</ListHeader>
+      ) : (
+        <Inset header={`Read as ${entriesWord(count)}`}>
           {preview.entries.map((entry, i) => (
             <Row
               // The preview has no ids; a row is its place in the list.
@@ -303,10 +311,10 @@ function PreviewBlock({ preview, saving, failed, onEdit, onSave }: PreviewBlockP
               {entry.body}
             </Row>
           ))}
-        </div>
+        </Inset>
       )}
-      <p className="app-comment">{preview.comment}</p>
-      <div className="app-preview-actions">
+      <Text variant="subheadline">{preview.comment}</Text>
+      <Actions error={failed ? 'Could not save. Try again.' : undefined}>
         <Button disabled={saving} onClick={onEdit}>
           Edit text
         </Button>
@@ -315,10 +323,7 @@ function PreviewBlock({ preview, saving, failed, onEdit, onSave }: PreviewBlockP
             Save {entriesWord(count)}
           </Button>
         )}
-      </div>
-      {failed ? (
-        <output className="app-error app-note-error">Could not save. Try again.</output>
-      ) : null}
+      </Actions>
     </>
   );
 }

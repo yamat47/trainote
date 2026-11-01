@@ -56,6 +56,8 @@ jobs:
         run: pnpm db:check
       - name: The committed tokens.css matches the design tokens
         run: pnpm tokens:check
+      - name: The app is built from the design system alone
+        run: pnpm design:check
 
   build:
     name: build

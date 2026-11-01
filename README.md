@@ -27,6 +27,7 @@ make typecheck   # tsc -b over the app, the Worker and the config files
 make test        # vitest
 make db-check    # the committed migrations match worker/db/schema.ts
 make tokens-check # the committed design/src/tokens.css matches design/system/tokens.json
+make design-check # src/ holds no stylesheet and names no class
 make dist        # vite build
 make storybook-dist # Storybook builds into dist-storybook/
 make check       # all of them, in that order

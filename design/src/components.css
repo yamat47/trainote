@@ -1,5 +1,43 @@
-/* Copied from design/system/components/bundle.css for the components the app has so far;
-   every value is a token from tokens.css. */
+/* The design system's stylesheet. Every value is a token from tokens.css, or a pixel the
+   design fixed where no token fits. The classes began as a copy of
+   design/system/components/bundle.css and are the source now. */
+
+/* Base: the page itself, so an app on this system writes no CSS of its own. */
+:root {
+  color-scheme: light dark;
+}
+body {
+  margin: 0;
+  background: var(--system-background);
+  color: var(--label);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Screen: the shell of a tab */
+.tn-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  /* The status bar area when the app runs from the home screen. */
+  padding-top: env(safe-area-inset-top);
+}
+.tn-screen-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.tn-screen-tabbar {
+  position: sticky;
+  bottom: 0;
+}
+.tn-screen-grouped,
+.tn-screen-grouped .tn-navbar {
+  background: var(--grouped-background);
+}
 
 /* Components never shrink inside a column flexbox: a list is as tall as its rows. */
 .tn-navbar,
@@ -124,6 +162,12 @@
   line-height: 20px;
   color: var(--secondary-label);
   font-variant-numeric: tabular-nums;
+}
+.tn-row-error {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--red);
 }
 .tn-row-detail {
   flex: none;
@@ -343,6 +387,55 @@
 .tn-btn:focus-visible {
   outline: 2px solid var(--tint);
   outline-offset: 2px;
+}
+
+/* Text: a line at the page's margin. The type style's font comes from tokens.css. */
+.tn-text {
+  margin: 0;
+  padding: var(--space-2) var(--margin) 0;
+  color: var(--secondary-label);
+}
+.tn-text-footnote {
+  padding: 6px var(--margin) 10px;
+}
+.tn-text-subheadline {
+  padding: var(--space-3) var(--margin) 0;
+}
+.tn-text-caption-1 {
+  padding: var(--space-1) var(--margin) 0;
+}
+.tn-text-error {
+  display: block;
+  color: var(--red);
+}
+
+/* Inset: the one raised block on a plain page */
+.tn-inset-body {
+  margin: var(--space-1) var(--margin) 0;
+  border-radius: var(--radius-group);
+  background: var(--secondary-background);
+  overflow: hidden;
+}
+.tn-inset-body > .tn-row:last-child::after {
+  display: none;
+}
+
+/* Actions: a row of buttons with the place for its error line */
+.tn-actions-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--margin) var(--margin) 0;
+}
+.tn-actions-row > .tn-btn-prominent {
+  flex: 1;
+}
+.tn-actions-end .tn-actions-row {
+  justify-content: flex-end;
+  padding: 0 var(--space-2);
+}
+.tn-actions-end .tn-text-error {
+  padding-left: var(--space-2);
 }
 
 /* Text for screen readers only */

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
-import readme from '../system/components/Field/README.md?raw';
+import readme from './Field.md?raw';
 import { Field } from './Field.tsx';
 
 type FieldArgs = Parameters<typeof Field>[0];
