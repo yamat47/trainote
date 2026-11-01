@@ -16,6 +16,7 @@ export { Text } from './Text.tsx';
 export { Field } from './Field.tsx';
 export { Button } from './Button.tsx';
 export { Actions } from './Actions.tsx';
+export { Stat } from './Stat.tsx';
 export { Week } from './Week.tsx';
 export { Icon } from './Icon.tsx';
 

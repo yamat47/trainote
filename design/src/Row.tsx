@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { classes } from './classes.ts';
 import { Icon } from './Icon.tsx';
 import type { EntryKind } from './types.ts';
 import { Mark } from './Mark.tsx';
@@ -15,8 +16,6 @@ type RowProps = {
   onClick?: () => void;
   children?: ReactNode;
 };
-
-const classes = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 export function Row({
   kind,

@@ -1,0 +1,20 @@
+<!-- @dsCard group="Numbers" subtitle="Today, First Day" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stat</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Stat, { "value": "64.2", "unit": "kg", "label": "Today", "note": "−0.8 kg this week" }),
+    h(T.Stat, { "value": "64.2", "unit": "kg", "label": "Today" })
+  )
+);
+</script>
+</body>
+</html>

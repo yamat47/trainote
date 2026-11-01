@@ -32,7 +32,11 @@
     - テーブルは `entries` (日付、種別 win / slip、カテゴリ、本文) と `workout_items` (entry_id、種目名、重量 kg、回数、セット、時間 分、距離 km。数値はすべて任意)
     - 行の粒度は原文に合わせて Claude が決める。「60kg 10 回 3 セット」は 1 行、「60kg で 10、8、6」は 3 行、「ジム行った」は行なし
     - 種目名は Claude が正規化する (「ベンチ」を「ベンチプレス」に)。種目マスタは v1 では持たない
-  - 体重は行動とは別のオブジェクト。1 日 1 件 (日付で upsert)、kg 小数 1 桁。体脂肪率は任意列。行動の入力欄では体重を受けない
+  - 体重は行動とは別のオブジェクト。1 日 1 件 (日付で upsert)、kg 小数 1 桁。体脂肪率は任意列 (% 小数 1 桁)。行動の入力欄では体重を受けない
+    - API は `PUT /api/weights/today` (今日の体重と任意の体脂肪率。同じ日にもう一度送ると上書き。日付はサーバーの Asia/Tokyo) と `GET /api/weights` (全件、新しい順、今日の日付つき)
+    - Weight の先頭は Today (kg) と Body fat (%) の 2 行。今日の値があれば 2 行に入れておき (再入力は上書き)、どちらかに書き始めると右に Save が出て、体重が入っていれば押せる。読み込みが終わる前は Save を出さない (今朝の体脂肪率を知らずに消さないため)
+    - 今日の値の横の「−0.8 kg this week」は、直近 7 日の平均と、その前 7 日の平均の差 (1 日の揺れで文が振れないように)。どちらかの 7 日に値が無ければ出さず、差が 0.0 なら「No change this week」。その下に「Averaging 64.5 kg and 18.5 % body fat over the last 7 days.」の 1 行 (直近 7 日に 2 件以上あるとき)
+    - 全件のリスト (Show all entries) は月ごとの見出し (October、年が違えば October 2025) の下に、日付の行と体重、体脂肪率があれば副行に「Body fat 18.4 %」
 
 ### 振り返り
 
@@ -72,6 +76,7 @@
 
 - 文言はすべて英語。利用者の入力と Claude の応答 (チャット、プレビューの一言、週の振り返り) は日本語
 - OOUI。オブジェクトは行動、体重、相談スレッド、プロフィール。そのまま下タブ Notes、Weight、Coach、Profile にし、最後に開いたタブを記憶する
+  - タブの上に重ねる画面 (All entries、後のスレッド) はパスを持つ (`/weight/all`、`/coach/weekly-review`)。History API の pushState で重ね、戻るは popstate。アドレスから直接開いたときは戻る先が無いので `/` に置き換え、その画面のタブを開く。重ねた画面で別のタブを押したときも `/` に置き換える (履歴に `/` が 1 つ余り、ブラウザの戻る 1 回が空振りする。iOS が root を差し替えるのと同じで、許容)。タブ自体にパスは無い
   - 各コレクションの先頭にインライン作成を置く。モーダルもウィザードも作らない
   - Notes は「振り返り」の節の通り
   - Weight は iOS のヘルスケアと同じ構成。先頭に今日の入力行、期間のセグメンテッドコントロール (W、M、6M、Y)、今日の値と 1 週間の増減、グラフ (目標線つき)、目標までの 1 文、直近の数行、最後に「Show all entries」で全件のリストへ。リストとグラフの切替はこれで代える
@@ -135,14 +140,14 @@
 
 - デザインシステム `trainote` = https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k (非公開。所有者だけが開ける)
   - iOS のシステムカラー、システムフォントのテキストスタイル、余白と角丸をトークンにしてある。ライトとダークの値は Apple のものをそのまま使う
-  - 公開している部品は `design/src/index.ts` の 15 個 (Screen、NavBar、TabBar、ListHeader、List、Inset、Group、Row、Mark、Text、Field、Button、Actions、Week、Icon)。Stat、Segmented、Bubble とグラフは Weight と Coach を作るときに足す
+  - 公開している部品は `design/src/index.ts` の 16 個 (Screen、NavBar、TabBar、ListHeader、List、Inset、Group、Row、Mark、Text、Field、Button、Actions、Stat、Week、Icon)。Segmented、Bubble とグラフは Weight のグラフと Coach を作るときに足す
   - 2026-11-01 から正本はリポジトリの `design/` (トークンは `design/system/tokens.json`、部品は `design/src/`)。このアーティファクトはそこから公開する写しになる。運用は `docs/design.md`。文書の「見た目」の行と食い違ったら文書を直す
   - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `fonts/` に同梱している (写しは `design/system/fonts/`)。これはキャンバスとプレビュー用で、アプリは npm の `framework7-icons@5.0.5` から同じファイルを配る
 - 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
 - 部品は Storybook (`make storybook`) で見る。部品とトークンの変更はリポジトリで行い、`make project` が作る `design/project/` を `design-publish` スキルでアーティファクトへ届ける (`docs/design.md`)。`design/screens/` は 2026-10 に画面のアーティファクトから手で写したもの
-  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は Stat、Segmented、Bubble を移植するまで古いまま (`docs/design.md`)
+  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は Segmented と Bubble を移植するまで古いまま (`docs/design.md`)
 
 ### 使うスキル (yamat47/github-toolkit)
 
@@ -164,7 +169,7 @@
 - 行動の保存後の編集と削除
 - 種目で絞ったときの推移の指標 (最大重量、総量、有酸素は距離か時間か)
 - 過去日付の記録を入れられるか
-- 同じ日に再入力したときの扱い。体脂肪率をグラフに出すか
+- 体脂肪率をグラフにどう出すか (2 本目の線の予定)
 - 行動の保存は entries と workout_items の 2 文で、間で失敗したあとの Try again は同じ entries をもう一度入れる。編集と削除が入るまでは許容し、一覧で見えて困るなら 1 つのバッチにまとめる (id を select で引き直す)
 - スレッドのタイトルの付け方。スレッドの削除
 - Coach で Claude API に失敗したときとオフライン時の表示 (Notes は上で決めた)

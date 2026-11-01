@@ -1,6 +1,9 @@
 // Generated from design/src by scripts/project.ts: the types of window.Trainote.
 import type { ReactNode } from 'react';
 
+// classes.ts
+export declare const classes: (...names: (string | false | undefined)[]) => string;
+
 // types.ts
 export type EntryKind = 'win' | 'slip';
 
@@ -16,8 +19,12 @@ export declare function Screen({ tone, tabBar, children }: ScreenProps): import(
 type NavBarProps = {
     title: string;
     trailing?: ReactNode;
+    back?: {
+        label: string;
+        onClick: () => void;
+    };
 };
-export declare function NavBar({ title, trailing }: NavBarProps): import("react").JSX.Element;
+export declare function NavBar({ title, trailing, back }: NavBarProps): import("react").JSX.Element;
 
 // TabBar.tsx
 export type TabItem<Key extends string> = {
@@ -91,15 +98,24 @@ type TextProps = {
 export declare function Text({ variant, tone, children }: TextProps): import("react").JSX.Element;
 
 // Field.tsx
-type FieldProps = {
+type Named = {
+    label: string;
+    ariaLabel?: undefined;
+} | {
+    label?: undefined;
+    ariaLabel: string;
+};
+type FieldProps = Named & {
     value: string;
     onChange: (value: string) => void;
     placeholder: string;
-    ariaLabel: string;
+    multiline?: boolean;
+    numeric?: boolean;
+    unit?: string;
     maxLength?: number;
     disabled?: boolean;
 };
-export declare function Field({ value, onChange, placeholder, ariaLabel, maxLength, disabled, }: FieldProps): import("react").JSX.Element;
+export declare function Field({ value, onChange, placeholder, label, ariaLabel, multiline, numeric, unit, maxLength, disabled, }: FieldProps): import("react").JSX.Element;
 
 // Button.tsx
 type ButtonProps = {
@@ -117,6 +133,15 @@ type ActionsProps = {
     children: ReactNode;
 };
 export declare function Actions({ align, error, children }: ActionsProps): import("react").JSX.Element;
+
+// Stat.tsx
+type StatProps = {
+    value: string;
+    unit?: string;
+    label: string;
+    note?: string | undefined;
+};
+export declare function Stat({ value, unit, label, note }: StatProps): import("react").JSX.Element;
 
 // Week.tsx
 export type WeekDay = {
@@ -153,6 +178,7 @@ declare global {
       Field: typeof Field;
       Button: typeof Button;
       Actions: typeof Actions;
+      Stat: typeof Stat;
       Week: typeof Week;
       Icon: typeof Icon;
     };

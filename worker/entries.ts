@@ -1,8 +1,8 @@
 import { and, count, desc, eq, gte, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { validator } from 'hono/validator';
 import { z } from 'zod';
 import type { AppEnv } from './app.ts';
+import { jsonBody } from './body.ts';
 import { database, type Database } from './db/index.ts';
 import { entries, workoutItems } from './db/schema.ts';
 import { problem } from './problem.ts';
@@ -17,13 +17,6 @@ const Note = z.object({ text: z.string().trim().min(1).max(MAX_NOTE_LENGTH) });
 const MAX_ENTRIES = 50;
 
 const Drafts = z.object({ entries: z.array(DraftEntry).min(1).max(MAX_ENTRIES) });
-
-// A JSON body that must fit the schema, or a 400 problem with the given title.
-const jsonBody = <T>(schema: z.ZodType<T>, title: string) =>
-  validator('json', (value, c) => {
-    const parsed = schema.safeParse(value);
-    return parsed.success ? parsed.data : problem(c, 400, title);
-  });
 
 const noteBody = jsonBody(Note, 'Body must carry a non-empty text');
 const draftsBody = jsonBody(Drafts, 'Body must carry one or more entries');

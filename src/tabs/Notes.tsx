@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { Category } from '../../worker/db/schema.ts';
 import { MAX_NOTE_LENGTH } from '../../worker/note.ts';
-import { addDays, WEEKDAYS } from '../../worker/week.ts';
+import { WEEKDAYS } from '../../worker/week.ts';
 import { plural, weekPhrase } from '../../worker/words.ts';
 import { Actions } from '../../design/src/Actions.tsx';
 import { Button } from '../../design/src/Button.tsx';
@@ -12,6 +12,10 @@ import { ListHeader } from '../../design/src/ListHeader.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { Text } from '../../design/src/Text.tsx';
 import { Week, type WeekDay } from '../../design/src/Week.tsx';
+import { dayLabel } from '../dates.ts';
+import { Failed } from '../Failed.tsx';
+import { runs } from '../groups.ts';
+import { useLoaded, type Shown } from '../loaded.ts';
 import {
   loadNotes,
   previewNote,
@@ -28,8 +32,6 @@ type Draft =
   | { status: 'reading'; text: string }
   | { status: 'previewed'; text: string; preview: Preview; failed: boolean }
   | { status: 'saving'; text: string; preview: Preview };
-
-type Shown = { status: 'loading' } | { status: 'failed' } | ({ status: 'ready' } & Loaded);
 
 const CATEGORY_LABELS: Record<Category, string> = {
   exercise: 'Exercise',
@@ -58,18 +60,6 @@ function describe(item: DraftItem): string {
     .join(' ');
 }
 
-// Consecutive items that belong together, by the caller's test: the groups of a day's
-// entries, or the sets of one exercise.
-function runs<T>(items: T[], together: (a: T, b: T) => boolean): [T, ...T[]][] {
-  const groups: [T, ...T[]][] = [];
-  for (const item of items) {
-    const last = groups.at(-1);
-    if (last !== undefined && together(last[0], item)) last.push(item);
-    else groups.push([item]);
-  }
-  return groups;
-}
-
 const onlyReps = (item: DraftItem) =>
   item.reps !== null && item.sets === null && item.durationMin === null && item.distanceKm === null;
 
@@ -90,29 +80,6 @@ function measures(items: DraftItem[]): string | undefined {
       return `${lead.exercise}${weight} × ${reps.map(String).join('、')}`;
     })
     .join('、');
-}
-
-// Days are plain dates, so the formatter reads them in UTC where nothing shifts them.
-const dayFormat = new Intl.DateTimeFormat('en-US', {
-  weekday: 'long',
-  month: 'short',
-  day: 'numeric',
-  timeZone: 'UTC',
-});
-const dayWithYearFormat = new Intl.DateTimeFormat('en-US', {
-  weekday: 'long',
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
-
-// Today, Yesterday, then "Friday, Oct 23"; the year only once it differs from today's.
-function dayLabel(date: string, today: string): string {
-  if (date === today) return 'Today';
-  if (date === addDays(today, -1)) return 'Yesterday';
-  const instant = new Date(`${date}T00:00:00Z`);
-  return (date.slice(0, 4) === today.slice(0, 4) ? dayFormat : dayWithYearFormat).format(instant);
 }
 
 // The week in the words of the design: the counts, then the run when there is one to
@@ -146,36 +113,10 @@ const weekDays = (week: Counts): WeekDay[] =>
 // Entries are newest first already; consecutive rows of one day form a group.
 const byDay = (entries: Entry[]) => runs(entries, (a, b) => a.date === b.date);
 
-// The one way the tab fills itself: on mount, on Try again, and after a save so the
-// new rows show up.
-async function load(show: (shown: Shown) => void) {
-  try {
-    show({ status: 'ready', ...(await loadNotes()) });
-  } catch {
-    show({ status: 'failed' });
-  }
-}
-
 export function Notes() {
   const [draft, setDraft] = useState<Draft>({ status: 'writing', text: '', failed: false });
-  const [shown, setShown] = useState<Shown>({ status: 'loading' });
-  // Responses are not ordered: a slow first load must not replace what a later load
-  // showed, and nothing is shown after the tab is left. Only the latest load writes.
-  const loadId = useRef(0);
-  const reload = useCallback(() => {
-    loadId.current += 1;
-    const id = loadId.current;
-    void load((next) => {
-      if (id === loadId.current) setShown(next);
-    });
-  }, []);
-
-  useEffect(() => {
-    reload();
-    return () => {
-      loadId.current += 1;
-    };
-  }, [reload]);
+  // Reloaded after a save, so the new rows and the week's counts show up.
+  const { shown, reload } = useLoaded(loadNotes);
 
   // Typing after a preview starts over: the preview belonged to the old text.
   const edit = (text: string) => setDraft({ status: 'writing', text, failed: false });
@@ -212,6 +153,7 @@ export function Notes() {
     <>
       <WeekBlock shown={shown} onRetry={reload} />
       <Field
+        multiline
         value={draft.text}
         onChange={edit}
         placeholder="What did you do today?"
@@ -258,19 +200,14 @@ export function Notes() {
   );
 }
 
-type WeekBlockProps = { shown: Shown; onRetry: () => void };
+type WeekBlockProps = { shown: Shown<Loaded>; onRetry: () => void };
 
 function WeekBlock({ shown, onRetry }: WeekBlockProps) {
   if (shown.status === 'failed') {
     return (
       <>
         <Week days={BLANK_WEEK} />
-        <Text variant="caption-1" tone="error">
-          Could not load your notes.
-        </Text>
-        <Actions align="end">
-          <Button onClick={onRetry}>Try again</Button>
-        </Actions>
+        <Failed message="Could not load your notes." onRetry={onRetry} />
       </>
     );
   }

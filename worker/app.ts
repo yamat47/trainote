@@ -7,6 +7,7 @@ import { problem } from './problem.ts';
 import { pushRoutes } from './push.ts';
 import { structureWithClaude, type Structure } from './structure.ts';
 import { findOrCreateUser } from './users.ts';
+import { weightRoutes } from './weights.ts';
 
 export type AppEnv = {
   Bindings: Env;
@@ -36,7 +37,8 @@ export function createApp({
   return api
     .get('/me', (c) => c.json(c.get('user')))
     .route('/push', pushRoutes())
-    .route('/entries', entryRoutes(structure));
+    .route('/entries', entryRoutes(structure))
+    .route('/weights', weightRoutes());
 }
 
 export type AppType = ReturnType<typeof createApp>;

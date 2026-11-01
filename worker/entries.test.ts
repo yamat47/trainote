@@ -4,8 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { database } from './db/index.ts';
 import { entries, workoutItems } from './db/schema.ts';
 import { StructureError, type Structure } from './structure.ts';
-import { findOrCreateUser } from './users.ts';
-import { appAs, clientAs, platform } from './test/platform.ts';
+import { appAs, clientAs, platform, userIdOf as idOf } from './test/platform.ts';
 import { NOTE, PREVIEW } from './test/preview.ts';
 import { addDays, tokyoDate, weekDates } from './week.ts';
 
@@ -31,8 +30,7 @@ describe('/api/entries', () => {
 
   afterAll(() => proxy.dispose());
 
-  const userIdOf = async (email: string) =>
-    (await findOrCreateUser(database(proxy.env.DB), email)).id;
+  const userIdOf = (email: string) => idOf(proxy.env, email);
 
   describe('GET /', () => {
     it("lists the caller's entries newest first with their items, and nobody else's", async () => {

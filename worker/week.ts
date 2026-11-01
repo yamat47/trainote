@@ -30,10 +30,13 @@ export function tokyoWeek(instant: Date): { from: string; to: string } {
   return { from: tokyoDate(monday), to };
 }
 
-// A calendar day plus n days, as YYYY-MM-DD. Days here are plain dates, so the arithmetic
-// runs in UTC where no zone can shift it.
+// A plain date as an instant: its midnight in UTC, where no zone can shift it. Every
+// arithmetic and every formatter on a YYYY-MM-DD goes through this.
+export const dayInstant = (date: string) => new Date(`${date}T00:00:00Z`);
+
+// A calendar day plus n days, as YYYY-MM-DD.
 export function addDays(date: string, n: number): string {
-  const instant = new Date(`${date}T00:00:00Z`);
+  const instant = dayInstant(date);
   instant.setUTCDate(instant.getUTCDate() + n);
   return instant.toISOString().slice(0, 10);
 }

@@ -19,7 +19,7 @@ export const MESSAGE_ROLES = ['user', 'assistant'] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
 
 // RFC 3339 in UTC with milliseconds, so rows sort by time as text.
-const NOW = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
+export const NOW = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
 
 const timestamp = () => text().notNull().default(NOW);
 
