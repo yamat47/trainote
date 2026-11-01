@@ -22,6 +22,16 @@ export const WithDetail: Story = { args: { detail: '64.2 kg', children: 'Sun, Oc
 export const Navigable: Story = {
   args: { accessory: 'disclosure', onClick: fn(), children: 'Weekly review' },
 };
+export const Thread: Story = {
+  args: {
+    accessory: 'disclosure',
+    detail: 'Oct 18',
+    preview:
+      '今週は Win が 9 件、Slip が 2 件でした。運動 3 回、食事の Win が 4 件と、食事が安定しています。体重は 65.0 kg から 64.2 kg へ。',
+    onClick: fn(),
+    children: 'Weekly review',
+  },
+};
 export const Action: Story = {
   args: { tone: 'tint', accessory: 'disclosure', onClick: fn(), children: 'Show all entries' },
 };

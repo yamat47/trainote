@@ -58,7 +58,7 @@ Apple's system colors, in Apple's values, with a light and a dark theme. Dark fo
 
 ## Components
 
-`window.Trainote`, React 18. Screens are composed from these; what is not here yet (the chat bubble, filter pills) is drawn per screen until it settles, then added. The structured preview is settled: an `Inset` headed "Read as 3 entries", the rows on a `secondary-background` block with `radius-group`, Claude's one sentence as `Text` in `subheadline` on `secondary-label`, then `Actions` with Edit text and Save 3 entries.
+`window.Trainote`, React 18. Screens are composed from these; what is not here yet (filter pills) is drawn per screen until it settles, then added. The structured preview is settled: an `Inset` headed "Read as 3 entries", the rows on a `secondary-background` block with `radius-group`, Claude's one sentence as `Text` in `subheadline` on `secondary-label`, then `Actions` with Edit text and Save 3 entries.
 
 - `Screen`: the shell of a tab: the safe area, the content and the `TabBar` held at the bottom. `tone` is `plain` or `grouped`.
 - `NavBar`: the large title and an optional trailing action; with `back`, the compact bar of a pushed screen such as All entries.
@@ -77,6 +77,6 @@ Apple's system colors, in Apple's values, with a light and a dark theme. Dark fo
 - `Actions`: the row of buttons under a field or a preview, `fill` or `end`, with the place for its error line.
 - `Graph`: the line graph of a measurement over the period, the goal as a dashed `red` line, body fat as a second line.
 - `Week`: the seven days of this week, Monday first, each with its count of wins above its count of slips; today's label is `tint`. The memorable thing on Notes: a week of effort at a glance, in numbers.
-- `Icon`: a Framework7 Icons glyph by name, for the tab bar and the chevron.
-
-Bubble (a chat message) was drawn with the first screens and arrives with the Coach tab.
+- `Bubble`: one message of a Coach thread, mine at the right in `tint`, the coach's at the left in `bubble`.
+- `Composer`: the capsule reply field at the bottom of a thread, with the send button, in the tab bar's place.
+- `Icon`: a Framework7 Icons glyph by name, for the tab bar, the chevron and the send button.

@@ -10,7 +10,7 @@ export type EntryKind = 'win' | 'slip';
 // Screen.tsx
 type ScreenProps = {
     tone?: 'plain' | 'grouped';
-    tabBar: ReactNode;
+    tabBar?: ReactNode;
     children: ReactNode;
 };
 export declare function Screen({ tone, tabBar, children }: ScreenProps): import("react").JSX.Element;
@@ -74,6 +74,7 @@ type RowProps = {
     kind?: EntryKind;
     tone?: 'tint';
     sub?: ReactNode;
+    preview?: string | null | undefined;
     error?: string | undefined;
     detail?: ReactNode;
     accessory?: 'disclosure';
@@ -81,7 +82,7 @@ type RowProps = {
     onClick?: () => void;
     children?: ReactNode;
 };
-export declare function Row({ kind, tone, sub, error, detail, accessory, muted, onClick, children, }: RowProps): import("react").JSX.Element;
+export declare function Row({ kind, tone, sub, preview, error, detail, accessory, muted, onClick, children, }: RowProps): import("react").JSX.Element;
 
 // Mark.tsx
 type MarkProps = {
@@ -190,6 +191,25 @@ type WeekProps = {
 };
 export declare function Week({ days, label }: WeekProps): import("react").JSX.Element;
 
+// Bubble.tsx
+type BubbleProps = {
+    from: 'me' | 'coach';
+    children: ReactNode;
+};
+export declare function Bubble({ from, children }: BubbleProps): import("react").JSX.Element;
+
+// Composer.tsx
+type ComposerProps = {
+    value: string;
+    onChange: (value: string) => void;
+    onSend: () => void;
+    disabled?: boolean;
+    error?: string | undefined;
+    placeholder?: string;
+    maxLength?: number;
+};
+export declare function Composer({ value, onChange, onSend, disabled, error, placeholder, maxLength, }: ComposerProps): import("react").JSX.Element;
+
 // Icon.tsx
 type IconProps = {
     name: string;
@@ -216,6 +236,8 @@ declare global {
       Stat: typeof Stat;
       Graph: typeof Graph;
       Week: typeof Week;
+      Bubble: typeof Bubble;
+      Composer: typeof Composer;
       Icon: typeof Icon;
     };
   }

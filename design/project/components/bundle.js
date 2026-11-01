@@ -1,9 +1,9 @@
-/* @ds-bundle: {"format":4,"namespace":"Trainote","components":[{"name":"Screen"},{"name":"NavBar"},{"name":"TabBar"},{"name":"ListHeader"},{"name":"List"},{"name":"Inset"},{"name":"Group"},{"name":"Row"},{"name":"Mark"},{"name":"Text"},{"name":"Field"},{"name":"Button"},{"name":"Actions"},{"name":"Segmented"},{"name":"Stat"},{"name":"Graph"},{"name":"Week"},{"name":"Icon"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Trainote","components":[{"name":"Screen"},{"name":"NavBar"},{"name":"TabBar"},{"name":"ListHeader"},{"name":"List"},{"name":"Inset"},{"name":"Group"},{"name":"Row"},{"name":"Mark"},{"name":"Text"},{"name":"Field"},{"name":"Button"},{"name":"Actions"},{"name":"Segmented"},{"name":"Stat"},{"name":"Graph"},{"name":"Week"},{"name":"Bubble"},{"name":"Composer"},{"name":"Icon"}]} */
 var Trainote = (function(exports) {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	// design/src/Screen.tsx
 	function Screen({ tone = "plain", tabBar, children }) {
-		return /* @__PURE__ */ React.createElement("div", { className: tone === "grouped" ? "tn-screen tn-screen-grouped" : "tn-screen" }, /* @__PURE__ */ React.createElement("main", { className: "tn-screen-content" }, children), /* @__PURE__ */ React.createElement("div", { className: "tn-screen-tabbar" }, tabBar));
+		return /* @__PURE__ */ React.createElement("div", { className: tone === "grouped" ? "tn-screen tn-screen-grouped" : "tn-screen" }, /* @__PURE__ */ React.createElement("main", { className: "tn-screen-content" }, children), tabBar === void 0 ? null : /* @__PURE__ */ React.createElement("div", { className: "tn-screen-tabbar" }, tabBar));
 	}
 	// design/src/classes.ts
 	var classes = (...names) => names.filter(Boolean).join(" ");
@@ -65,9 +65,9 @@ var Trainote = (function(exports) {
 		}, slip ? "−" : "+"), /* @__PURE__ */ React.createElement("span", { className: "tn-sr-only" }, slip ? "Slip" : "Win"));
 	}
 	// design/src/Row.tsx
-	function Row({ kind, tone, sub, error, detail, accessory, muted, onClick, children }) {
+	function Row({ kind, tone, sub, preview, error, detail, accessory, muted, onClick, children }) {
 		const className = classes("tn-row", kind !== void 0 && "tn-row-with-mark", (muted ?? kind === "slip") && "tn-row-muted", tone === "tint" && "tn-row-tint", onClick !== void 0 && "tn-row-press");
-		const content = /* @__PURE__ */ React.createElement(React.Fragment, null, kind === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-mark" }, /* @__PURE__ */ React.createElement(Mark, { kind })), /* @__PURE__ */ React.createElement("span", { className: "tn-row-text" }, children, sub === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-sub" }, sub), error === void 0 ? null : /* @__PURE__ */ React.createElement("output", { className: "tn-row-error" }, error)), detail === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-detail" }, detail), accessory === "disclosure" ? /* @__PURE__ */ React.createElement("span", { className: "tn-row-chevron" }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron_right" })) : null);
+		const content = /* @__PURE__ */ React.createElement(React.Fragment, null, kind === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-mark" }, /* @__PURE__ */ React.createElement(Mark, { kind })), /* @__PURE__ */ React.createElement("span", { className: "tn-row-text" }, children, sub === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-sub" }, sub), preview === void 0 || preview === null ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-sub tn-row-preview" }, preview), error === void 0 ? null : /* @__PURE__ */ React.createElement("output", { className: "tn-row-error" }, error)), detail === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-row-detail" }, detail), accessory === "disclosure" ? /* @__PURE__ */ React.createElement("span", { className: "tn-row-chevron" }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron_right" })) : null);
 		return onClick === void 0 ? /* @__PURE__ */ React.createElement("div", { className }, content) : /* @__PURE__ */ React.createElement("button", {
 			type: "button",
 			className,
@@ -242,8 +242,39 @@ var Trainote = (function(exports) {
 			"aria-hidden": "true"
 		}, day.slips === 0 ? "" : `\u2212${String(day.slips)}`))));
 	}
+	// design/src/Bubble.tsx
+	function Bubble({ from, children }) {
+		return /* @__PURE__ */ React.createElement("div", { className: classes("tn-bubble", from === "me" && "tn-bubble-me") }, /* @__PURE__ */ React.createElement("p", { className: "tn-bubble-body" }, children));
+	}
+	// design/src/Composer.tsx
+	function Composer({ value, onChange, onSend, disabled, error, placeholder = "Message", maxLength }) {
+		return /* @__PURE__ */ React.createElement("div", { className: "tn-composer" }, error === void 0 ? null : /* @__PURE__ */ React.createElement(Text, {
+			variant: "caption-1",
+			tone: "error"
+		}, error), /* @__PURE__ */ React.createElement("div", { className: "tn-composer-row" }, /* @__PURE__ */ React.createElement("span", {
+			className: "tn-composer-field",
+			"data-value": value
+		}, /* @__PURE__ */ React.createElement("textarea", {
+			className: "tn-composer-input",
+			rows: 1,
+			value,
+			placeholder,
+			"aria-label": placeholder,
+			maxLength,
+			disabled,
+			onChange: (event) => onChange(event.target.value)
+		})), /* @__PURE__ */ React.createElement("button", {
+			type: "button",
+			className: "tn-composer-send",
+			"aria-label": "Send",
+			disabled: (disabled ?? false) || value.trim() === "",
+			onClick: onSend
+		}, /* @__PURE__ */ React.createElement(Icon, { name: "arrow_up_circle_fill" }))));
+	}
 	exports.Actions = Actions;
+	exports.Bubble = Bubble;
 	exports.Button = Button;
+	exports.Composer = Composer;
 	exports.Field = Field;
 	exports.Graph = Graph;
 	exports.Group = Group;
