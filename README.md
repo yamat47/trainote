@@ -28,6 +28,7 @@ make test        # vitest
 make db-check    # the committed migrations match worker/db/schema.ts
 make tokens-check # the committed design/src/tokens.css matches design/system/tokens.json
 make design-check # src/ holds no stylesheet and names no class
+make project-check # the committed design/project/ matches the build from design/
 make dist        # vite build
 make storybook-dist # Storybook builds into dist-storybook/
 make check       # all of them, in that order
@@ -37,7 +38,7 @@ make check       # all of them, in that order
 
 Anything else: `make pnpm ARGS="add hono"` and `make wrangler ARGS="d1 info trainote"`.
 
-After changing `worker/db/schema.ts`, run `make db-generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `make typegen` and commit `worker-configuration.d.ts`. After changing the design tokens in `design/system/tokens.json`, run `make tokens` and commit `design/src/tokens.css`. The home-screen icons under `public/icons/` are drawn by opening `scripts/icon.html` in Safari on a Mac and saving the three files it offers.
+After changing `worker/db/schema.ts`, run `make db-generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `make typegen` and commit `worker-configuration.d.ts`. After changing the design tokens in `design/system/tokens.json`, run `make tokens` and commit `design/src/tokens.css`. After changing anything under `design/src/` or `design/system/`, run `make project` and commit `design/project/`, the files the design-system artifact is published from (`docs/design.md`). The home-screen icons under `public/icons/` are drawn by opening `scripts/icon.html` in Safari on a Mac and saving the three files it offers.
 
 wrangler authenticates with the API token in `.env` (`CLOUDFLARE_API_TOKEN=...`, ignored by git; `docs/requirements.md` says which token). `make whoami` shows the account it reaches, and `make secret NAME=VAPID_PRIVATE_KEY < file` stores a Worker secret.
 
