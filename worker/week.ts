@@ -21,12 +21,14 @@ export function tokyoDate(instant: Date): string {
   return dayFormat.format(instant);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 // The Monday-to-today range of the Tokyo week the instant falls in, as two dates.
 export function tokyoWeek(instant: Date): { from: string; to: string } {
   const to = tokyoDate(instant);
   const sinceMonday = MONDAY_FIRST[weekdayFormat.format(instant)];
   if (sinceMonday === undefined) throw new Error(`unexpected weekday for ${instant.toISOString()}`);
-  const monday = new Date(instant.getTime() - sinceMonday * 24 * 60 * 60 * 1000);
+  const monday = new Date(instant.getTime() - sinceMonday * DAY_MS);
   return { from: tokyoDate(monday), to };
 }
 
@@ -40,6 +42,10 @@ export function addDays(date: string, n: number): string {
   instant.setUTCDate(instant.getUTCDate() + n);
   return instant.toISOString().slice(0, 10);
 }
+
+// Whole days from one plain date to another.
+export const daysBetween = (from: string, to: string): number =>
+  Math.round((dayInstant(to).getTime() - dayInstant(from).getTime()) / DAY_MS);
 
 // The seven dates of the Tokyo week the instant falls in, Monday first.
 export const weekDates = (instant: Date): string[] =>

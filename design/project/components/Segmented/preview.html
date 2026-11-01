@@ -1,0 +1,21 @@
+<!-- @dsCard group="Entry" subtitle="Month" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Segmented</title>
+<style>#root { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+function Live(p) { var state = React.useState(p.args[p.value]); var args = Object.assign({}, p.args); args[p.value] = state[0]; args[p.onChange] = state[1]; return h(p.of, args); }
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(Live, { of: T.Segmented, value: "value", onChange: "onChange", args: { "items": [{ "key": "w", "label": "W" }, { "key": "m", "label": "M" }, { "key": "6m", "label": "6M" }, { "key": "y", "label": "Y" }], "value": "m", "onChange": function () {}, "label": "Period" } })
+  )
+);
+</script>
+</body>
+</html>

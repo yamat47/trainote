@@ -8,8 +8,11 @@ import { NOW, weights } from './db/schema.ts';
 import { MAX_BODY_FAT_PCT, MAX_WEIGHT_KG } from './measurement.ts';
 import { tokyoDate } from './week.ts';
 
+// A weight in kg as a scale shows it; the goal is one too.
+export const WeightKg = z.number().gt(0).lt(MAX_WEIGHT_KG).multipleOf(0.1);
+
 export const Measurement = z.object({
-  weightKg: z.number().gt(0).lt(MAX_WEIGHT_KG).multipleOf(0.1),
+  weightKg: WeightKg,
   bodyFatPct: z.number().gt(0).lt(MAX_BODY_FAT_PCT).multipleOf(0.1).optional(),
 });
 export type Measurement = z.infer<typeof Measurement>;

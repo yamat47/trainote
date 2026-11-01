@@ -1,4 +1,4 @@
-<!-- @dsCard group="Entry" subtitle="Empty, Written, Labelled, Labelled Written" -->
+<!-- @dsCard group="Entry" subtitle="Empty, Written, Labelled, Labelled Written, Date" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,10 +12,11 @@ var T = window.Trainote, h = React.createElement;
 function Live(p) { var state = React.useState(p.args[p.value]); var args = Object.assign({}, p.args); args[p.value] = state[0]; args[p.onChange] = state[1]; return h(p.of, args); }
 ReactDOM.createRoot(document.getElementById("root")).render(
   h(React.Fragment, null,
-    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "multiline": true, "value": "", "onChange": function () {}, "placeholder": "What did you do today?", "ariaLabel": "New entry" } }),
-    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "multiline": true, "value": "23時に寝た。昼をサラダにした。駅まで歩いた2.5km。スクワット80kgで10、8、6。腹筋50回", "onChange": function () {}, "placeholder": "What did you do today?", "ariaLabel": "New entry" } }),
-    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Today", "numeric": true, "unit": "kg", "value": "", "onChange": function () {}, "placeholder": "0.0" } }),
-    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Body fat", "numeric": true, "unit": "%", "value": "18.4", "onChange": function () {}, "placeholder": "0.0" } })
+    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "kind": "multiline", "value": "", "onChange": function () {}, "placeholder": "What did you do today?", "ariaLabel": "New entry" } }),
+    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "kind": "multiline", "value": "23時に寝た。昼をサラダにした。駅まで歩いた2.5km。スクワット80kgで10、8、6。腹筋50回", "onChange": function () {}, "placeholder": "What did you do today?", "ariaLabel": "New entry" } }),
+    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Today", "kind": "numeric", "unit": "kg", "value": "", "onChange": function () {}, "placeholder": "0.0" } }),
+    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Body fat", "kind": "numeric", "unit": "%", "value": "18.4", "onChange": function () {}, "placeholder": "0.0" } }),
+    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "By", "kind": "date", "value": "2027-03-31", "onChange": function () {}, "placeholder": "" } })
   )
 );
 </script>

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Group } from '../../design/src/Group.tsx';
 import { Row } from '../../design/src/Row.tsx';
+import { useLoaded } from '../loaded.ts';
+import { loadProfile } from '../profile.ts';
+import { GoalGroup } from './Goal.tsx';
 import {
   reminderState,
   sendTestReminder,
@@ -24,6 +27,8 @@ const footers: Record<State, string> = {
 };
 
 export function Profile() {
+  // One load of the profile row for every group on the tab.
+  const profile = useLoaded(loadProfile);
   const [reminder, setReminder] = useState<Reminder>({
     state: 'loading',
     busy: false,
@@ -65,18 +70,25 @@ export function Profile() {
   };
 
   return (
-    <Group header="Notifications" footer={footers[reminder.state]}>
-      <ReminderRow
-        state={reminder.state}
-        failed={reminder.failed === 'change'}
-        onChange={(action) => void change(action)}
+    <>
+      <GoalGroup
+        shown={profile.shown}
+        onRetry={profile.reload}
+        onSaved={(saved) => profile.replace(() => saved)}
       />
-      {reminder.state === 'on' ? (
-        <Row tone="tint" error={testFailure(reminder.failed)} onClick={() => void test()}>
-          Send a reminder now
-        </Row>
-      ) : null}
-    </Group>
+      <Group header="Notifications" footer={footers[reminder.state]}>
+        <ReminderRow
+          state={reminder.state}
+          failed={reminder.failed === 'change'}
+          onChange={(action) => void change(action)}
+        />
+        {reminder.state === 'on' ? (
+          <Row tone="tint" error={testFailure(reminder.failed)} onClick={() => void test()}>
+            Send a reminder now
+          </Row>
+        ) : null}
+      </Group>
+    </>
   );
 }
 

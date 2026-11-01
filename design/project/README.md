@@ -46,8 +46,8 @@ Apple's system colors, in Apple's values, with a light and a dark theme. Dark fo
 
 ## Charts
 
-- The weight graph is a `stroke-plot` line in `tint` over hairline gridlines in `separator`, with the goal as a dashed `red` line and axis labels in `footnote` on `secondary-label`. Exercise trends are drawn the same way.
-- Nothing is filled, nothing is animated, and the latest value is written beside its point in `headline`.
+- The weight graph is `Graph`: a `stroke-plot` line in `tint` over hairline gridlines in `separator`, with the goal as a dashed `red` line, body fat as a thinner line in `secondary-label` against a left axis, and axis labels in `footnote` on `secondary-label`. Exercise trends are drawn the same way.
+- Nothing is filled, nothing is animated; the only dot is the last point, and the number itself lives in the `Stat` above.
 
 ## States and motion
 
@@ -58,7 +58,7 @@ Apple's system colors, in Apple's values, with a light and a dark theme. Dark fo
 
 ## Components
 
-`window.Trainote`, React 18. Screens are composed from these; what is not here yet (the weight graph, the period control, the chat bubble, filter pills) is drawn per screen until it settles, then added. The structured preview is settled: an `Inset` headed "Read as 3 entries", the rows on a `secondary-background` block with `radius-group`, Claude's one sentence as `Text` in `subheadline` on `secondary-label`, then `Actions` with Edit text and Save 3 entries.
+`window.Trainote`, React 18. Screens are composed from these; what is not here yet (the chat bubble, filter pills) is drawn per screen until it settles, then added. The structured preview is settled: an `Inset` headed "Read as 3 entries", the rows on a `secondary-background` block with `radius-group`, Claude's one sentence as `Text` in `subheadline` on `secondary-label`, then `Actions` with Edit text and Save 3 entries.
 
 - `Screen`: the shell of a tab: the safe area, the content and the `TabBar` held at the bottom. `tone` is `plain` or `grouped`.
 - `NavBar`: the large title and an optional trailing action; with `back`, the compact bar of a pushed screen such as All entries.
@@ -70,11 +70,13 @@ Apple's system colors, in Apple's values, with a light and a dark theme. Dark fo
 - `Row`: one row of a list. Pass `kind` for an entry, the words as children, the numbers as `sub`, a number or date as `detail`; `accessory: "disclosure"` adds the chevron; `tone: "tint"` makes the row an action in `tint`, like Add Account in Settings; `error` puts the red `caption-1` line directly under it.
 - `Mark`: the + or − of an entry. Pass `kind`.
 - `Text`: one line at the margin in an iOS text style (`footnote`, `subheadline`, `caption-1`), `secondary` or, as an `<output>`, `error`.
-- `Field`: the multiline entry row of Notes, and the labelled value row with a unit on Weight (Today, Body fat).
+- `Field`: the multiline entry row of Notes, the labelled value row with a unit on Weight (Today, Body fat), and the date row of the goal.
+- `Segmented`: the period control on Weight (W, M, 6M, Y).
 - `Stat`: the big number of a screen with its unit and label, and the week's change beside it: today's weight.
 - `Button`: `prominent` for Save, `plain` for Edit and Cancel. `tinted` and `destructive` arrive with the screens that need them.
 - `Actions`: the row of buttons under a field or a preview, `fill` or `end`, with the place for its error line.
+- `Graph`: the line graph of a measurement over the period, the goal as a dashed `red` line, body fat as a second line.
 - `Week`: the seven days of this week, Monday first, each with its count of wins above its count of slips; today's label is `tint`. The memorable thing on Notes: a week of effort at a glance, in numbers.
 - `Icon`: a Framework7 Icons glyph by name, for the tab bar and the chevron.
 
-Segmented (the period control) and Bubble (a chat message) were drawn with the first screens and arrive with the Weight graph and the Coach tab.
+Bubble (a chat message) was drawn with the first screens and arrives with the Coach tab.

@@ -1,15 +1,22 @@
 import { MAX_BODY_FAT_PCT, MAX_WEIGHT_KG, parseMeasurement } from '../worker/measurement.ts';
-import { addDays } from '../worker/week.ts';
+import type { GraphProps } from '../design/src/Graph.tsx';
+import type { Goal } from '../worker/profile.ts';
+import { addDays, daysBetween } from '../worker/week.ts';
 import type { Measurement, Weight, Weights } from '../worker/weights.ts';
 import { client, expectOk } from './api.ts';
+import { longDate, shortDate } from './dates.ts';
+import { loadProfile } from './profile.ts';
 
-export type { Measurement, Weight, Weights };
+export type { Measurement, Weight };
 
-// Every weight newest first, with the server's today.
-export async function loadWeights(): Promise<Weights> {
-  const response = await client.api.weights.$get();
+export type Loaded = Weights & { goal: Goal };
+
+// Every weight newest first with the server's today, and the goal from the profile.
+export async function loadWeights(): Promise<Loaded> {
+  const [response, profile] = await Promise.all([client.api.weights.$get(), loadProfile()]);
   expectOk(response, 'GET /api/weights');
-  return response.json();
+  const { goalWeightKg, goalDeadline } = profile;
+  return { ...(await response.json()), goal: { goalWeightKg, goalDeadline } };
 }
 
 // Today's measurement; a second save of the day replaces the first.
@@ -18,6 +25,12 @@ export async function saveToday(body: Measurement): Promise<Weight> {
   expectOk(response, 'PUT /api/weights/today');
   return (await response.json()).weight;
 }
+
+// The fields as the stored day fills them, "" for a value the day has not got.
+export const measurementFields = (row: Weight | undefined) => ({
+  weight: row === undefined ? '' : row.weightKg.toFixed(1),
+  bodyFat: typeof row?.bodyFatPct === 'number' ? row.bodyFatPct.toFixed(1) : '',
+});
 
 // The request the two fields make, or nothing while they do not hold a measurement the
 // server takes: a weight, and a body fat when that field is not empty.
@@ -66,4 +79,58 @@ export function weekLines(rows: Weight[], today: string): WeekLines {
     average = `Averaging ${parts} over the last 7 days.`;
   }
   return { change, average };
+}
+
+export const PERIODS = [
+  { key: 'w', label: 'W', days: 7, name: 'the last week' },
+  { key: 'm', label: 'M', days: 30, name: 'the last month' },
+  { key: '6m', label: '6M', days: 182, name: 'the last 6 months' },
+  { key: 'y', label: 'Y', days: 365, name: 'the last year' },
+] as const;
+export type PeriodKey = (typeof PERIODS)[number]['key'];
+
+// The graph's props for the period: the days as x from 0, the weights and body fats in
+// it as points, the three dates under it, the goal line, and the sentence a screen
+// reader hears. Fewer than two weights in the period: no graph.
+export function graphData(
+  rows: Weight[],
+  today: string,
+  period: PeriodKey,
+  goal: number | null,
+): GraphProps | undefined {
+  const { days, name } = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
+  const to = days - 1;
+  const from = addDays(today, -to);
+  const [first, ...rest] = within(rows, from, today).toReversed();
+  const last = rest.at(-1);
+  if (first === undefined || last === undefined) return undefined;
+  const inPeriod = [first, ...rest];
+  const x = (date: string) => daysBetween(from, date);
+  const bodyFat = inPeriod.flatMap((row) =>
+    row.bodyFatPct === null ? [] : [{ x: x(row.date), y: row.bodyFatPct }],
+  );
+  const goalWords = goal === null ? '' : `, goal ${kg(goal)}`;
+  return {
+    label: `Weight over ${name}, ${kg(first.weightKg)} to ${kg(last.weightKg)}${goalWords}`,
+    points: inPeriod.map((row) => ({ x: x(row.date), y: row.weightKg })),
+    secondary: bodyFat.length < 2 ? undefined : bodyFat,
+    to,
+    xLabels: [from, addDays(from, Math.floor(to / 2)), today].map((date) => ({
+      x: x(date),
+      label: shortDate(date),
+    })),
+    goal: goal === null ? undefined : { y: goal, label: `Goal ${goal.toFixed(1)}` },
+  };
+}
+
+// "Goal 60.0 kg by Mar 31, 2027. 4.2 kg to go.", under the graph. Weights and goals
+// are tenths, so a real difference is at least 0.1 and prints as itself.
+export function goalSentence(goal: Goal, latest: Weight): string | undefined {
+  if (goal.goalWeightKg === null) return undefined;
+  const by = goal.goalDeadline === null ? '' : ` by ${longDate(goal.goalDeadline)}`;
+  const rest =
+    latest.weightKg > goal.goalWeightKg
+      ? ` ${kg(latest.weightKg - goal.goalWeightKg)} to go.`
+      : ' Reached.';
+  return `Goal ${kg(goal.goalWeightKg)}${by}.${rest}`;
 }
