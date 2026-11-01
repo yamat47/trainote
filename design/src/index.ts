@@ -16,10 +16,14 @@ export { Text } from './Text.tsx';
 export { Field } from './Field.tsx';
 export { Button } from './Button.tsx';
 export { Actions } from './Actions.tsx';
+export { Segmented } from './Segmented.tsx';
 export { Stat } from './Stat.tsx';
+export { Graph } from './Graph.tsx';
 export { Week } from './Week.tsx';
 export { Icon } from './Icon.tsx';
 
 export type { EntryKind } from './types.ts';
 export type { TabItem } from './TabBar.tsx';
 export type { WeekDay } from './Week.tsx';
+export type { Segment } from './Segmented.tsx';
+export type { GraphPoint, GraphProps } from './Graph.tsx';

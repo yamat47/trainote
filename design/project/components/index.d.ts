@@ -105,17 +105,17 @@ type Named = {
     label?: undefined;
     ariaLabel: string;
 };
+export type FieldKind = 'text' | 'multiline' | 'numeric' | 'date';
 type FieldProps = Named & {
     value: string;
     onChange: (value: string) => void;
     placeholder: string;
-    multiline?: boolean;
-    numeric?: boolean;
+    kind?: FieldKind;
     unit?: string;
     maxLength?: number;
     disabled?: boolean;
 };
-export declare function Field({ value, onChange, placeholder, label, ariaLabel, multiline, numeric, unit, maxLength, disabled, }: FieldProps): import("react").JSX.Element;
+export declare function Field({ value, onChange, placeholder, label, ariaLabel, kind, unit, maxLength, disabled, }: FieldProps): import("react").JSX.Element;
 
 // Button.tsx
 type ButtonProps = {
@@ -134,6 +134,19 @@ type ActionsProps = {
 };
 export declare function Actions({ align, error, children }: ActionsProps): import("react").JSX.Element;
 
+// Segmented.tsx
+export type Segment<Key extends string> = {
+    key: Key;
+    label: string;
+};
+type SegmentedProps<Key extends string> = {
+    items: readonly Segment<Key>[];
+    value: Key;
+    onChange: (key: Key) => void;
+    label: string;
+};
+export declare function Segmented<Key extends string>({ items, value, onChange, label, }: SegmentedProps<Key>): import("react").JSX.Element;
+
 // Stat.tsx
 type StatProps = {
     value: string;
@@ -142,6 +155,27 @@ type StatProps = {
     note?: string | undefined;
 };
 export declare function Stat({ value, unit, label, note }: StatProps): import("react").JSX.Element;
+
+// Graph.tsx
+export type GraphPoint = {
+    x: number;
+    y: number;
+};
+export type GraphProps = {
+    label: string;
+    points: GraphPoint[];
+    secondary?: GraphPoint[] | undefined;
+    to: number;
+    xLabels: {
+        x: number;
+        label: string;
+    }[];
+    goal?: {
+        y: number;
+        label: string;
+    } | undefined;
+};
+export declare function Graph({ label, points, secondary, to, xLabels, goal }: GraphProps): import("react").JSX.Element;
 
 // Week.tsx
 export type WeekDay = {
@@ -178,7 +212,9 @@ declare global {
       Field: typeof Field;
       Button: typeof Button;
       Actions: typeof Actions;
+      Segmented: typeof Segmented;
       Stat: typeof Stat;
+      Graph: typeof Graph;
       Week: typeof Week;
       Icon: typeof Icon;
     };

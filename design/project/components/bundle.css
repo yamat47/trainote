@@ -416,9 +416,99 @@ body {
 .tn-field-numeric .tn-field-input {
   font-variant-numeric: tabular-nums;
 }
+/* WebKit draws a date's value in an inner box that ignores the input's alignment. */
+.tn-field-input[type='date']::-webkit-date-and-time-value {
+  text-align: inherit;
+}
 .tn-field-unit {
   flex: none;
   color: var(--secondary-label);
+}
+
+/* Segmented control: the period of a graph */
+.tn-segmented {
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: var(--space-4) var(--margin) var(--space-3);
+  border: 0;
+  padding: 2px;
+  border-radius: var(--radius-control);
+  background: var(--tertiary-fill);
+  font-family: var(--font-sans);
+}
+.tn-segment {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-segment[aria-pressed='true'] {
+  background: var(--segment-selected);
+  box-shadow: var(--shadow-segment);
+  font-weight: 600;
+}
+.tn-segment:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 1px;
+}
+
+/* Graph: a line over hairline gridlines, the goal dashed in red */
+.tn-graph {
+  margin: 0;
+  padding: var(--space-2) var(--margin) 0;
+}
+.tn-graph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.tn-graph-grid {
+  stroke: var(--separator);
+  stroke-width: var(--stroke-separator);
+}
+.tn-graph-axis {
+  fill: var(--secondary-label);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-graph-goal {
+  stroke: var(--red);
+  stroke-width: var(--stroke-plot);
+  stroke-dasharray: 6 5;
+}
+.tn-graph-goal-label {
+  fill: var(--red);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.tn-graph-line {
+  fill: none;
+  stroke: var(--tint);
+  stroke-width: var(--stroke-plot);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.tn-graph-line-secondary {
+  stroke: var(--secondary-label);
+  stroke-width: 1.5;
+}
+.tn-graph-point {
+  fill: var(--tint);
+  stroke: var(--system-background);
+  stroke-width: 2;
 }
 
 /* Stat: the big number of a screen, its label under it and the week's change beside it */
