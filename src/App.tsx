@@ -1,46 +1,67 @@
-import { hc } from 'hono/client';
-import { Component, Suspense, use, type ReactNode } from 'react';
-import type { AppType } from '../worker/app.ts';
+import { useState } from 'react';
+import { NavBar } from './components/NavBar.tsx';
+import { TabBar, type TabItem } from './components/TabBar.tsx';
+import { Profile } from './tabs/Profile.tsx';
 
-const client = hc<AppType>('/');
+const TAB_KEYS = ['notes', 'weight', 'coach', 'profile'] as const;
+type TabKey = (typeof TAB_KEYS)[number];
 
-// Created once at module scope: a promise made during render never settles for `use`.
-const me = client.api.me.$get().then((response) => {
-  // The 401 comes from the auth middleware, so the route type carries only the 200.
-  const { ok, status }: { ok: boolean; status: number } = response;
-  if (!ok) throw new Error(`GET /api/me answered ${status}`);
-  return response.json();
-});
+const tabs: Record<TabKey, Omit<TabItem<TabKey>, 'key'>> = {
+  notes: { label: 'Notes', icon: 'doc_text', iconActive: 'doc_text_fill' },
+  weight: { label: 'Weight', icon: 'chart_bar', iconActive: 'chart_bar_fill' },
+  coach: {
+    label: 'Coach',
+    icon: 'bubble_left_bubble_right',
+    iconActive: 'bubble_left_bubble_right_fill',
+  },
+  profile: {
+    label: 'Profile',
+    icon: 'person_crop_circle',
+    iconActive: 'person_crop_circle_fill',
+  },
+};
+
+const items: TabItem<TabKey>[] = TAB_KEYS.map((key) => ({ key, ...tabs[key] }));
+
+const isTabKey = (value: string | null): value is TabKey => TAB_KEYS.some((key) => key === value);
+
+const TAB_STORAGE_KEY = 'tab';
+
+// The last tab opened, remembered across launches. Storage can be unavailable (private
+// browsing, a full quota); the app then always opens on Notes.
+function rememberedTab(): TabKey {
+  try {
+    const stored = localStorage.getItem(TAB_STORAGE_KEY);
+    return isTabKey(stored) ? stored : 'notes';
+  } catch {
+    return 'notes';
+  }
+}
+
+function rememberTab(key: TabKey) {
+  try {
+    localStorage.setItem(TAB_STORAGE_KEY, key);
+  } catch {
+    // Nothing to do: the next launch opens on Notes.
+  }
+}
 
 export function App() {
+  const [tab, setTab] = useState<TabKey>(rememberedTab);
+  const select = (key: TabKey) => {
+    setTab(key);
+    rememberTab(key);
+  };
+
   return (
-    <main>
-      <h1>trainote</h1>
-      <LoadFailed>
-        <Suspense fallback={<p>Signing in</p>}>
-          <SignedInAs />
-        </Suspense>
-      </LoadFailed>
-    </main>
+    <div className={tab === 'profile' ? 'app app-grouped' : 'app'}>
+      <main className="app-content">
+        <NavBar title={tabs[tab].label} />
+        {tab === 'profile' ? <Profile /> : null}
+      </main>
+      <div className="app-tabbar">
+        <TabBar items={items} active={tab} onChange={select} />
+      </div>
+    </div>
   );
-}
-
-function SignedInAs() {
-  const user = use(me);
-  return <p>Signed in as {user.email}.</p>;
-}
-
-type LoadFailedProps = { children: ReactNode };
-type LoadFailedState = { failed: boolean };
-
-class LoadFailed extends Component<LoadFailedProps, LoadFailedState> {
-  override state: LoadFailedState = { failed: false };
-
-  static getDerivedStateFromError(): LoadFailedState {
-    return { failed: true };
-  }
-
-  override render() {
-    return this.state.failed ? <p>Could not reach the server.</p> : this.props.children;
-  }
 }

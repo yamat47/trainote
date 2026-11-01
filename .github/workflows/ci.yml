@@ -54,6 +54,8 @@ jobs:
       - run: pnpm test
       - name: The committed migrations match the schema
         run: pnpm db:check
+      - name: The committed tokens.css matches the design tokens
+        run: pnpm tokens:check
 
   build:
     name: build

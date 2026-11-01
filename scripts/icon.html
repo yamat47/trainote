@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- The home-screen icon until a designed one exists: the brand book's placeholder, the
+     name in large-title type on system-background, no mark. Open in Safari on a Mac so the
+     type is SF Pro, then save the three files. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>trainote icon</title>
+  </head>
+  <body>
+    <script>
+      for (const [name, size] of [
+        ['icon-512.png', 512],
+        ['icon-192.png', 192],
+        ['apple-touch-icon.png', 180],
+      ]) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = '#000000';
+        const px = Math.round(size * 0.165);
+        ctx.font = `700 ${px}px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.letterSpacing = `${-0.01 * px}px`;
+        ctx.fillText('trainote', size / 2, size / 2);
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = name;
+        link.textContent = `Save ${name}`;
+        link.style.display = 'block';
+        document.body.append(canvas, link);
+      }
+    </script>
+  </body>
+</html>

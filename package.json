@@ -16,6 +16,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "cf-typegen": "wrangler types",
+    "tokens": "node scripts/tokens.ts",
+    "tokens:check": "pnpm tokens && test -z \"$(git status --porcelain -- src/tokens.css)\"",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit generate && test -z \"$(git status --porcelain -- migrations)\"",
     "db:migrate:local": "wrangler d1 migrations apply trainote --local",
@@ -23,6 +25,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",
+    "framework7-icons": "5.0.5",
     "hono": "^4.13.14",
     "jose": "^6.2.14",
     "react": "^19.3.1",

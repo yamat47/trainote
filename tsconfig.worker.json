@@ -12,5 +12,5 @@
     "outDir": "./node_modules/.tmp/worker"
   },
   "include": ["worker"],
-  "exclude": ["worker/**/*.test.ts"]
+  "exclude": ["worker/**/*.test.ts", "worker/test"]
 }

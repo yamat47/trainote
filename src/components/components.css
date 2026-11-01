@@ -1,0 +1,217 @@
+/* Copied from design/system/components/bundle.css for the components the app has so far;
+   every value is a token from tokens.css. */
+
+/* Components never shrink inside a column flexbox: a list is as tall as its rows. */
+.tn-navbar,
+.tn-tabbar,
+.tn-row,
+.tn-group {
+  flex-shrink: 0;
+}
+
+/* Tab bar */
+.tn-tabbar {
+  display: flex;
+  background: var(--system-background);
+  border-top: var(--stroke-separator) solid var(--separator);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tn-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: var(--tab-bar);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 500;
+  color: var(--secondary-label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-tab .f7-icons {
+  font-size: 25px;
+  line-height: 28px;
+}
+.tn-tab[aria-selected='true'] {
+  color: var(--tint);
+}
+.tn-tab:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: -2px;
+}
+
+/* Navigation bar with a large title */
+.tn-navbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  min-height: calc(var(--nav-bar) + 52px);
+  padding: 0 var(--margin) 6px;
+  background: var(--system-background);
+  font-family: var(--font-sans);
+}
+.tn-navbar-title {
+  margin: 0;
+  font-size: 34px;
+  line-height: 41px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--label);
+}
+.tn-navbar-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Rows */
+.tn-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--row);
+  margin: 0;
+  padding: 0 var(--margin);
+  border: 0;
+  background: none;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 400;
+  color: var(--label);
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-row::after {
+  content: '';
+  position: absolute;
+  left: var(--margin);
+  right: 0;
+  bottom: 0;
+  border-bottom: var(--stroke-separator) solid var(--separator);
+}
+.tn-row-with-mark::after {
+  left: calc(var(--margin) + 22px + var(--space-3));
+}
+.tn-row-mark {
+  flex: none;
+  display: inline-flex;
+}
+.tn-row-text {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  overflow-wrap: anywhere;
+}
+.tn-row-sub {
+  display: block;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--secondary-label);
+  font-variant-numeric: tabular-nums;
+}
+.tn-row-detail {
+  flex: none;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--secondary-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-row-tint .tn-row-text {
+  color: var(--tint);
+}
+.tn-row-chevron {
+  flex: none;
+  margin-right: -4px;
+  color: var(--tertiary-label);
+}
+.tn-row-chevron .f7-icons {
+  font-size: 16px;
+  line-height: 22px;
+}
+.tn-row-muted .tn-row-text {
+  color: var(--secondary-label);
+}
+.tn-row-press {
+  cursor: pointer;
+}
+.tn-row-press:active {
+  background: var(--fill);
+}
+.tn-row-press:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: -2px;
+}
+
+/* Inset grouped list */
+.tn-group {
+  font-family: var(--font-sans);
+}
+.tn-group-header,
+.tn-group-footer {
+  margin: 0;
+  padding: 0 calc(var(--margin) * 2);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--secondary-label);
+}
+.tn-group-header {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-2);
+}
+.tn-group-footer {
+  padding-top: var(--space-2);
+}
+.tn-group-body {
+  margin: 0 var(--margin);
+  border-radius: var(--radius-group);
+  background: var(--grouped-cell);
+  overflow: hidden;
+}
+.tn-group-body > .tn-row:last-child::after {
+  display: none;
+}
+
+/* Text for screen readers only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Mark */
+.tn-mark {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.tn-mark-slip {
+  color: var(--secondary-label);
+}

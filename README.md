@@ -26,13 +26,14 @@ make lint        # oxlint with type-aware rules, then prettier --check
 make typecheck   # tsc -b over the app, the Worker and the config files
 make test        # vitest
 make db-check    # the committed migrations match worker/db/schema.ts
+make tokens-check # the committed src/tokens.css matches design/system/tokens.json
 make dist        # vite build
-make check       # all five, in that order
+make check       # all six, in that order
 ```
 
 Anything else: `make pnpm ARGS="add hono"` and `make wrangler ARGS="d1 info trainote"`.
 
-After changing `worker/db/schema.ts`, run `make db-generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `make typegen` and commit `worker-configuration.d.ts`.
+After changing `worker/db/schema.ts`, run `make db-generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `make typegen` and commit `worker-configuration.d.ts`. After updating the copy of the design tokens in `design/system/tokens.json`, run `make tokens` and commit `src/tokens.css`. The home-screen icons under `public/icons/` are drawn by opening `scripts/icon.html` in Safari on a Mac and saving the three files it offers.
 
 wrangler authenticates with the API token in `.env` (`CLOUDFLARE_API_TOKEN=...`, ignored by git; `docs/requirements.md` says which token). `make whoami` shows the account it reaches, and `make secret NAME=VAPID_PRIVATE_KEY < file` stores a Worker secret.
 

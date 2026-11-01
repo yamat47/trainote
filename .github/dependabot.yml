@@ -11,6 +11,10 @@ updates:
       npm-minor-patch:
         patterns: ['*']
         update-types: [minor, patch]
+    ignore:
+      # The icon font's version is a design decision: design/system/fonts/ carries the
+      # same file, and the two move together by hand.
+      - dependency-name: framework7-icons
     cooldown:
       default-days: 7
 

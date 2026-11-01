@@ -2,6 +2,7 @@
 design
 # Generated.
 worker-configuration.d.ts
+src/tokens.css
 migrations
 pnpm-lock.yaml
 dist
