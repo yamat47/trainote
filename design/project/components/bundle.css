@@ -224,6 +224,14 @@ body {
   color: var(--secondary-label);
   font-variant-numeric: tabular-nums;
 }
+/* A preview is cut after two lines; the thread itself has the rest. */
+.tn-row-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
 .tn-row-error {
   display: block;
   font-size: 12px;
@@ -672,5 +680,118 @@ body {
 }
 .tn-mark-slip {
   color: var(--secondary-label);
+}
+
+/* Bubble: one message of a thread, mine at the right in tint, the coach's at the left */
+.tn-bubble {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--space-1) var(--margin);
+  font-family: var(--font-sans);
+}
+.tn-bubble-me {
+  justify-content: flex-end;
+}
+.tn-bubble-body {
+  box-sizing: border-box;
+  max-width: 78%;
+  margin: 0;
+  padding: var(--space-2) 14px;
+  border-radius: var(--radius-bubble);
+  background: var(--bubble);
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--label);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.tn-bubble-me .tn-bubble-body {
+  background: var(--tint);
+  color: var(--on-tint);
+}
+
+/* Composer: the capsule reply field held at the bottom of a thread, in the tab bar's place */
+.tn-composer {
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: var(--stroke-separator) solid var(--separator);
+  background: var(--system-background);
+  font-family: var(--font-sans);
+}
+.tn-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--margin);
+}
+.tn-composer-field {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: var(--stroke-separator) solid var(--separator);
+  border-radius: var(--radius-capsule);
+  background: var(--system-background);
+}
+.tn-composer-field::after {
+  content: attr(data-value) ' ';
+  visibility: hidden;
+  white-space: pre-wrap;
+}
+.tn-composer-field::after,
+.tn-composer-input {
+  grid-area: 1 / 1 / 2 / 2;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 7px 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--label);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  outline: none;
+  resize: none;
+}
+.tn-composer-input::placeholder {
+  color: var(--tertiary-label);
+  opacity: 1;
+}
+.tn-composer-send {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--tint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-composer-send .f7-icons {
+  font-size: 32px;
+}
+.tn-composer-send:active {
+  opacity: 0.6;
+}
+.tn-composer-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.tn-composer-send:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 2px;
 }
 /*$vite$:1*/

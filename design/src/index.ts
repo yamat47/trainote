@@ -20,6 +20,8 @@ export { Segmented } from './Segmented.tsx';
 export { Stat } from './Stat.tsx';
 export { Graph } from './Graph.tsx';
 export { Week } from './Week.tsx';
+export { Bubble } from './Bubble.tsx';
+export { Composer } from './Composer.tsx';
 export { Icon } from './Icon.tsx';
 
 export type { EntryKind } from './types.ts';

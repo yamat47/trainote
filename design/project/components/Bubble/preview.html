@@ -1,0 +1,21 @@
+<!-- @dsCard group="Chat" subtitle="Me, Coach" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bubble</title>
+<style>#root { display: flex; gap: 16px; align-items: flex-start; } #root > div { width: 390px; flex: none; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h("div", null, h(T.Bubble, { "from": "me" }, "今週の振り返りをして")),
+    h("div", null, h(T.Bubble, { "from": "coach" }, "今週は Win が 9 件、Slip が 2 件でした。運動 3 回、食事の Win が 4 件と、食事が安定しています。\n\n体重は 65.0 kg から 64.2 kg へ。目標の 60.0 kg まであと 4.2 kg です。\n\nSlip は 2 つとも睡眠でした。来週の方針は 1 つだけ。平日は 23 時に寝る日を 3 日つくりましょう。"))
+  )
+);
+</script>
+</body>
+</html>

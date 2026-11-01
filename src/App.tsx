@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { NavBar } from '../design/src/NavBar.tsx';
+import { useCallback, useEffect, useState } from 'react';
 import { Screen } from '../design/src/Screen.tsx';
 import { TabBar, type TabItem } from '../design/src/TabBar.tsx';
+import { coachScreen } from './coach.ts';
+import { Coach } from './tabs/Coach.tsx';
 import { Notes } from './tabs/Notes.tsx';
 import { Profile } from './tabs/Profile.tsx';
-import { WeightTab } from './tabs/Weight.tsx';
+import { ALL_WEIGHTS, WeightTab } from './tabs/Weight.tsx';
 
 const TAB_KEYS = ['notes', 'weight', 'coach', 'profile'] as const;
 type TabKey = (typeof TAB_KEYS)[number];
@@ -49,14 +50,13 @@ function rememberTab(key: TabKey) {
   }
 }
 
-// The screens pushed over a tab, by path. A pushed screen has a path, so a reload and the
-// notification's link (`/coach/weekly-review`, later) land on it; a tab has none.
-const ALL_WEIGHTS = '/weight/all';
-const PUSHED = {
-  [ALL_WEIGHTS]: { tab: 'weight', title: 'All entries' },
-} as const satisfies Record<string, { tab: TabKey; title: string }>;
-
-const isPushedPath = (path: string): path is keyof typeof PUSHED => path in PUSHED;
+// The tab a screen pushed over one belongs to. A pushed screen has a path, so a reload
+// and the notification's link (`/coach/weekly-review`) land on it; a tab has none, and
+// so has a path no tab knows.
+function tabOf(path: string): TabKey | undefined {
+  if (path === ALL_WEIGHTS) return 'weight';
+  return coachScreen(path) === undefined ? undefined : 'coach';
+}
 
 export function App() {
   const [stored, setStored] = useState<TabKey>(rememberedTab);
@@ -68,13 +68,19 @@ export function App() {
     return () => removeEventListener('popstate', onPop);
   }, []);
 
-  const pushed = isPushedPath(path) ? PUSHED[path] : undefined;
-  const tab: TabKey = pushed?.tab ?? stored;
+  const pushed = tabOf(path);
+  const tab: TabKey = pushed ?? stored;
 
   const push = (next: string) => {
     history.pushState({ pushed: true }, '', next);
     setPath(next);
   };
+  // The address of the screen changes under it: the weekly review's becomes its thread's.
+  // Kept the same across renders, since the weekly review's effect depends on it.
+  const replace = useCallback((next: string) => {
+    history.replaceState(history.state, '', next);
+    setPath(next);
+  }, []);
   // Leaving a pushed screen pops what this app pushed; a screen opened by its address
   // has nothing to pop to, so the address is replaced and its tab is kept (a tab tap
   // replaces too, which leaves one spare `/` behind; docs/requirements.md).
@@ -85,8 +91,8 @@ export function App() {
       history.replaceState(null, '', '/');
       setPath('/');
       if (pushed !== undefined) {
-        setStored(pushed.tab);
-        rememberTab(pushed.tab);
+        setStored(pushed);
+        rememberTab(pushed);
       }
     }
   };
@@ -98,21 +104,27 @@ export function App() {
     setStored(key);
     rememberTab(key);
   };
-  const back = leave;
+
+  const coach = tab === 'coach' ? coachScreen(path) : undefined;
 
   return (
     <Screen
       tone={tab === 'profile' ? 'grouped' : 'plain'}
-      tabBar={<TabBar items={items} active={tab} onChange={select} />}
+      // A thread has no tab bar: its composer holds the bottom, as in Messages.
+      tabBar={
+        coach === undefined ? <TabBar items={items} active={tab} onChange={select} /> : undefined
+      }
     >
-      {pushed === undefined ? (
-        <NavBar title={tabs[tab].label} />
-      ) : (
-        <NavBar title={pushed.title} back={{ label: tabs[pushed.tab].label, onClick: back }} />
-      )}
       {tab === 'notes' ? <Notes /> : null}
       {tab === 'weight' ? (
-        <WeightTab allEntries={path === ALL_WEIGHTS} onShowAll={() => push(ALL_WEIGHTS)} />
+        <WeightTab
+          allEntries={path === ALL_WEIGHTS}
+          onShowAll={() => push(ALL_WEIGHTS)}
+          onBack={leave}
+        />
+      ) : null}
+      {tab === 'coach' ? (
+        <Coach screen={coach} onPush={push} onReplace={replace} onBack={leave} />
       ) : null}
       {tab === 'profile' ? <Profile /> : null}
     </Screen>

@@ -8,6 +8,9 @@ type RowProps = {
   kind?: EntryKind;
   tone?: 'tint';
   sub?: ReactNode;
+  // What the row opens, in its own words, cut to two lines: the coach's last line under a
+  // thread's title.
+  preview?: string | null | undefined;
   // The red caption directly under the row's text when what the row did failed.
   error?: string | undefined;
   detail?: ReactNode;
@@ -21,6 +24,7 @@ export function Row({
   kind,
   tone,
   sub,
+  preview,
   error,
   detail,
   accessory,
@@ -45,6 +49,9 @@ export function Row({
       <span className="tn-row-text">
         {children}
         {sub === undefined ? null : <span className="tn-row-sub">{sub}</span>}
+        {preview === undefined || preview === null ? null : (
+          <span className="tn-row-sub tn-row-preview">{preview}</span>
+        )}
         {error === undefined ? null : <output className="tn-row-error">{error}</output>}
       </span>
       {detail === undefined ? null : <span className="tn-row-detail">{detail}</span>}

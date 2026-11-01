@@ -4,6 +4,7 @@ import { Button } from '../../design/src/Button.tsx';
 import { Field } from '../../design/src/Field.tsx';
 import { Graph } from '../../design/src/Graph.tsx';
 import { List } from '../../design/src/List.tsx';
+import { NavBar } from '../../design/src/NavBar.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { Segmented } from '../../design/src/Segmented.tsx';
 import { Stat } from '../../design/src/Stat.tsx';
@@ -37,13 +38,17 @@ const byMonth = (rows: Weight[]) => runs(rows, (a, b) => monthOf(a.date) === mon
 
 const FAILED = 'Could not load your weights.';
 
+// The address of the All entries screen pushed over the tab.
+export const ALL_WEIGHTS = '/weight/all';
+
 type WeightProps = {
   // The tab itself, or the All entries screen pushed over it.
   allEntries: boolean;
   onShowAll: () => void;
+  onBack: () => void;
 };
 
-export function WeightTab({ allEntries, onShowAll }: WeightProps) {
+export function WeightTab({ allEntries, onShowAll, onBack }: WeightProps) {
   const [period, setPeriod] = useState<PeriodKey>('m');
   const { shown, reload, replace } = useLoaded(loadWeights);
   const loaded = shown.status === 'ready' ? shown : undefined;
@@ -60,14 +65,18 @@ export function WeightTab({ allEntries, onShowAll }: WeightProps) {
   });
 
   if (allEntries) {
-    if (shown.status === 'failed') return <Failed message={FAILED} onRetry={reload} />;
-    return shown.status === 'ready' ? (
-      <AllEntries rows={shown.weights} today={shown.today} />
-    ) : null;
+    return (
+      <>
+        <NavBar title="All entries" back={{ label: 'Weight', onClick: onBack }} />
+        {shown.status === 'failed' ? <Failed message={FAILED} onRetry={reload} /> : null}
+        {shown.status === 'ready' ? <AllEntries rows={shown.weights} today={shown.today} /> : null}
+      </>
+    );
   }
 
   return (
     <>
+      <NavBar title="Weight" />
       <Field
         label="Today"
         kind="numeric"

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Chat" subtitle="Empty, Written, Answering, With Error" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Composer</title>
+<style>#root { display: flex; gap: 16px; align-items: flex-start; } #root > div { width: 390px; flex: none; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+function Live(p) { var state = React.useState(p.args[p.value]); var args = Object.assign({}, p.args); args[p.value] = state[0]; args[p.onChange] = state[1]; return h(p.of, args); }
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h("div", null, h(Live, { of: T.Composer, value: "value", onChange: "onChange", args: { "value": "", "onChange": function () {}, "onSend": function () {} } })),
+    h("div", null, h(Live, { of: T.Composer, value: "value", onChange: "onChange", args: { "value": "来週は脚の日を 2 回にしたい。\nメニューを組んで", "onChange": function () {}, "onSend": function () {} } })),
+    h("div", null, h(Live, { of: T.Composer, value: "value", onChange: "onChange", args: { "value": "", "onChange": function () {}, "onSend": function () {}, "disabled": true } })),
+    h("div", null, h(Live, { of: T.Composer, value: "value", onChange: "onChange", args: { "value": "脚の日のメニューを組んで", "onChange": function () {}, "onSend": function () {}, "error": "Could not send. Try again." } }))
+  )
+);
+</script>
+</body>
+</html>
