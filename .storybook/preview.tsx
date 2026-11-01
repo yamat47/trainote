@@ -2,9 +2,7 @@ import type { Preview } from '@storybook/react-vite';
 import 'framework7-icons/css/framework7-icons.css';
 import '../design/src/tokens.css';
 import '../design/src/components.css';
-import { Themed, type Theme } from './Themed.tsx';
-
-const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark';
+import { Framing } from './Framing.tsx';
 
 const preview: Preview = {
   globalTypes: {
@@ -14,13 +12,7 @@ const preview: Preview = {
     },
   },
   initialGlobals: { theme: 'light' },
-  decorators: [
-    (Story, context) => (
-      <Themed theme={isTheme(context.globals['theme']) ? context.globals['theme'] : 'light'}>
-        <Story />
-      </Themed>
-    ),
-  ],
+  decorators: [Framing],
   parameters: {
     layout: 'fullscreen',
     backgrounds: { disable: true },

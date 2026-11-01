@@ -7,14 +7,7 @@ const meta = {
   title: 'Lists/Group',
   component: Group,
   tags: ['autodocs'],
-  parameters: { docs: { description: { component: readme } } },
-  decorators: [
-    (Story) => (
-      <div style={{ background: 'var(--grouped-background)', paddingBottom: 16 }}>
-        <Story />
-      </div>
-    ),
-  ],
+  parameters: { docs: { description: { component: readme } }, card: { background: 'grouped' } },
 } satisfies Meta<typeof Group>;
 
 export default meta;

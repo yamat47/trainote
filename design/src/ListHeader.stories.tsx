@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import readme from './ListHeader.md?raw';
 import { ListHeader } from './ListHeader.tsx';
-import { Row } from './Row.tsx';
 
 const meta = {
   title: 'Lists/ListHeader',
@@ -13,13 +12,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Yesterday: Story = {
-  args: { children: 'Yesterday' },
-  render: (args) => (
-    <>
-      <ListHeader {...args} />
-      <Row kind="win">23 時に寝た</Row>
-      <Row kind="slip">ジムをサボった</Row>
-    </>
-  ),
-};
+// The header above its rows is the List story.
+export const Yesterday: Story = { args: { children: 'Yesterday' } };
+export const ReadAs: Story = { name: 'Read as entries', args: { children: 'Read as 3 entries' } };

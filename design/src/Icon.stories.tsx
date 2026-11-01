@@ -1,19 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import readme from './Icon.md?raw';
 import { Icon } from './Icon.tsx';
 
-// Framework7 Icons, the font the tab bar and the disclosure chevron draw from.
 const meta = {
   title: 'Foundations/Icon',
   component: Icon,
   tags: ['autodocs'],
-  parameters: { layout: 'padded' },
-  decorators: [
-    (Story) => (
-      <span style={{ fontSize: 25, lineHeight: 1 }}>
-        <Story />
-      </span>
-    ),
-  ],
+  parameters: {
+    docs: { description: { component: readme } },
+    layout: 'padded',
+    // The tab bar's size.
+    card: { layout: 'row', fontSize: 25 },
+  },
 } satisfies Meta<typeof Icon>;
 
 export default meta;

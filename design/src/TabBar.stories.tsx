@@ -24,7 +24,10 @@ const meta = {
   title: 'Navigation/TabBar',
   component: TabBar,
   tags: ['autodocs'],
-  parameters: { docs: { description: { component: readme } } },
+  parameters: {
+    docs: { description: { component: readme } },
+    card: { controlled: { value: 'active', onChange: 'onChange' } },
+  },
   args: { items, active: 'notes', onChange: fn() },
 } satisfies Meta<typeof TabBar<(typeof items)[number]['key']>>;
 

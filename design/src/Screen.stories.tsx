@@ -29,7 +29,11 @@ const meta = {
   title: 'Navigation/Screen',
   component: Screen,
   tags: ['autodocs'],
-  parameters: { docs: { description: { component: readme } } },
+  parameters: {
+    docs: { description: { component: readme } },
+    // Two phones side by side on the artifact's card, each the height of a screen.
+    card: { layout: 'phones', height: 640, width: 812 },
+  },
 } satisfies Meta<typeof Screen>;
 
 export default meta;
