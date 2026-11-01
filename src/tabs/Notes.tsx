@@ -1,17 +1,31 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Category } from '../../worker/db/schema.ts';
 import { MAX_NOTE_LENGTH } from '../../worker/note.ts';
+import { addDays } from '../../worker/week.ts';
+import { plural, weekPhrase } from '../../worker/words.ts';
 import { Button } from '../components/Button.tsx';
 import { Field } from '../components/Field.tsx';
 import { ListHeader } from '../components/ListHeader.tsx';
 import { Row } from '../components/Row.tsx';
-import { previewNote, saveEntries, type DraftItem, type Preview } from '../notes.ts';
+import { Week } from '../components/Week.tsx';
+import {
+  loadNotes,
+  previewNote,
+  saveEntries,
+  type DraftItem,
+  type Entry,
+  type Notes as Loaded,
+  type Preview,
+  type Week as Counts,
+} from '../notes.ts';
 
 type Draft =
   | { status: 'writing'; text: string; failed: boolean }
   | { status: 'reading'; text: string }
   | { status: 'previewed'; text: string; preview: Preview; failed: boolean }
   | { status: 'saving'; text: string; preview: Preview };
+
+type Shown = { status: 'loading' } | { status: 'failed' } | ({ status: 'ready' } & Loaded);
 
 const CATEGORY_LABELS: Record<Category, string> = {
   exercise: 'Exercise',
@@ -20,7 +34,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   life: 'Life',
 };
 
-const entries = (n: number) => (n === 1 ? '1 entry' : `${String(n)} entries`);
+const entriesWord = (n: number) => (n === 1 ? '1 entry' : `${String(n)} entries`);
 
 // "ベンチプレス 60 kg × 10 × 3", "ウォーキング 2.5 km": the exercise, then the numbers
 // the note gave, in the order weight, reps, sets, time, distance.
@@ -40,11 +54,107 @@ function describe(item: DraftItem): string {
     .join(' ');
 }
 
-const measures = (items: DraftItem[]) =>
-  items.length === 0 ? undefined : items.map(describe).join('、');
+// Consecutive items that belong together, by the caller's test: the groups of a day's
+// entries, or the sets of one exercise.
+function runs<T>(items: T[], together: (a: T, b: T) => boolean): [T, ...T[]][] {
+  const groups: [T, ...T[]][] = [];
+  for (const item of items) {
+    const last = groups.at(-1);
+    if (last !== undefined && together(last[0], item)) last.push(item);
+    else groups.push([item]);
+  }
+  return groups;
+}
+
+const onlyReps = (item: DraftItem) =>
+  item.reps !== null && item.sets === null && item.durationMin === null && item.distanceKm === null;
+
+// Items that differ only in reps are one set group written out: "60kg で 10、8、6".
+const sameSetGroup = (a: DraftItem, b: DraftItem) =>
+  a.exercise === b.exercise && a.weightKg === b.weightKg && onlyReps(a) && onlyReps(b);
+
+// The items of an entry in one line, "ベンチプレス 60 kg × 10 × 3、スクワット 80 kg × 10、8、6":
+// a run of items that differ only in reps folds back into the phrase the note used.
+function measures(items: DraftItem[]): string | undefined {
+  if (items.length === 0) return undefined;
+  return runs(items, sameSetGroup)
+    .map((group) => {
+      const [lead] = group;
+      if (group.length < 2) return describe(lead);
+      const weight = lead.weightKg === null ? '' : ` ${String(lead.weightKg)} kg`;
+      const reps = group.map((item) => item.reps).filter((n) => n !== null);
+      return `${lead.exercise}${weight} × ${reps.map(String).join('、')}`;
+    })
+    .join('、');
+}
+
+// Days are plain dates, so the formatter reads them in UTC where nothing shifts them.
+const dayFormat = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+const dayWithYearFormat = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+// Today, Yesterday, then "Friday, Oct 23"; the year only once it differs from today's.
+function dayLabel(date: string, today: string): string {
+  if (date === today) return 'Today';
+  if (date === addDays(today, -1)) return 'Yesterday';
+  const instant = new Date(`${date}T00:00:00Z`);
+  return (date.slice(0, 4) === today.slice(0, 4) ? dayFormat : dayWithYearFormat).format(instant);
+}
+
+// The week in the words of the design: the counts, then the run when there is one to
+// speak of. A week without a note gets an invitation rather than "0 wins and 0 slips".
+function weekSentence(week: Counts): string {
+  const wins = week.days.reduce((sum, day) => sum + day.wins, 0);
+  const slips = week.days.reduce((sum, day) => sum + day.slips, 0);
+  const phrase = weekPhrase(wins, slips) ?? 'Nothing this week yet';
+  // The run survives a week boundary as it survives midnight, so Monday morning still
+  // says what the person is keeping up.
+  return week.streak >= 2 ? `${phrase}, ${plural(week.streak, 'day')} in a row.` : `${phrase}.`;
+}
+
+// Entries are newest first already; consecutive rows of one day form a group.
+const byDay = (entries: Entry[]) => runs(entries, (a, b) => a.date === b.date);
+
+// The one way the tab fills itself: on mount, on Try again, and after a save so the
+// new rows show up.
+async function load(show: (shown: Shown) => void) {
+  try {
+    show({ status: 'ready', ...(await loadNotes()) });
+  } catch {
+    show({ status: 'failed' });
+  }
+}
 
 export function Notes() {
   const [draft, setDraft] = useState<Draft>({ status: 'writing', text: '', failed: false });
+  const [shown, setShown] = useState<Shown>({ status: 'loading' });
+  // Responses are not ordered: a slow first load must not replace what a later load
+  // showed, and nothing is shown after the tab is left. Only the latest load writes.
+  const loadId = useRef(0);
+  const reload = useCallback(() => {
+    loadId.current += 1;
+    const id = loadId.current;
+    void load((next) => {
+      if (id === loadId.current) setShown(next);
+    });
+  }, []);
+
+  useEffect(() => {
+    reload();
+    return () => {
+      loadId.current += 1;
+    };
+  }, [reload]);
 
   // Typing after a preview starts over: the preview belonged to the old text.
   const edit = (text: string) => setDraft({ status: 'writing', text, failed: false });
@@ -68,6 +178,7 @@ export function Notes() {
     try {
       await saveEntries(preview.entries);
       setDraft({ status: 'writing', text: '', failed: false });
+      reload();
     } catch {
       setDraft({ status: 'previewed', text, preview, failed: true });
     }
@@ -78,6 +189,7 @@ export function Notes() {
 
   return (
     <>
+      <WeekBlock shown={shown} onRetry={reload} />
       <Field
         value={draft.text}
         onChange={edit}
@@ -108,6 +220,41 @@ export function Notes() {
           onSave={() => void save()}
         />
       )}
+      {shown.status === 'ready'
+        ? byDay(shown.entries).map((group) => (
+            <section key={group[0].date}>
+              <ListHeader>{dayLabel(group[0].date, shown.week.today)}</ListHeader>
+              {group.map((entry) => (
+                <Row key={entry.id} kind={entry.kind} sub={measures(entry.items)}>
+                  {entry.body}
+                </Row>
+              ))}
+            </section>
+          ))
+        : null}
+    </>
+  );
+}
+
+type WeekBlockProps = { shown: Shown; onRetry: () => void };
+
+function WeekBlock({ shown, onRetry }: WeekBlockProps) {
+  if (shown.status === 'failed') {
+    return (
+      <>
+        <Week />
+        <output className="app-error app-week-error">Could not load your notes.</output>
+        <div className="app-note-actions">
+          <Button onClick={onRetry}>Try again</Button>
+        </div>
+      </>
+    );
+  }
+  const week = shown.status === 'ready' ? shown.week : undefined;
+  return (
+    <>
+      <Week week={week} />
+      <p className="app-week-sentence">{week === undefined ? '' : weekSentence(week)}</p>
     </>
   );
 }
@@ -124,7 +271,7 @@ function PreviewBlock({ preview, saving, failed, onEdit, onSave }: PreviewBlockP
   const count = preview.entries.length;
   return (
     <>
-      <ListHeader>{count === 0 ? 'Nothing to save' : `Read as ${entries(count)}`}</ListHeader>
+      <ListHeader>{count === 0 ? 'Nothing to save' : `Read as ${entriesWord(count)}`}</ListHeader>
       {count === 0 ? null : (
         <div className="app-preview">
           {preview.entries.map((entry, i) => (
@@ -148,7 +295,7 @@ function PreviewBlock({ preview, saving, failed, onEdit, onSave }: PreviewBlockP
         </Button>
         {count === 0 ? null : (
           <Button variant="prominent" disabled={saving} onClick={onSave}>
-            Save {entries(count)}
+            Save {entriesWord(count)}
           </Button>
         )}
       </div>

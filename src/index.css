@@ -40,9 +40,23 @@ body {
 
 /* The error line directly under the row it concerns: caption-1 in red. */
 .app-error {
+  display: block;
   font-size: 12px;
   line-height: 16px;
   color: var(--red);
+}
+
+/* Notes: the sentence under the week strip, and the line that replaces it when the
+   notes could not be loaded. */
+.app-week-sentence {
+  margin: 0;
+  padding: 6px var(--margin) 10px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--secondary-label);
+}
+.app-week-error {
+  padding: 6px var(--margin) 0;
 }
 
 /* Notes: the buttons under the entry field, right-aligned like a navigation bar action. */
@@ -53,7 +67,6 @@ body {
   padding: 0 var(--space-2);
 }
 .app-note-error {
-  display: block;
   margin: 0;
   align-self: stretch;
   padding: var(--space-1) var(--space-2) 0;
