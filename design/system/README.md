@@ -58,17 +58,22 @@ Apple's system colors, in Apple's values, with a light and a dark theme. Dark fo
 
 ## Components
 
-`window.Trainote`, React 18. Screens are composed from these; what is not here yet (the weight graph, filter pills) is drawn per screen until it settles, then added. The structured preview is settled: a `ListHeader` reading "Read as 3 entries", the rows on a `secondary-background` block with `radius-group`, Claude's one sentence in `subheadline` on `secondary-label`, then Edit text and Save 3 entries.
+`window.Trainote`, React 18. Screens are composed from these; what is not here yet (the weight graph, the period control, the big number, the chat bubble, filter pills) is drawn per screen until it settles, then added. The structured preview is settled: an `Inset` headed "Read as 3 entries", the rows on a `secondary-background` block with `radius-group`, Claude's one sentence as `Text` in `subheadline` on `secondary-label`, then `Actions` with Edit text and Save 3 entries.
 
+- `Screen`: the shell of a tab: the safe area, the content and the `TabBar` held at the bottom. `tone` is `plain` or `grouped`.
 - `NavBar`: the large title and an optional trailing action.
 - `TabBar`: the four icon tabs. Pass `items` with `icon` and `iconActive`, `active` and `onChange`.
-- `Row`: one row of a list. Pass `kind` for an entry, the words as children, a number or date as `detail` (it truncates at 55% of the row); `accessory: "disclosure"` adds the chevron; `tone: "tint"` makes the row an action in `tint`, like Add Account in Settings.
 - `ListHeader`: the `footnote` line above a run of rows: Today, Yesterday, Friday, Oct 23, October, Read as 3 entries.
-- `Week`: the seven days of this week, Monday first, each with its count of wins above its count of slips; today's label is `tint`. The memorable thing on Notes: a week of effort at a glance, in numbers.
+- `List`: a run of plain rows under a `ListHeader`: a day's entries on Notes.
+- `Inset`: the one raised block on a plain page: rows on `secondary-background` under an optional header. The structured preview.
 - `Group`: an inset grouped section of rows with an optional `header` and `footer`, for Profile.
-- `Field`: an entry row. `multiline` for the Notes entry; `label`, `numeric` and `unit` for weight and profile values.
+- `Row`: one row of a list. Pass `kind` for an entry, the words as children, the numbers as `sub`, a number or date as `detail`; `accessory: "disclosure"` adds the chevron; `tone: "tint"` makes the row an action in `tint`, like Add Account in Settings; `error` puts the red `caption-1` line directly under it.
 - `Mark`: the + or − of an entry. Pass `kind`.
-- `Stat`: a big number with its unit and label: today's weight at the top of Weight, with the day under it.
-- `Button`: `prominent` for Save, `plain` for Edit and Cancel, `tinted` for a secondary call to action, `destructive` for Delete.
-- `Segmented`: the period control on Weight (W, M, 6M, Y).
-- `Bubble`: one chat message. Pass `from`: `me` or `coach`.
+- `Text`: one line at the margin in an iOS text style (`footnote`, `subheadline`, `caption-1`), `secondary` or, as an `<output>`, `error`.
+- `Field`: the multiline entry row of Notes. The labelled single-line form with a unit arrives with Weight.
+- `Button`: `prominent` for Save, `plain` for Edit and Cancel. `tinted` and `destructive` arrive with the screens that need them.
+- `Actions`: the row of buttons under a field or a preview, `fill` or `end`, with the place for its error line.
+- `Week`: the seven days of this week, Monday first, each with its count of wins above its count of slips; today's label is `tint`. The memorable thing on Notes: a week of effort at a glance, in numbers.
+- `Icon`: a Framework7 Icons glyph by name, for the tab bar and the chevron.
+
+Stat (today's weight), Segmented (the period control) and Bubble (a chat message) were drawn with the first screens and arrive with the Weight and Coach tabs.
