@@ -65,6 +65,14 @@ type Result = keyof Delivery;
 // that is off all night does not get Sunday's reminder on Monday.
 const TTL_SECONDS = 6 * 60 * 60;
 
+// The Topic lets a newer reminder replace one still queued at the push service. RFC 8030
+// §5.4 and Apple's own page allow 32 characters of the URL-safe Base64 alphabet, but
+// web.push.apple.com answered 400 BadWebPushTopic to `weekly-review` and `weekly_review`
+// and accepted letters and digits (checked 2026-11-01 against a real subscription), so
+// the value stays inside what every service has taken.
+// https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers
+export const TOPIC = 'weeklyreview';
+
 async function deliver(
   db: Database,
   vapid: Vapid,
@@ -76,9 +84,7 @@ async function deliver(
     const payload = await buildPushPayload(
       {
         data: weeklyReminder(counts.win, counts.slip),
-        // No Topic header: Apple's push service answers 400 BadWebPushTopic to any
-        // value. The tag in the payload already collapses duplicates on the device.
-        options: { ttl: TTL_SECONDS, urgency: 'normal' },
+        options: { ttl: TTL_SECONDS, urgency: 'normal', topic: TOPIC },
       },
       {
         endpoint: subscription.endpoint,

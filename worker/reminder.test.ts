@@ -4,6 +4,7 @@ import { database, type Database } from './db/index.ts';
 import { entries, pushSubscriptions } from './db/schema.ts';
 import {
   sendWeeklyReminder,
+  TOPIC,
   weekCounts,
   weeklyReminder,
   type Send,
@@ -74,6 +75,12 @@ const answering =
     calls.push({ endpoint, init });
     return Promise.resolve(new Response(null, { status: status(endpoint) }));
   };
+
+describe('TOPIC', () => {
+  it('stays within the letters and digits every push service has accepted', () => {
+    expect(TOPIC).toMatch(/^[A-Za-z0-9]{1,32}$/);
+  });
+});
 
 describe('weeklyReminder', () => {
   it('counts the week in the words of the notification screen', () => {
@@ -176,8 +183,7 @@ describe('sendWeeklyReminder', () => {
     expect(headers.get('authorization')).toMatch(/^vapid t=.+, k=.+$/);
     expect(headers.get('content-encoding')).toBe('aes128gcm');
     expect(headers.get('ttl')).toBe(String(6 * 60 * 60));
-    // Apple rejects any Topic header, so none is sent.
-    expect(headers.has('topic')).toBe(false);
+    expect(headers.get('topic')).toBe(TOPIC);
     expect(calls[0]?.init.body).toBeInstanceOf(Uint8Array);
   });
 
