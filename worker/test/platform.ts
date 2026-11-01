@@ -4,7 +4,9 @@ import { hc } from 'hono/client';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import { createApp, type AppType } from '../app.ts';
 import type { IdentityResolver } from '../auth/identity.ts';
+import { database } from '../db/index.ts';
 import type { Structure } from '../structure.ts';
+import { findOrCreateUser } from '../users.ts';
 
 const root = path.resolve(import.meta.dirname, '..', '..');
 
@@ -37,6 +39,10 @@ const identityOf =
 
 // No test reaches Claude; a route that needs the structurer gets one from its test.
 const noStructure: Structure = () => Promise.reject(new Error('no structurer in this test'));
+
+// The id of the user a test speaks as, created on first use.
+export const userIdOf = async (env: Env, email: string) =>
+  (await findOrCreateUser(database(env.DB), email)).id;
 
 // The app with Access replaced by a fixed identity (or none).
 export const appAs = (email: string | undefined, structure: Structure = noStructure) =>
