@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from './app.ts';
@@ -6,7 +6,7 @@ import { jsonBody } from './body.ts';
 import { database, type Database } from './db/index.ts';
 import { NOW, weights } from './db/schema.ts';
 import { MAX_BODY_FAT_PCT, MAX_WEIGHT_KG } from './measurement.ts';
-import { tokyoDate } from './week.ts';
+import { tokyoDate, type DayRange } from './week.ts';
 
 // A weight in kg as a scale shows it; the goal is one too.
 export const WeightKg = z.number().gt(0).lt(MAX_WEIGHT_KG).multipleOf(0.1);
@@ -70,4 +70,13 @@ export async function listWeights(db: Database, userId: number, now: Date): Prom
     .where(eq(weights.userId, userId))
     .orderBy(desc(weights.date));
   return { today: tokyoDate(now), weights: rows };
+}
+
+// The weights of the days in the range, oldest first: what the coach reads.
+export function weightsBetween(db: Database, userId: number, { from, to }: DayRange) {
+  return db
+    .select(shown)
+    .from(weights)
+    .where(and(eq(weights.userId, userId), gte(weights.date, from), lte(weights.date, to)))
+    .orderBy(weights.date);
 }

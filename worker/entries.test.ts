@@ -128,11 +128,9 @@ describe('/api/entries', () => {
         return Promise.resolve(PREVIEW);
       };
 
-      const response = await clientAs(
-        proxy.env,
-        'owner@example.com',
+      const response = await clientAs(proxy.env, 'owner@example.com', {
         structure,
-      ).api.entries.preview.$post({ json: { text: NOTE } });
+      }).api.entries.preview.$post({ json: { text: NOTE } });
 
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual(PREVIEW);
@@ -146,11 +144,9 @@ describe('/api/entries', () => {
         return Promise.resolve(PREVIEW);
       };
 
-      const response = await clientAs(
-        proxy.env,
-        'owner@example.com',
+      const response = await clientAs(proxy.env, 'owner@example.com', {
         structure,
-      ).api.entries.preview.$post({ json: { text: '   \n' } });
+      }).api.entries.preview.$post({ json: { text: '   \n' } });
 
       expect(response.status).toBe(400);
       expect(response.headers.get('content-type')).toBe('application/problem+json');
@@ -158,11 +154,9 @@ describe('/api/entries', () => {
     });
 
     it('answers 502 when the note could not be structured', async () => {
-      const response = await clientAs(
-        proxy.env,
-        'owner@example.com',
-        refusing,
-      ).api.entries.preview.$post({ json: { text: 'a note' } });
+      const response = await clientAs(proxy.env, 'owner@example.com', {
+        structure: refusing,
+      }).api.entries.preview.$post({ json: { text: 'a note' } });
 
       expect(response.status).toBe(502);
       expect(response.headers.get('content-type')).toBe('application/problem+json');

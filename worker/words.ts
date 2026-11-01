@@ -8,3 +8,18 @@ export const weekPhrase = (wins: number, slips: number): string | undefined =>
   wins === 0 && slips === 0
     ? undefined
     : `${plural(wins, 'win')} and ${plural(slips, 'slip')} this week`;
+
+const graphemes = new Intl.Segmenter();
+
+// The first non-empty line of a text, cut to `length` characters with an ellipsis: a
+// thread's title and the preview under it. The characters are graphemes, so a cut never
+// splits an emoji or a combining mark.
+export function firstLine(text: string, length: number): string {
+  const line =
+    text
+      .split('\n')
+      .map((part) => part.trim())
+      .find((part) => part !== '') ?? '';
+  const characters = Array.from(graphemes.segment(line), (part) => part.segment);
+  return characters.length > length ? `${characters.slice(0, length - 1).join('')}…` : line;
+}
