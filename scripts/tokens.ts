@@ -1,7 +1,7 @@
-// Writes src/tokens.css from design/system/tokens.json, the copy of the design system
-// that the implementation reads. Dark values follow the OS through prefers-color-scheme,
-// since the app has no theme toggle. The icon font is not declared here: it comes from
-// the framework7-icons package.
+// Writes design/src/tokens.css from design/system/tokens.json. Dark values apply under
+// data-theme="dark" (Storybook's toggle, and what the artifact's page emits) and, when no
+// theme is set, through prefers-color-scheme, since the app follows the OS. The icon font
+// is not declared here: it comes from the framework7-icons package.
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import source from '../design/system/tokens.json' with { type: 'json' };
@@ -25,7 +25,7 @@ type Tokens = {
   shadow: { tokens: Token[] };
 };
 
-const target = path.resolve(import.meta.dirname, '..', 'src', 'tokens.css');
+const target = path.resolve(import.meta.dirname, '..', 'design', 'src', 'tokens.css');
 
 const themed = (value: Value, theme: Theme) => (typeof value === 'string' ? value : value[theme]);
 
@@ -59,12 +59,16 @@ function render(tokens: Tokens): string {
     .join('\n');
   return [
     '/* Generated from design/system/tokens.json by scripts/tokens.ts. Edit the design, then run `pnpm tokens`. */',
-    ':root {',
+    ':root,',
+    '[data-theme="light"] {',
     declare('light', () => true),
     families,
     '}',
+    '[data-theme="dark"] {',
+    declare('dark', dark),
+    '}',
     '@media (prefers-color-scheme: dark) {',
-    '  :root {',
+    '  :root:not([data-theme="light"]) {',
     declare('dark', dark).replace(/^/gm, '  '),
     '  }',
     '}',

@@ -2,8 +2,8 @@ import 'framework7-icons/css/framework7-icons.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
-import './tokens.css';
-import './components/components.css';
+import '../design/src/tokens.css';
+import '../design/src/components.css';
 import './index.css';
 
 const root = document.getElementById('root');

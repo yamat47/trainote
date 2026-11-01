@@ -346,7 +346,7 @@
 }
 
 /* Text for screen readers only */
-.sr-only {
+.tn-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;

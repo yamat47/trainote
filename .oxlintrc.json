@@ -9,7 +9,15 @@
     "suspicious": "error",
     "perf": "error"
   },
-  "ignorePatterns": ["dist", ".wrangler", "design", "migrations", "worker-configuration.d.ts"],
+  "ignorePatterns": [
+    "dist",
+    "dist-storybook",
+    ".wrangler",
+    "design/system",
+    "design/screens",
+    "migrations",
+    "worker-configuration.d.ts"
+  ],
   "rules": {
     // The automatic JSX runtime needs no React in scope.
     "react/react-in-jsx-scope": "off",

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { NavBar } from './components/NavBar.tsx';
-import { TabBar, type TabItem } from './components/TabBar.tsx';
+import { NavBar } from '../design/src/NavBar.tsx';
+import { TabBar, type TabItem } from '../design/src/TabBar.tsx';
 import { Notes } from './tabs/Notes.tsx';
 import { Profile } from './tabs/Profile.tsx';
 

@@ -1,30 +1,43 @@
+# The one toolchain image, run two ways: `app` is the dev server, `storybook` the design
+# system's Storybook. Both share the source and the node_modules volume.
+x-toolchain: &toolchain
+  build: .
+  init: true
+  volumes:
+    - .:/workspace
+    # Native binaries (workerd, oxlint, tsgolint, rolldown) are built per platform,
+    # so the container's node_modules never shares a directory with the host's.
+    # pnpm keeps its store inside it too, since hard links need one filesystem.
+    - node_modules:/workspace/node_modules
+  env_file:
+    # CLOUDFLARE_API_TOKEN for wrangler. Missing until the owner writes it, and the
+    # app runs without it.
+    - path: .env
+      required: false
+  environment:
+    CLOUDFLARE_ACCOUNT_ID: 24a305c930f17853bb811c18bee6074a
+    # wrangler would otherwise read .env as Worker variables, which would put the
+    # API token into the Worker's env in local dev.
+    CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: 'false'
+    WRANGLER_SEND_METRICS: 'false'
+    # colima's virtiofs mount delivers no inotify events to the container, so Vite
+    # polls for changes. `colima start --mount-inotify` would make this unnecessary.
+    CHOKIDAR_USEPOLLING: '1'
+
 services:
   app:
-    build: .
-    init: true
+    <<: *toolchain
     ports:
       - '127.0.0.1:5173:5173'
-    volumes:
-      - .:/workspace
-      # Native binaries (workerd, oxlint, tsgolint, rolldown) are built per platform,
-      # so the container's node_modules never shares a directory with the host's.
-      # pnpm keeps its store inside it too, since hard links need one filesystem.
-      - node_modules:/workspace/node_modules
-    env_file:
-      # CLOUDFLARE_API_TOKEN for wrangler. Missing until the owner writes it, and the
-      # app runs without it.
-      - path: .env
-        required: false
-    environment:
-      CLOUDFLARE_ACCOUNT_ID: 24a305c930f17853bb811c18bee6074a
-      # wrangler would otherwise read .env as Worker variables, which would put the
-      # API token into the Worker's env in local dev.
-      CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: 'false'
-      WRANGLER_SEND_METRICS: 'false'
-      # colima's virtiofs mount delivers no inotify events to the container, so Vite
-      # polls for changes. `colima start --mount-inotify` would make this unnecessary.
-      CHOKIDAR_USEPOLLING: '1'
     command: pnpm dev --host 0.0.0.0
+
+  # Behind a profile, so `make dev` does not start it; `make storybook` names it.
+  storybook:
+    <<: *toolchain
+    profiles: [storybook]
+    ports:
+      - '127.0.0.1:6006:6006'
+    command: pnpm storybook
 
 volumes:
   node_modules:

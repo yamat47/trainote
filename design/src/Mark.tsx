@@ -1,4 +1,4 @@
-import type { EntryKind } from '../../worker/db/schema.ts';
+import type { EntryKind } from './types.ts';
 
 type MarkProps = { kind: EntryKind };
 
@@ -11,7 +11,7 @@ export function Mark({ kind }: MarkProps) {
       <span className={slip ? 'tn-mark tn-mark-slip' : 'tn-mark'} aria-hidden="true">
         {slip ? '\u2212' : '+'}
       </span>
-      <span className="sr-only">{slip ? 'Slip' : 'Win'}</span>
+      <span className="tn-sr-only">{slip ? 'Slip' : 'Win'}</span>
     </>
   );
 }

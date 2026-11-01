@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Icon } from './Icon.tsx';
-import type { EntryKind } from '../../worker/db/schema.ts';
+import type { EntryKind } from './types.ts';
 import { Mark } from './Mark.tsx';
 
 type RowProps = {
