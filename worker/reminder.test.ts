@@ -168,8 +168,9 @@ describe('sendWeeklyReminder', () => {
       now,
     });
 
-    expect(delivery).toEqual({ sent: 2, removed: 0, failed: 0 });
-    expect(calls.map((call) => call.endpoint).toSorted()).toEqual([a, b]);
+    // Other tests store rows in the same database; this one only owns a and b.
+    expect(calls.map((call) => call.endpoint)).toEqual(expect.arrayContaining([a, b]));
+    expect(delivery).toEqual({ sent: calls.length, removed: 0, failed: 0 });
     const headers = new Headers(calls[0]?.init.headers);
     expect(calls[0]?.init.method).toMatch(/^post$/i);
     expect(headers.get('authorization')).toMatch(/^vapid t=.+, k=.+$/);
@@ -179,23 +180,31 @@ describe('sendWeeklyReminder', () => {
     expect(calls[0]?.init.body).toBeInstanceOf(Uint8Array);
   });
 
-  it('forgets a subscription the push service reports gone and keeps the others', async () => {
-    const gone = 'https://push.example.com/send/gone';
-    const kept = 'https://push.example.com/send/kept';
-    await subscribe('gone-one@example.com', gone);
-    await subscribe('gone-two@example.com', kept);
-    const calls: { endpoint: string; init: RequestInit }[] = [];
+  it.each([404, 410])(
+    'forgets a subscription the push service answers %i for and keeps the others',
+    async (status) => {
+      const gone = `https://push.example.com/send/gone-${String(status)}`;
+      const kept = `https://push.example.com/send/kept-${String(status)}`;
+      const me = await subscribe(`gone-${String(status)}@example.com`, gone);
+      await db.insert(pushSubscriptions).values({
+        userId: me.id,
+        endpoint: kept,
+        ...(await browserKeys()),
+      });
+      const calls: { endpoint: string; init: RequestInit }[] = [];
 
-    const delivery = await sendWeeklyReminder(db, vapid, {
-      send: answering((endpoint) => (endpoint === gone ? 410 : 201))(calls),
-      now,
-    });
+      const delivery = await sendWeeklyReminder(db, vapid, {
+        send: answering((endpoint) => (endpoint === gone ? status : 201))(calls),
+        now,
+        userId: me.id,
+      });
 
-    expect(delivery.removed).toBe(1);
-    const stored = await endpointsStored();
-    expect(stored).not.toContain(gone);
-    expect(stored).toContain(kept);
-  });
+      expect(delivery).toEqual({ sent: 1, removed: 1, failed: 0 });
+      const stored = await endpointsStored();
+      expect(stored).not.toContain(gone);
+      expect(stored).toContain(kept);
+    },
+  );
 
   it('counts a push service error as a failure without dropping the subscription', async () => {
     const flaky = 'https://push.example.com/send/flaky';
