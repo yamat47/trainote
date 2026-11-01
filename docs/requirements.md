@@ -39,9 +39,14 @@
 - 週に 1 回、「Weekly review」を定型の相談として用意する
   - Coach タブのスレッド一覧に入口を置く。押すと新しいスレッドができ、定型の最初の発言 (今週の行動と体重を読んで、できたこと、つまずき、来週の方針を 1 つにまとめて) が送られ、Claude の返答がそのまま流れる
   - 毎週日曜 20:00 JST にプッシュ通知 (「Time for your weekly review?」) で知らせる。通知を押すと上と同じことが起きる
-    - Web Push を使う。Worker の Cron Trigger (`triggers.crons` に UTC で `0 11 * * SUN`。Cloudflare の cron は曜日を 1 から 7 で数えるので 0 は通らない) が scheduled ハンドラで送る。購読は `push_subscriptions` (endpoint、p256dh、auth) に保存する。VAPID の秘密鍵は Worker の secret、公開鍵は環境変数
-    - `web-push` パッケージは Node の crypto に依存して Worker で動かないので、WebCrypto で動くライブラリを使う
+    - Web Push を使う。Worker の Cron Trigger (`triggers.crons` に UTC で `0 11 * * SUN`。Cloudflare の cron は曜日を 1 から 7 で数えるので 0 は通らない) が scheduled ハンドラで送る。購読は `push_subscriptions` (endpoint、p256dh、auth) に保存する。VAPID の秘密鍵は Worker の secret `VAPID_PRIVATE_KEY` (ローカルは `.dev.vars`)、公開鍵と subject は `wrangler.jsonc` の vars。鍵対は 1 組で、開発と本番で同じ
+      - 購読は endpoint を識別子にして `PUT` と `DELETE /api/push/subscriptions/:endpoint` で出し入れする。公開鍵は `GET /api/push/vapid-public-key`
+      - 通知の本文は今週 (月曜から当日まで、Asia/Tokyo) の Win と Slip の数で「9 wins and 2 slips this week. Open to look back with your coach.」。1 件は単数形、片方が 0 でも「1 win and 0 slips」のまま、両方 0 なら後半の 1 文だけ。TTL は 6 時間。push サービスが 404 か 410 を返した購読は消す
+      - `POST /api/push/test` が呼んだ人の購読にその場で同じ通知を送る。Profile の Notifications に「Send a reminder now」の行として置く。日曜を待たずに届くことを確かめるためで、通知の種類は増やさない
+    - `web-push` パッケージは Node の crypto に依存して Worker で動かないので、WebCrypto で動く `@block65/webcrypto-web-push` を使う (aes128gcm と RFC 8292 の vapid。Apple が受け付ける組み合わせ)
     - iOS を想定する。アプリを PWA にし (manifest、アイコン、service worker)、ホーム画面に追加して使う。iOS ではホーム画面に追加したときだけ通知が届く。service worker は push だけを扱い、fetch には触らない。Access のログインリダイレクトを邪魔しないため
+      - manifest は Access の Cookie つきでしか取れないので `crossorigin="use-credentials"` で参照する。通知を有効にする操作は Profile の Notifications グループの tint の行 (「Turn on the Sunday reminder」)。ホーム画面に追加する前の Safari では Push API が無いので、行の代わりに footer で追加を促す
+      - ホーム画面のアイコンはデザインの placeholder (白地に名前、マークなし) を `scripts/icon.html` で描いた PNG。設計したアイコンができたら差し替える
     - 通知はこの用途だけ。他の通知は v1 では送らない
 
 ### Claude との相談
@@ -140,7 +145,7 @@
 2. (済) `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev`、`triggers.crons` を書く
 3. (済) Drizzle のスキーマと最初のマイグレーション
 4. (済) CI (lint、typecheck、test、main で migrate と deploy)。infra-github に `required_checks` を足す作業は infra-github #34
-5. PWA (manifest、アイコン、service worker) と Web Push の購読と送信
+5. (済) PWA (manifest、アイコン、service worker) と Web Push の購読と送信
 
 ## 未決
 
@@ -154,4 +159,4 @@
 - スレッドのタイトルの付け方。スレッドの削除
 - 初回でデータがないときの表示。Claude API 失敗時とオフライン時の表示
 - 初回に開くタブ
-- 週の文と通知の本文の、0 件や 1 件のときの言い回し (「1 win and 0 slips this week」でよいか)
+- 週の文 (Notes の先頭) の 0 件や 1 件のときの言い回し。通知の本文は上で決めたので、揃えるなら同じ形

@@ -37,6 +37,8 @@ After changing `worker/db/schema.ts`, run `make db-generate` and commit the new 
 
 wrangler authenticates with the API token in `.env` (`CLOUDFLARE_API_TOKEN=...`, ignored by git; `docs/requirements.md` says which token). `make whoami` shows the account it reaches, and `make secret NAME=VAPID_PRIVATE_KEY < file` stores a Worker secret.
 
+The Sunday reminder runs from a cron trigger; `make scheduled` fires it against the dev server, and the Profile tab has a row that sends it to the signed-in owner's own subscriptions at once.
+
 ## Deploying
 
 A push to `main` runs the checks, applies the migrations to the remote D1 and deploys the Worker from the `deploy` environment. Nothing is deployed from a pull request.

@@ -54,6 +54,14 @@ export async function turnOn(): Promise<ReminderState> {
   return 'on';
 }
 
+// The reminder, now, to this browser and the owner's other devices.
+export async function sendTestReminder(): Promise<void> {
+  const response = await client.api.push.test.$post();
+  if (!response.ok) throw new Error(`POST /api/push/test answered ${String(response.status)}`);
+  const { sent } = await response.json();
+  if (sent === 0) throw new Error('the push service took none of the subscriptions');
+}
+
 export async function turnOff(): Promise<ReminderState> {
   const current = await subscription();
   if (current === null) return 'off';

@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Group } from '../components/Group.tsx';
 import { Row } from '../components/Row.tsx';
-import { reminderState, turnOff, turnOn, type ReminderState } from '../push.ts';
+import { reminderState, sendTestReminder, turnOff, turnOn, type ReminderState } from '../push.ts';
 
 type State = ReminderState | 'loading';
-type Reminder = { state: State; busy: boolean; failed: boolean };
+type Failure = 'change' | 'test';
+type Reminder = { state: State; busy: boolean; failed: Failure | undefined };
 type Change = () => Promise<ReminderState>;
 
 const footers: Record<State, string> = {
   loading: 'A reminder at 20:00 on Sundays to look back at the week with your coach.',
   off: 'A reminder at 20:00 on Sundays to look back at the week with your coach.',
-  on: 'The Sunday reminder is on.',
+  on: 'The Sunday reminder arrives at 20:00.',
   unsupported: 'Add trainote to your Home Screen to get the Sunday reminder.',
   denied: 'Notifications for trainote are turned off in Settings.',
 };
@@ -19,14 +20,14 @@ export function Profile() {
   const [reminder, setReminder] = useState<Reminder>({
     state: 'loading',
     busy: false,
-    failed: false,
+    failed: undefined,
   });
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       const state = await reminderState().catch((): ReminderState => 'unsupported');
-      if (!cancelled) setReminder({ state, busy: false, failed: false });
+      if (!cancelled) setReminder({ state, busy: false, failed: undefined });
     };
     void load();
     return () => {
@@ -36,12 +37,23 @@ export function Profile() {
 
   const change = async (action: Change) => {
     if (reminder.busy) return;
-    setReminder((current) => ({ ...current, busy: true, failed: false }));
+    setReminder((current) => ({ ...current, busy: true, failed: undefined }));
     try {
       const state = await action();
-      setReminder({ state, busy: false, failed: false });
+      setReminder({ state, busy: false, failed: undefined });
     } catch {
-      setReminder((current) => ({ ...current, busy: false, failed: true }));
+      setReminder((current) => ({ ...current, busy: false, failed: 'change' }));
+    }
+  };
+
+  const test = async () => {
+    if (reminder.busy) return;
+    setReminder((current) => ({ ...current, busy: true, failed: undefined }));
+    try {
+      await sendTestReminder();
+      setReminder((current) => ({ ...current, busy: false }));
+    } catch {
+      setReminder((current) => ({ ...current, busy: false, failed: 'test' }));
     }
   };
 
@@ -49,20 +61,30 @@ export function Profile() {
     <Group header="Notifications" footer={footers[reminder.state]}>
       <ReminderRow
         state={reminder.state}
-        failed={reminder.failed}
+        failed={reminder.failed === 'change'}
         onChange={(action) => void change(action)}
       />
+      {reminder.state === 'on' ? (
+        <Row
+          tone="tint"
+          sub={failure(reminder.failed === 'test', 'Could not send a reminder. Try again.')}
+          onClick={() => void test()}
+        >
+          Send a reminder now
+        </Row>
+      ) : null}
     </Group>
   );
 }
 
+// The error line sits directly under the row it concerns, as its second line.
+const failure = (failed: boolean, words: string) =>
+  failed ? <span className="app-error">{words}</span> : undefined;
+
 type ReminderRowProps = { state: State; failed: boolean; onChange: (action: Change) => void };
 
 function ReminderRow({ state, failed, onChange }: ReminderRowProps) {
-  // The error line sits directly under the row it concerns, as its second line.
-  const error = failed ? (
-    <span className="app-error">Could not change the reminder. Try again.</span>
-  ) : undefined;
+  const error = failure(failed, 'Could not change the reminder. Try again.');
   if (state === 'off') {
     return (
       <Row tone="tint" sub={error} onClick={() => onChange(turnOn)}>

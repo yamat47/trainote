@@ -5,6 +5,7 @@ import type { AppEnv } from './app.ts';
 import { database } from './db/index.ts';
 import { pushSubscriptions } from './db/schema.ts';
 import { problem } from './problem.ts';
+import { sendWeeklyReminder, vapidOf } from './reminder.ts';
 
 type SubscriptionKeys = { p256dh: string; auth: string };
 
@@ -36,32 +37,42 @@ const endpointParam = validator('param', (value, c) => {
 // The subscription's endpoint is its identity, so the client addresses it in the path,
 // URL-encoded. Storing it again with new keys is how a browser rotates them.
 export function pushRoutes() {
-  return new Hono<AppEnv>()
-    .get('/vapid-public-key', (c) => {
-      // Widened from the literal that `wrangler types` writes for the var.
-      const vapidPublicKey: string = c.env.VAPID_PUBLIC_KEY;
-      return c.json({ vapidPublicKey });
-    })
-    .put('/subscriptions/:endpoint', endpointParam, subscriptionKeys, async (c) => {
-      const { endpoint } = c.req.valid('param');
-      const keys = c.req.valid('json');
-      const userId = c.get('user').id;
-      await database(c.env.DB)
-        .insert(pushSubscriptions)
-        .values({ userId, endpoint, ...keys })
-        .onConflictDoUpdate({ target: pushSubscriptions.endpoint, set: { userId, ...keys } });
-      return c.body(null, 204);
-    })
-    .delete('/subscriptions/:endpoint', endpointParam, async (c) => {
-      const { endpoint } = c.req.valid('param');
-      await database(c.env.DB)
-        .delete(pushSubscriptions)
-        .where(
-          and(
-            eq(pushSubscriptions.endpoint, endpoint),
-            eq(pushSubscriptions.userId, c.get('user').id),
-          ),
-        );
-      return c.body(null, 204);
-    });
+  return (
+    new Hono<AppEnv>()
+      .get('/vapid-public-key', (c) => {
+        // Widened from the literal that `wrangler types` writes for the var.
+        const vapidPublicKey: string = c.env.VAPID_PUBLIC_KEY;
+        return c.json({ vapidPublicKey });
+      })
+      .put('/subscriptions/:endpoint', endpointParam, subscriptionKeys, async (c) => {
+        const { endpoint } = c.req.valid('param');
+        const keys = c.req.valid('json');
+        const userId = c.get('user').id;
+        await database(c.env.DB)
+          .insert(pushSubscriptions)
+          .values({ userId, endpoint, ...keys })
+          .onConflictDoUpdate({ target: pushSubscriptions.endpoint, set: { userId, ...keys } });
+        return c.body(null, 204);
+      })
+      // The Sunday reminder, now, to the caller's own subscriptions: the way to see it
+      // arrive without waiting for Sunday.
+      .post('/test', async (c) => {
+        const delivery = await sendWeeklyReminder(database(c.env.DB), vapidOf(c.env), {
+          userId: c.get('user').id,
+        });
+        return c.json(delivery);
+      })
+      .delete('/subscriptions/:endpoint', endpointParam, async (c) => {
+        const { endpoint } = c.req.valid('param');
+        await database(c.env.DB)
+          .delete(pushSubscriptions)
+          .where(
+            and(
+              eq(pushSubscriptions.endpoint, endpoint),
+              eq(pushSubscriptions.userId, c.get('user').id),
+            ),
+          );
+        return c.body(null, 204);
+      })
+  );
 }
