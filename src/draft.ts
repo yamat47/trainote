@@ -2,6 +2,13 @@ import { useState } from 'react';
 
 type Flags = { saving: boolean; failed: boolean };
 
+// What a Save button reads of a draft: whether to show it, whether it can be pressed,
+// and how the last save went.
+export type Saving = Pick<
+  ReturnType<typeof useDraft>,
+  'offered' | 'ready' | 'saving' | 'failed' | 'submit'
+>;
+
 // Fields over a stored record: what the person typed over each stored value, a field
 // they have not touched showing the stored value, so a load arriving late cannot
 // overwrite their typing. Saving is offered only over loaded stored values, so a save

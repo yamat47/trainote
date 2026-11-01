@@ -1,4 +1,4 @@
-<!-- @dsCard group="Entry" subtitle="Empty, Written, Labelled, Labelled Written, Date" -->
+<!-- @dsCard group="Entry" subtitle="Empty, Written, Labelled, Labelled Written, Whole, Date" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -16,6 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "kind": "multiline", "value": "23時に寝た。昼をサラダにした。駅まで歩いた2.5km。スクワット80kgで10、8、6。腹筋50回", "onChange": function () {}, "placeholder": "What did you do today?", "ariaLabel": "New entry" } }),
     h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Today", "kind": "numeric", "unit": "kg", "value": "", "onChange": function () {}, "placeholder": "0.0" } }),
     h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Body fat", "kind": "numeric", "unit": "%", "value": "18.4", "onChange": function () {}, "placeholder": "0.0" } }),
+    h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "Born", "kind": "whole", "value": "1990", "onChange": function () {}, "placeholder": "Year" } }),
     h(Live, { of: T.Field, value: "value", onChange: "onChange", args: { "label": "By", "kind": "date", "value": "2027-03-31", "onChange": function () {}, "placeholder": "" } })
   )
 );

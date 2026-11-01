@@ -80,6 +80,10 @@ var Trainote = (function(exports) {
 		return tone === "error" ? /* @__PURE__ */ React.createElement("output", { className }, children) : /* @__PURE__ */ React.createElement("p", { className }, children);
 	}
 	// design/src/Field.tsx
+	var INPUT_MODE = {
+		numeric: "decimal",
+		whole: "numeric"
+	};
 	function Field({ value, onChange, placeholder, label, ariaLabel, kind = "text", unit, maxLength, disabled }) {
 		const shared = {
 			className: "tn-field-input",
@@ -90,7 +94,7 @@ var Trainote = (function(exports) {
 			disabled,
 			onChange: (event) => onChange(event.target.value)
 		};
-		return /* @__PURE__ */ React.createElement("label", { className: classes("tn-field", kind === "numeric" && "tn-field-numeric") }, label === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-field-label" }, label), kind === "multiline" ? /* @__PURE__ */ React.createElement("span", {
+		return /* @__PURE__ */ React.createElement("label", { className: classes("tn-field", (kind === "numeric" || kind === "whole") && "tn-field-numeric") }, label === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-field-label" }, label), kind === "multiline" ? /* @__PURE__ */ React.createElement("span", {
 			className: "tn-field-grow",
 			"data-value": value
 		}, /* @__PURE__ */ React.createElement("textarea", {
@@ -99,7 +103,7 @@ var Trainote = (function(exports) {
 		})) : /* @__PURE__ */ React.createElement("input", {
 			...shared,
 			type: kind === "date" ? "date" : "text",
-			inputMode: kind === "numeric" ? "decimal" : void 0
+			inputMode: INPUT_MODE[kind]
 		}), unit === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-field-unit" }, unit));
 	}
 	// design/src/Button.tsx

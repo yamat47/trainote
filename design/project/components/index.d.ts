@@ -106,7 +106,7 @@ type Named = {
     label?: undefined;
     ariaLabel: string;
 };
-export type FieldKind = 'text' | 'multiline' | 'numeric' | 'date';
+export type FieldKind = 'text' | 'multiline' | 'numeric' | 'whole' | 'date';
 type FieldProps = Named & {
     value: string;
     onChange: (value: string) => void;

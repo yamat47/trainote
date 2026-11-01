@@ -53,6 +53,9 @@ export const LabelledWritten: Story = {
     placeholder: '0.0',
   },
 };
+export const Whole: Story = {
+  args: { label: 'Born', kind: 'whole', value: '1990', onChange: () => {}, placeholder: 'Year' },
+};
 export const Date: Story = {
   args: { label: 'By', kind: 'date', value: '2027-03-31', onChange: () => {}, placeholder: '' },
 };

@@ -78,6 +78,9 @@
     - イベントは `reading` (tool_use が始まるたび)、`text` (返答の断片)、`done` (保存した `assistant` の発言)、`error` (理由はログ用。画面の文言は 1 つ)。`text` を全部つなげたものがそのまま保存される。ツールの往復をはさんだ文はひとつ空行を挟む
     - 自分の発言は返答を求める前に保存する。返答に失敗したとき (API のエラー、refusal、max_tokens で切れた、何も言わなかった、オフライン) は最後の吹き出しの下に赤の 1 行「Could not reach your coach.」と Try again (answer をもう一度)。途中まで届いた返答は保存せず、画面からも消す
 - プロフィールは毎回システムプロンプトに入れる。項目は身長、生年、性別、目標体重と期限、運動環境 (ジムか自宅か、器具、週回数)、制約メモ (自由文)。入っている項目だけを、今日の日付とともに指示文の後ろに置く (前半が日によって変わらないので prompt cache が効く)
+  - API は `GET /api/profile` (全項目、未設定は null) と、Profile のグループごとの `PUT /api/profile/about` (身長、生年、性別)、`/goal`、`/training` (場所、週回数、器具)、`/notes` (制約メモ)。グループの全項目を送り、空にした項目は null で消す。どの PUT もプロフィール全体を返し、ページはそのうち保存したグループの項目だけを取り込む (2 つのグループを続けて保存したとき、後から着いた答えがもう一方を古い値に戻さないため)。グループ単位にするのは、読み込みが終わる前は Save を出さない体重の決定 (上の「記録するもの」) と同じく、見ていない項目を保存で消さないため
+  - 範囲は身長 50 以上 250 未満 cm (小数 1 桁)、生年 1900 から今年 (Asia/Tokyo) まで、週回数 0 から 14 の整数。性別と場所は 50 字、器具は 200 字、制約メモはメモと同じ 2000 字。文字は前後の空白を落とし、空なら null。境界はページとサーバーで 1 つの定義 (`worker/profile-fields.ts`) を読む
+  - 性別、場所、器具は自由文の行。デザインの Profile 画面は選択画面へ進む disclosure の行で描いているが、Claude は文字列をそのまま読むので選択肢を決める必要がなく、Profile に重ねる画面を増やさない (2026-11-02)
 - システムプロンプトでボディメイクを軸に置く。頑張ったことと頑張れなかったことを踏まえて、運動と食事の両方について助言する
 
 ### UI
@@ -93,6 +96,7 @@
     - スレッドの画面は inline の NavBar (題と Coach への戻り)、吹き出し、下部に Composer (Messages 風のカプセルと送信ボタン)。タブバーは出さず、Composer がその場所に付く。通知の `/coach/weekly-review` は今日の Weekly review を開くか作り、アドレスをそのスレッドの `/coach/:id` に置き換える
     - 開いたとき最後の発言が自分のものなら (作った直後、通知から開いた Weekly review、前の返答が失敗したまま離れたスレッド) そのまま answer を呼ぶ。Try again も同じ answer。返答中は Composer を無効にする。送信は `POST /api/threads/:id/messages` で保存し、吹き出しを足してから answer。保存できなければ Composer の上に赤の 1 行「Could not send. Try again.」で本文は残す
     - 返答が流れる間は最新の発言が見えるように下までスクロールする。吹き出しごとの時刻や日付の行、題の下の日付は出さない (一覧の API はサーバーの today を返さず、端末の時計で Today を決めない方針のため)
+  - Profile はデザインの画面の順に About you (Height cm、Born、Sex)、Goal (Goal weight、By)、Training (Where、Days a week、Equipment)、Notes for your coach (複数行の欄 1 つ)、Notifications。各グループに書き始めると右に Save が出て、保存できなければその下に「Could not save. Try again.」。プロフィールを読み込めなければグループの代わりに「Could not load your profile.」と Try again。Notes for your coach の footer は「Your coach reads everything above before every reply.」(Notifications は Claude が読まないので「above」)
 - 見た目は iOS の標準 (Human Interface Guidelines) に揃える。部品は平らな一般的なもので、Liquid Glass は真似しない
   - 書体はシステムフォント。iOS では英数字が SF Pro、日本語が Hiragino Sans になる。テキストの Web フォントは読み込まない (読み込むのはアイコンフォントだけ)。サイズは iOS のテキストスタイル (本文 17、大見出し 34 など)。数字はタブラー
   - 色は iOS のシステムカラー (label、secondaryLabel、separator、systemBackground など) をライトもダークも Apple の値のまま使う。ダークモードは OS 設定に追従する

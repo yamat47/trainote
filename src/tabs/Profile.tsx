@@ -4,7 +4,7 @@ import { NavBar } from '../../design/src/NavBar.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { useLoaded } from '../loaded.ts';
 import { loadProfile } from '../profile.ts';
-import { GoalGroup } from './Goal.tsx';
+import { ProfileGroups } from './ProfileGroups.tsx';
 import {
   reminderState,
   sendTestReminder,
@@ -73,10 +73,10 @@ export function Profile() {
   return (
     <>
       <NavBar title="Profile" />
-      <GoalGroup
+      <ProfileGroups
         shown={profile.shown}
         onRetry={profile.reload}
-        onSaved={(saved) => profile.replace(() => saved)}
+        onSaved={(fields) => profile.replace((current) => ({ ...current, ...fields }))}
       />
       <Group header="Notifications" footer={footers[reminder.state]}>
         <ReminderRow
