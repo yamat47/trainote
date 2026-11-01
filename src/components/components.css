@@ -5,7 +5,9 @@
 .tn-navbar,
 .tn-tabbar,
 .tn-row,
-.tn-group {
+.tn-field,
+.tn-group,
+.tn-week {
   flex-shrink: 0;
 }
 
@@ -192,6 +194,46 @@
 }
 .tn-group-body > .tn-row:last-child::after {
   display: none;
+}
+
+/* This week, seven columns of counts */
+.tn-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin: 0;
+  padding: 0 var(--margin);
+  list-style: none;
+  font-family: var(--font-sans);
+}
+.tn-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.tn-week-label {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--secondary-label);
+}
+.tn-week-today .tn-week-label {
+  color: var(--tint);
+  font-weight: 600;
+}
+.tn-week-wins {
+  min-height: 28px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.tn-week-slips {
+  min-height: 20px;
+  font-size: 15px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  color: var(--secondary-label);
 }
 
 /* Entry fields */

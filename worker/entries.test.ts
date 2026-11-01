@@ -4,9 +4,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { database } from './db/index.ts';
 import { entries, workoutItems } from './db/schema.ts';
 import { StructureError, type Structure } from './structure.ts';
+import { findOrCreateUser } from './users.ts';
 import { appAs, clientAs, platform } from './test/platform.ts';
 import { NOTE, PREVIEW } from './test/preview.ts';
-import { tokyoDate } from './week.ts';
+import { addDays, tokyoDate, weekDates } from './week.ts';
 
 const refusing: Structure = () => Promise.reject(new StructureError('refused'));
 
@@ -29,6 +30,97 @@ describe('/api/entries', () => {
   });
 
   afterAll(() => proxy.dispose());
+
+  const userIdOf = async (email: string) =>
+    (await findOrCreateUser(database(proxy.env.DB), email)).id;
+
+  describe('GET /', () => {
+    it("lists the caller's entries newest first with their items, and nobody else's", async () => {
+      const mine = await userIdOf('list@example.com');
+      const other = await userIdOf('other-list@example.com');
+      const today = tokyoDate(new Date());
+      const [older, newer] = await database(proxy.env.DB)
+        .insert(entries)
+        .values([
+          {
+            userId: mine,
+            date: addDays(today, -1),
+            kind: 'win',
+            category: 'exercise',
+            body: 'ジムで胸と脚',
+          },
+          { userId: mine, date: today, kind: 'slip', category: 'sleep', body: '夜更かし (list)' },
+          { userId: other, date: today, kind: 'win', category: 'life', body: '他人の行' },
+        ])
+        .returning();
+      if (older === undefined || newer === undefined) throw new Error('rows were not inserted');
+      await database(proxy.env.DB)
+        .insert(workoutItems)
+        .values([
+          {
+            entryId: older.id,
+            position: 1,
+            exercise: 'スクワット',
+            weightKg: 80,
+            reps: 8,
+            sets: 3,
+          },
+          {
+            entryId: older.id,
+            position: 0,
+            exercise: 'ベンチプレス',
+            weightKg: 60,
+            reps: 10,
+            sets: 3,
+          },
+        ]);
+
+      const response = await clientAs(proxy.env, 'list@example.com').api.entries.$get();
+
+      expect(response.status).toBe(200);
+      const listed = (await response.json()).entries;
+      expect(
+        listed.map((entry) => [entry.date, entry.body, entry.items.map((item) => item.exercise)]),
+      ).toEqual([
+        [today, '夜更かし (list)', []],
+        [addDays(today, -1), 'ジムで胸と脚', ['ベンチプレス', 'スクワット']],
+      ]);
+    });
+  });
+
+  describe('GET /week', () => {
+    it('counts this week Monday first and the days written in a row', async () => {
+      const me = await userIdOf('week@example.com');
+      const today = tokyoDate(new Date());
+      const yesterday = addDays(today, -1);
+      await database(proxy.env.DB)
+        .insert(entries)
+        .values([
+          { userId: me, date: today, kind: 'win', category: 'food', body: 'w1' },
+          { userId: me, date: today, kind: 'win', category: 'life', body: 'w2' },
+          { userId: me, date: today, kind: 'slip', category: 'sleep', body: 's1' },
+          { userId: me, date: yesterday, kind: 'win', category: 'food', body: 'w3' },
+          { userId: me, date: addDays(today, -3), kind: 'win', category: 'food', body: 'w4' },
+        ]);
+
+      const response = await clientAs(proxy.env, 'week@example.com').api.entries.week.$get();
+
+      expect(response.status).toBe(200);
+      const week = await response.json();
+      // Yesterday may be last week, in which case the strip does not show it.
+      const wins: Record<string, number> = { [today]: 2, [yesterday]: 1, [addDays(today, -3)]: 1 };
+      const slips: Record<string, number> = { [today]: 1 };
+      expect(week.days).toEqual(
+        weekDates(new Date()).map((date) => ({
+          date,
+          wins: wins[date] ?? 0,
+          slips: slips[date] ?? 0,
+        })),
+      );
+      expect(week.streak).toBe(2);
+      expect(week.today).toBe(today);
+    });
+  });
 
   describe('POST /preview', () => {
     it('hands the note to the structurer and returns its preview', async () => {

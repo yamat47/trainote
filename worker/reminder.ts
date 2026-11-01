@@ -1,8 +1,10 @@
 import { buildPushPayload } from '@block65/webcrypto-web-push';
-import { and, count, eq, gte, lte } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { Database } from './db/index.ts';
-import { entries, pushSubscriptions, type EntryKind } from './db/schema.ts';
+import { pushSubscriptions, type EntryKind } from './db/schema.ts';
+import { countByDay } from './entries.ts';
 import { tokyoWeek } from './week.ts';
+import { weekPhrase } from './words.ts';
 
 export type Vapid = { subject: string; publicKey: string; privateKey: string };
 
@@ -15,16 +17,12 @@ export const vapidOf = (env: Env): Vapid => ({
 // What public/sw.js reads out of the push message.
 export type Reminder = { title: string; body: string; tag: string; url: string };
 
-const plural = (n: number, word: string) => `${String(n)} ${word}${n === 1 ? '' : 's'}`;
-
 // The words of the design's notification screen. A week without a single note gets the
 // invitation alone rather than "0 wins and 0 slips".
 export function weeklyReminder(wins: number, slips: number): Reminder {
   const invitation = 'Open to look back with your coach.';
-  const body =
-    wins === 0 && slips === 0
-      ? invitation
-      : `${plural(wins, 'win')} and ${plural(slips, 'slip')} this week. ${invitation}`;
+  const phrase = weekPhrase(wins, slips);
+  const body = phrase === undefined ? invitation : `${phrase}. ${invitation}`;
   // TODO: the Coach tab does not exist yet, so a tap opens the remembered tab; the
   // weekly-review entry of the Coach work (docs/requirements.md, 振り返り) takes this
   // URL and starts the review thread.
@@ -41,13 +39,8 @@ export type WeekCounts = Record<EntryKind, number>;
 // How many wins and slips the user wrote in the Tokyo week of `now`, Monday to that day.
 export async function weekCounts(db: Database, userId: number, now: Date): Promise<WeekCounts> {
   const { from, to } = tokyoWeek(now);
-  const rows = await db
-    .select({ kind: entries.kind, n: count() })
-    .from(entries)
-    .where(and(eq(entries.userId, userId), gte(entries.date, from), lte(entries.date, to)))
-    .groupBy(entries.kind);
   const counts: WeekCounts = { win: 0, slip: 0 };
-  for (const row of rows) counts[row.kind] = row.n;
+  for (const row of await countByDay(db, userId, from, to)) counts[row.kind] += row.n;
   return counts;
 }
 
