@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, streak, tokyoDate, tokyoWeek, weekDates } from './week.ts';
+import { addDays, daysBetween, streak, tokyoDate, tokyoWeek, weekDates } from './week.ts';
 
 describe('tokyoDate', () => {
   it('is the next day once Tokyo passes midnight, while UTC is still the evening before', () => {
@@ -39,6 +39,14 @@ describe('addDays', () => {
     expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
     expect(addDays('2026-01-01', -1)).toBe('2025-12-31');
     expect(addDays('2026-11-05', 0)).toBe('2026-11-05');
+  });
+});
+
+describe('daysBetween', () => {
+  it('counts calendar days, across a month and a year', () => {
+    expect(daysBetween('2026-10-03', '2026-11-01')).toBe(29);
+    expect(daysBetween('2025-12-31', '2026-01-01')).toBe(1);
+    expect(daysBetween('2026-11-01', '2026-11-01')).toBe(0);
   });
 });
 
