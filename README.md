@@ -42,7 +42,7 @@ After changing `worker/db/schema.ts`, run `make db-generate` and commit the new 
 
 wrangler authenticates with the API token in `.env` (`CLOUDFLARE_API_TOKEN=...`, ignored by git; `docs/requirements.md` says which token). `make whoami` shows the account it reaches, and `make secret NAME=VAPID_PRIVATE_KEY < file` stores a Worker secret.
 
-Reading a note into entries calls the Claude API, so `.dev.vars` needs `ANTHROPIC_API_KEY=...` (ignored by git) before the Notes tab works locally. The model is the `STRUCTURE_MODEL` var in `wrangler.jsonc`.
+Reading a note into entries and answering in the Coach tab call the Claude API, so `.dev.vars` needs `ANTHROPIC_API_KEY=...` (ignored by git) before those work locally. The models are the `STRUCTURE_MODEL` and `COACH_MODEL` vars in `wrangler.jsonc`.
 
 The Sunday reminder runs from a cron trigger; `make scheduled` fires it against the dev server, and the Profile tab has a row that sends it to the signed-in owner's own subscriptions at once.
 
