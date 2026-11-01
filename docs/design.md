@@ -8,7 +8,7 @@ trainote の見た目は 1 つのデザインシステム (トークンと部品
 - Claude Design 側のデザインシステム (https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k) は公開先で、正本の写しである。中身は `project/` 配下のファイル一式 (tokens.json、components/bundle.js、bundle.css、index.d.ts、部品ごとの README.md と preview.html) で、`make project` が `design/project/` に生成したものをそのまま送る (`scripts/project.ts`: bundle.js は Vite の IIFE ビルド、index.d.ts は tsc の宣言を 1 つに束ねたもの、preview.html はストーリーの args から書く。カードの枠 (横並び、grouped の背景、文字サイズ、controlled な部品) はストーリーの `parameters.card` に 1 度だけ書き、Storybook の decorator と preview.html が同じものを読む。ストーリー側の `render` や `decorators` はカードに届かないのでビルドが拒む)。index に `editing: code` を入れてページを読み取り専用にし、ページ側の編集で写しがずれることをなくす。
 - 画面のアーティファクト (`trainote screens`、https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB) は、公開したデザインシステムの部品で画面を描く場所。こちらは編集してよい。
 
-2026-10 までは逆向き (アーティファクトが正、`design/system/` に手で写し、さらに `src/components/` に手で TSX に起こす) だった。写すたびに黙ってずれ、アプリに固有の CSS が増えたので向きを変えた。アーティファクトから写した bundle と preview は 2026-11-01 に消し、`design/project/` が置き換えた。`design/system/` に残るのは正本側のもの (tokens.json、README.md、cover.html、fonts/) と、まだ移植していない Bubble と Segmented の説明文と旧プレビューだけ。
+2026-10 までは逆向き (アーティファクトが正、`design/system/` に手で写し、さらに `src/components/` に手で TSX に起こす) だった。写すたびに黙ってずれ、アプリに固有の CSS が増えたので向きを変えた。アーティファクトから写した bundle と preview は 2026-11-01 に消し、`design/project/` が置き換えた。`design/system/` に残るのは正本側のもの (tokens.json、README.md、cover.html、fonts/) と、まだ移植していない Bubble の説明文と旧プレビューだけ。
 
 ## 流れ
 
@@ -47,7 +47,7 @@ flowchart LR
    3. `git diff --name-status <sha> HEAD -- design/project` で、送るファイルと消すファイルを決める。差分が無ければ何も書かずに終わる。
    4. 1 回の publish で送る。index は同じ呼び出しで最後に書く: `editing: code`、`lastChange` に誰が・いつ・どのコミットから。tokens.css もこちらで作って送る (`design/project/tokens.css`。コードから保たれるページはファイルを書かないので、ページが作る形をこちらで出す)。api/ のカードと manifest.json はページが作る。
    5. 公開したファイル一覧を読み戻し、`design/project/` とサイズを突き合わせる。
-   6. 画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) が古いかを報告する。更新は頼んだときだけ: 画面は Segmented と Bubble をまだ使っていて、新しい bundle にはそれらが無い。
+   6. 画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) が古いかを報告する。更新は頼んだときだけ: 画面は Bubble をまだ使っていて、新しい bundle にはそれが無い。
 4. ずれに気づく。CI からアーティファクトに書く API は無いので、公開は人が言う。代わりに、trainote の作業を始めるときは `design-publish` の status (上の 1 から 3 だけ、書き込みなし) で index の `lastChange` と main を比べ、`design/` に未公開の差分があれば先に公開する。
 
 ## 最初の公開
@@ -70,12 +70,12 @@ flowchart LR
 | Mark の読み上げ文字、Week の ul/li                                             | Mark と Week で直す                    |
 | アイコン                                                                       | Icon を公開する                        |
 
-アーティファクトから移した説明文には、まだ移植していない props が残っている (Button の `tinted`、`destructive`、`bold`、`block`、Row の `mark`)。Weight の 1 本目で Field の `label`、`numeric`、`unit` と Stat を移植した。残りは Coach を作るときに、使う部品から順に TSX と説明文を揃える。
+アーティファクトから移した説明文には、まだ移植していない props が残っている (Button の `tinted`、`destructive`、`bold`、`block`、Row の `mark`)。Weight で Field の `label`、`numeric`、`unit`、Stat、Segmented を移植し、Graph を足した。残りは Coach を作るときに、使う部品から順に TSX と説明文を揃える。
 
 ## 進み具合
 
-| 段階 | 内容                                                                                                             | 状態                                                                       |
-| ---- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 1    | 部品を `design/src/` に移し、Storybook (部品、トークンのページ、ライトとダークの切替) を入れる                   | 済 (2026-11-01)                                                            |
-| 2    | 上の表の部品を足し、タブを部品だけで書き直し、アプリの CSS を 0 行にして検査を入れる                             | 済 (2026-11-01)                                                            |
-| 3    | `design/project/` のビルドと最初の公開、`design-publish` スキル (github-toolkit)、`design/screens/` の扱いの整理 | 済 (2026-11-01)。写し `ds/trainote/` の更新は Segmented と Bubble の移植後 |
+| 段階 | 内容                                                                                                             | 状態                                                          |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1    | 部品を `design/src/` に移し、Storybook (部品、トークンのページ、ライトとダークの切替) を入れる                   | 済 (2026-11-01)                                               |
+| 2    | 上の表の部品を足し、タブを部品だけで書き直し、アプリの CSS を 0 行にして検査を入れる                             | 済 (2026-11-01)                                               |
+| 3    | `design/project/` のビルドと最初の公開、`design-publish` スキル (github-toolkit)、`design/screens/` の扱いの整理 | 済 (2026-11-01)。写し `ds/trainote/` の更新は Bubble の移植後 |
