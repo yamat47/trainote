@@ -1,3 +1,4 @@
+import { and, count, desc, eq, gte, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { validator } from 'hono/validator';
 import { z } from 'zod';
@@ -7,7 +8,7 @@ import { entries, workoutItems } from './db/schema.ts';
 import { problem } from './problem.ts';
 import { MAX_NOTE_LENGTH } from './note.ts';
 import { DraftEntry, StructureError, type Structure } from './structure.ts';
-import { tokyoDate } from './week.ts';
+import { addDays, streak, tokyoDate, tokyoWeek, weekDates } from './week.ts';
 
 const Note = z.object({ text: z.string().trim().min(1).max(MAX_NOTE_LENGTH) });
 
@@ -34,6 +35,13 @@ export type Entry = typeof entries.$inferSelect & { items: Item[] };
 // nothing is kept between the two calls and a rewritten note is just another preview.
 export function entryRoutes(structure: Structure) {
   return new Hono<AppEnv>()
+    .get('/', async (c) => {
+      const found = await listEntries(database(c.env.DB), c.get('user').id);
+      return c.json({ entries: found });
+    })
+    .get('/week', async (c) =>
+      c.json(await weekOf(database(c.env.DB), c.get('user').id, new Date())),
+    )
     .post('/preview', noteBody, async (c) => {
       const { text } = c.req.valid('json');
       try {
@@ -81,7 +89,77 @@ export async function saveEntries(
   const items =
     itemRows.length === 0 ? [] : await db.insert(workoutItems).values(itemRows).returning();
 
-  return inserted.map((entry) =>
-    Object.assign(entry, { items: items.filter((item) => item.entryId === entry.id) }),
+  return withItems(inserted, items);
+}
+
+// Each entry with its items, in the order the items were stored.
+function withItems(rows: (typeof entries.$inferSelect)[], items: Item[]): Entry[] {
+  const itemsOf = new Map<number, Item[]>();
+  for (const item of items) {
+    const list = itemsOf.get(item.entryId);
+    if (list === undefined) itemsOf.set(item.entryId, [item]);
+    else list.push(item);
+  }
+  return rows.map((entry) => Object.assign(entry, { items: itemsOf.get(entry.id) ?? [] }));
+}
+
+// Every entry of the user, newest first, with its items in the order of the note. Two
+// queries in one round trip; the items join through entries rather than binding the
+// ids, which D1 caps at a hundred parameters.
+export async function listEntries(db: Database, userId: number): Promise<Entry[]> {
+  const [rows, itemRows] = await db.batch([
+    db
+      .select()
+      .from(entries)
+      .where(eq(entries.userId, userId))
+      .orderBy(desc(entries.date), desc(entries.id)),
+    db
+      .select({ item: workoutItems })
+      .from(workoutItems)
+      .innerJoin(entries, eq(workoutItems.entryId, entries.id))
+      .where(eq(entries.userId, userId))
+      .orderBy(workoutItems.entryId, workoutItems.position),
+  ]);
+  return withItems(
+    rows,
+    itemRows.map(({ item }) => item),
   );
+}
+
+// How many wins and slips the user wrote on each day from `from` to `to`, both
+// inclusive: the one query behind the week strip and the Sunday reminder.
+export function countByDay(db: Database, userId: number, from: string, to: string) {
+  return db
+    .select({ date: entries.date, kind: entries.kind, n: count() })
+    .from(entries)
+    .where(and(eq(entries.userId, userId), gte(entries.date, from), lte(entries.date, to)))
+    .groupBy(entries.date, entries.kind);
+}
+
+export type Day = { date: string; wins: number; slips: number };
+// `today` is the server's Tokyo date, so the page labels Today and tints the strip from
+// the same clock that filed the entries.
+export type Week = { today: string; days: Day[]; streak: number };
+
+// The seven days of this week with their counts, and the run of days written up to now.
+export async function weekOf(db: Database, userId: number, now: Date): Promise<Week> {
+  const today = tokyoDate(now);
+  const { from } = tokyoWeek(now);
+  const [counted, written] = await db.batch([
+    countByDay(db, userId, from, addDays(from, 6)),
+    db.selectDistinct({ date: entries.date }).from(entries).where(eq(entries.userId, userId)),
+  ]);
+  const days = weekDates(now).map((date): Day => ({ date, wins: 0, slips: 0 }));
+  for (const row of counted) {
+    const day = days.find((d) => d.date === row.date);
+    if (day !== undefined) day[row.kind === 'win' ? 'wins' : 'slips'] = row.n;
+  }
+  return {
+    today,
+    days,
+    streak: streak(
+      written.map((row) => row.date),
+      today,
+    ),
+  };
 }
