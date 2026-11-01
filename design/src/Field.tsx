@@ -6,14 +6,16 @@ import { classes } from './classes.ts';
 // what it is to a screen reader.
 type Named = { label: string; ariaLabel?: undefined } | { label?: undefined; ariaLabel: string };
 
+// What the field takes: a line of text; the Notes entry, a textarea that grows with the
+// text; a number with its unit, with tabular figures and the decimal keyboard; a calendar
+// day as YYYY-MM-DD, picked with the platform's date control.
+export type FieldKind = 'text' | 'multiline' | 'numeric' | 'date';
+
 type FieldProps = Named & {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
-  // The Notes entry: a textarea that grows with the text.
-  multiline?: boolean;
-  // A number with its unit: tabular figures and the decimal keyboard.
-  numeric?: boolean;
+  kind?: FieldKind;
   unit?: string;
   maxLength?: number;
   disabled?: boolean;
@@ -30,8 +32,7 @@ export function Field({
   placeholder,
   label,
   ariaLabel,
-  multiline = false,
-  numeric = false,
+  kind = 'text',
   unit,
   maxLength,
   disabled,
@@ -47,14 +48,18 @@ export function Field({
       onChange(event.target.value),
   };
   return (
-    <label className={classes('tn-field', numeric && 'tn-field-numeric')}>
+    <label className={classes('tn-field', kind === 'numeric' && 'tn-field-numeric')}>
       {label === undefined ? null : <span className="tn-field-label">{label}</span>}
-      {multiline ? (
+      {kind === 'multiline' ? (
         <span className="tn-field-grow" data-value={value}>
           <textarea {...shared} rows={1} />
         </span>
       ) : (
-        <input {...shared} type="text" inputMode={numeric ? 'decimal' : undefined} />
+        <input
+          {...shared}
+          type={kind === 'date' ? 'date' : 'text'}
+          inputMode={kind === 'numeric' ? 'decimal' : undefined}
+        />
       )}
       {unit === undefined ? null : <span className="tn-field-unit">{unit}</span>}
     </label>
