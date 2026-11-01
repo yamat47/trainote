@@ -6,6 +6,22 @@
 :root {
   color-scheme: light dark;
 }
+/* The icon font's class: a Framework7 Icons glyph is the name itself, as a ligature. The
+   app also has this rule from the framework7-icons package, which declares the face; a
+   page that loads only this stylesheet needs it here. */
+.f7-icons {
+  font-family: var(--font-icons);
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
 body {
   margin: 0;
   background: var(--system-background);

@@ -58,6 +58,8 @@ jobs:
         run: pnpm tokens:check
       - name: The app is built from the design system alone
         run: pnpm design:check
+      - name: The committed design/project matches the build
+        run: pnpm design:project:check
 
   build:
     name: build

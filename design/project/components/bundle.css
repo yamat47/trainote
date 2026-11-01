@@ -1,0 +1,484 @@
+/* The design system's stylesheet. Every value is a token from tokens.css, or a pixel the
+   design fixed where no token fits. The classes began as a copy of
+   design/system/components/bundle.css and are the source now. */
+
+/* Base: the page itself, so an app on this system writes no CSS of its own. */
+:root {
+  color-scheme: light dark;
+}
+/* The icon font's class: a Framework7 Icons glyph is the name itself, as a ligature. The
+   app also has this rule from the framework7-icons package, which declares the face; a
+   page that loads only this stylesheet needs it here. */
+.f7-icons {
+  font-family: var(--font-icons);
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
+body {
+  margin: 0;
+  background: var(--system-background);
+  color: var(--label);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Screen: the shell of a tab */
+.tn-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  /* The status bar area when the app runs from the home screen. */
+  padding-top: env(safe-area-inset-top);
+}
+.tn-screen-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.tn-screen-tabbar {
+  position: sticky;
+  bottom: 0;
+}
+.tn-screen-grouped,
+.tn-screen-grouped .tn-navbar {
+  background: var(--grouped-background);
+}
+
+/* Components never shrink inside a column flexbox: a list is as tall as its rows. */
+.tn-navbar,
+.tn-tabbar,
+.tn-row,
+.tn-field,
+.tn-group,
+.tn-week {
+  flex-shrink: 0;
+}
+
+/* Tab bar */
+.tn-tabbar {
+  display: flex;
+  background: var(--system-background);
+  border-top: var(--stroke-separator) solid var(--separator);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tn-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: var(--tab-bar);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 500;
+  color: var(--secondary-label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-tab .f7-icons {
+  font-size: 25px;
+  line-height: 28px;
+}
+.tn-tab[aria-selected='true'] {
+  color: var(--tint);
+}
+.tn-tab:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: -2px;
+}
+
+/* Navigation bar with a large title */
+.tn-navbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  min-height: calc(var(--nav-bar) + 52px);
+  padding: 0 var(--margin) 6px;
+  background: var(--system-background);
+  font-family: var(--font-sans);
+}
+.tn-navbar-title {
+  margin: 0;
+  font-size: 34px;
+  line-height: 41px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--label);
+}
+.tn-navbar-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Rows */
+.tn-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--row);
+  margin: 0;
+  padding: 0 var(--margin);
+  border: 0;
+  background: none;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 400;
+  color: var(--label);
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-row::after {
+  content: '';
+  position: absolute;
+  left: var(--margin);
+  right: 0;
+  bottom: 0;
+  border-bottom: var(--stroke-separator) solid var(--separator);
+}
+.tn-row-with-mark::after {
+  left: calc(var(--margin) + 22px + var(--space-3));
+}
+.tn-row-mark {
+  flex: none;
+  display: inline-flex;
+}
+.tn-row-text {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  overflow-wrap: anywhere;
+}
+.tn-row-sub {
+  display: block;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--secondary-label);
+  font-variant-numeric: tabular-nums;
+}
+.tn-row-error {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--red);
+}
+.tn-row-detail {
+  flex: none;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--secondary-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-row-tint .tn-row-text {
+  color: var(--tint);
+}
+.tn-row-chevron {
+  flex: none;
+  margin-right: -4px;
+  color: var(--tertiary-label);
+}
+.tn-row-chevron .f7-icons {
+  font-size: 16px;
+  line-height: 22px;
+}
+.tn-row-muted .tn-row-text {
+  color: var(--secondary-label);
+}
+.tn-row-press {
+  cursor: pointer;
+}
+.tn-row-press:active {
+  background: var(--fill);
+}
+.tn-row-press:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: -2px;
+}
+
+/* Inset grouped list */
+.tn-group {
+  font-family: var(--font-sans);
+}
+.tn-group-header,
+.tn-group-footer,
+.tn-list-header {
+  margin: 0;
+  padding: 0 calc(var(--margin) * 2);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--secondary-label);
+}
+/* The same footnote above a run of plain rows: Today, Yesterday, Read as 3 entries. */
+.tn-list-header {
+  flex-shrink: 0;
+  padding: var(--space-6) var(--margin) var(--space-1);
+}
+.tn-group-header {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-2);
+}
+.tn-group-footer {
+  padding-top: var(--space-2);
+}
+.tn-group-body {
+  margin: 0 var(--margin);
+  border-radius: var(--radius-group);
+  background: var(--grouped-cell);
+  overflow: hidden;
+}
+.tn-group-body > .tn-row:last-child::after {
+  display: none;
+}
+
+/* This week, seven columns of counts */
+.tn-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin: 0;
+  padding: 0 var(--margin);
+  list-style: none;
+  font-family: var(--font-sans);
+}
+.tn-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.tn-week-label {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--secondary-label);
+}
+.tn-week-today .tn-week-label {
+  color: var(--tint);
+  font-weight: 600;
+}
+.tn-week-wins {
+  min-height: 28px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.tn-week-slips {
+  min-height: 20px;
+  font-size: 15px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  color: var(--secondary-label);
+}
+
+/* Entry fields */
+.tn-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--row);
+  margin: 0;
+  padding: 0 var(--margin);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--label);
+}
+.tn-field::after {
+  content: '';
+  position: absolute;
+  left: var(--margin);
+  right: 0;
+  bottom: 0;
+  border-bottom: var(--stroke-separator) solid var(--separator);
+}
+.tn-field-input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 11px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--label);
+  outline: none;
+  resize: none;
+}
+.tn-field-grow {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.tn-field-grow::after {
+  content: attr(data-value) ' ';
+  visibility: hidden;
+  white-space: pre-wrap;
+}
+.tn-field-grow::after,
+.tn-field-grow > .tn-field-input {
+  grid-area: 1 / 1 / 2 / 2;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 0;
+  font: inherit;
+  line-height: 22px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.tn-field-input::placeholder {
+  color: var(--tertiary-label);
+  opacity: 1;
+}
+
+/* Buttons */
+.tn-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: 0;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 400;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-btn-prominent {
+  height: 50px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-button);
+  background: var(--tint);
+  color: var(--on-tint);
+  font-weight: 600;
+}
+.tn-btn-plain {
+  height: var(--row);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--tint);
+}
+.tn-btn:active {
+  opacity: 0.6;
+}
+.tn-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.tn-btn:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 2px;
+}
+
+/* Text: a line at the page's margin. The type style's font comes from tokens.css. */
+.tn-text {
+  margin: 0;
+  padding: var(--space-2) var(--margin) 0;
+  color: var(--secondary-label);
+}
+.tn-text-footnote {
+  padding: 6px var(--margin) 10px;
+}
+.tn-text-subheadline {
+  padding: var(--space-3) var(--margin) 0;
+}
+.tn-text-caption-1 {
+  padding: var(--space-1) var(--margin) 0;
+}
+.tn-text-error {
+  display: block;
+  color: var(--red);
+}
+
+/* Inset: the one raised block on a plain page */
+.tn-inset-body {
+  margin: var(--space-1) var(--margin) 0;
+  border-radius: var(--radius-group);
+  background: var(--secondary-background);
+  overflow: hidden;
+}
+.tn-inset-body > .tn-row:last-child::after {
+  display: none;
+}
+
+/* Actions: a row of buttons with the place for its error line */
+.tn-actions-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--margin) var(--margin) 0;
+}
+.tn-actions-row > .tn-btn-prominent {
+  flex: 1;
+}
+.tn-actions-end .tn-actions-row {
+  justify-content: flex-end;
+  padding: 0 var(--space-2);
+}
+.tn-actions-end .tn-text-error {
+  padding-left: var(--space-2);
+}
+
+/* Text for screen readers only */
+.tn-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Mark */
+.tn-mark {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.tn-mark-slip {
+  color: var(--secondary-label);
+}
+/*$vite$:1*/

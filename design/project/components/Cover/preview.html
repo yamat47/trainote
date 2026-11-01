@@ -1,0 +1,51 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>trainote</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--system-background); color: var(--label); font-family: var(--font-sans); overflow: hidden; }
+  .cover { position: relative; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .tint { fill: var(--tint); }
+  .soft { fill: var(--tint-soft); }
+  .ink { fill: var(--label); }
+  .red { fill: var(--red); }
+  .cell { fill: var(--on-tint); rx: var(--radius-group); }
+  .btn { rx: var(--radius-button); }
+  .grp { rx: var(--radius-group); }
+  .pill { rx: 8px; }
+  .words { position: absolute; left: var(--space-6); bottom: var(--space-6); max-width: 440px; }
+  .name { margin: 0; font-size: 84px; line-height: .95; font-weight: 700; letter-spacing: -.02em; color: var(--label); }
+  .tag { margin: var(--space-2) 0 0 2px; font-size: 14px; line-height: 20px; color: var(--secondary-label); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      tint 220×200 at x=32,y=44 (radius-button) · label 176×112 at x=268,y=44 (radius-group) · tint-soft 176×72 at x=268,y=172 (radius-group), the relief · red: one 44×16 pill at x=268,y=258, small because red only ever means the goal line or Delete — together ≈31% of 960×288
+  arrangement one tall tint slab with two satellites stacked beside it, all standing on one baseline at y=244, space-4 gutters, the red pill below the line like a footnote
+  pattern     inset grouped cells cut from the tint slab in on-tint at the row pitch, from "Notes, Weight and Coach are plain lists… Profile is an inset grouped list": three cells 188 wide on a 44px pitch, the top one merged two rows tall like a multiline entry
+  scales      sides in row (44) multiples; gutters space-4; cell pitch row; corners radius-button, radius-group; the pill's rx half its height
+-->
+<rect class="tint btn" x="32" y="44" width="220" height="200"/>
+<rect class="cell" x="48" y="60" width="188" height="80"/>
+<rect class="cell" x="48" y="148" width="188" height="36"/>
+<rect class="cell" x="48" y="192" width="188" height="36"/>
+<rect class="ink grp" x="268" y="44" width="176" height="112"/>
+<rect class="soft grp" x="268" y="172" width="176" height="72"/>
+<rect class="red pill" x="268" y="258" width="44" height="16"/>
+</svg>
+</div>
+<div class="words">
+  <h1 class="name">trainote</h1>
+  <p class="tag">What you did and what you weigh, in an iPhone note.</p>
+</div>
+</div>
+</body>
+</html>

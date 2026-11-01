@@ -1,0 +1,21 @@
+<!-- @dsCard group="Navigation" subtitle="Notes Selected, Profile Selected" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TabBar</title>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+function Live(p) { var state = React.useState(p.args[p.value]); var args = Object.assign({}, p.args); args[p.value] = state[0]; args[p.onChange] = state[1]; return h(p.of, args); }
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(Live, { of: T.TabBar, value: "active", onChange: "onChange", args: { "items": [{ "key": "notes", "label": "Notes", "icon": "doc_text", "iconActive": "doc_text_fill" }, { "key": "weight", "label": "Weight", "icon": "chart_bar", "iconActive": "chart_bar_fill" }, { "key": "coach", "label": "Coach", "icon": "bubble_left_bubble_right", "iconActive": "bubble_left_bubble_right_fill" }, { "key": "profile", "label": "Profile", "icon": "person_crop_circle", "iconActive": "person_crop_circle_fill" }], "active": "notes", "onChange": function () {} } }),
+    h(Live, { of: T.TabBar, value: "active", onChange: "onChange", args: { "items": [{ "key": "notes", "label": "Notes", "icon": "doc_text", "iconActive": "doc_text_fill" }, { "key": "weight", "label": "Weight", "icon": "chart_bar", "iconActive": "chart_bar_fill" }, { "key": "coach", "label": "Coach", "icon": "bubble_left_bubble_right", "iconActive": "bubble_left_bubble_right_fill" }, { "key": "profile", "label": "Profile", "icon": "person_crop_circle", "iconActive": "person_crop_circle_fill" }], "active": "profile", "onChange": function () {} } })
+  )
+);
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!-- @dsCard group="Foundations" subtitle="Notes, Notes Active, Chevron" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Icon</title>
+<style>#root { font-size: 25px; line-height: 1; } #root { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var T = window.Trainote, h = React.createElement;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  h(React.Fragment, null,
+    h(T.Icon, { "name": "doc_text" }),
+    h(T.Icon, { "name": "doc_text_fill" }),
+    h(T.Icon, { "name": "chevron_right" })
+  )
+);
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@ else
 endif
 
 .PHONY: help build install dev down logs shell storybook storybook-dist lint typecheck test dist db-check \
-  tokens-check design-check check migrate-local db-generate typegen tokens scheduled whoami secret pnpm wrangler
+  tokens-check design-check project project-check check migrate-local db-generate typegen tokens scheduled whoami secret pnpm wrangler
 
 help: ## This list
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed -E 's/^([a-z-]+):.*## /\1\t/' | sort | column -t -s "$$(printf '\t')"
@@ -64,7 +64,13 @@ tokens-check: ## The committed design/src/tokens.css matches design/system/token
 design-check: ## src/ holds no stylesheet and names no class
 	$(IN) pnpm design:check
 
-check: lint typecheck test db-check tokens-check design-check dist storybook-dist ## The checks CI runs, in CI's order
+project: ## Rebuild design/project/, the files the design-system artifact is published from
+	$(IN) pnpm design:project
+
+project-check: ## The committed design/project/ matches the build
+	$(IN) pnpm design:project:check
+
+check: lint typecheck test db-check tokens-check design-check project-check dist storybook-dist ## The checks CI runs, in CI's order
 
 migrate-local: ## Apply migrations/ to the local D1
 	$(IN) pnpm db:migrate:local

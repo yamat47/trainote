@@ -1,0 +1,12 @@
+{
+  "artifact": "https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k",
+  "root": "design/project",
+  "check": "make project-check",
+  "mirrors": [
+    {
+      "artifact": "https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB",
+      "prefix": "project/ds/trainote",
+      "files": ["tokens.json", "tokens.css", "components/bundle.js", "components/bundle.css"]
+    }
+  ]
+}
