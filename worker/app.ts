@@ -1,11 +1,12 @@
 import { Hono, type Context } from 'hono';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { accessIdentity, type AccessContext, type IdentityResolver } from './auth/identity.ts';
 import { database } from './db/index.ts';
 import type { User } from './db/schema.ts';
+import { problem } from './problem.ts';
+import { pushRoutes } from './push.ts';
 import { findOrCreateUser } from './users.ts';
 
-type AppEnv = {
+export type AppEnv = {
   Bindings: Env;
   Variables: { user: User };
 };
@@ -21,7 +22,7 @@ export function createApp(identity: IdentityResolver = accessIdentity()) {
     return next();
   });
 
-  return api.get('/me', (c) => c.json(c.get('user')));
+  return api.get('/me', (c) => c.json(c.get('user'))).route('/push', pushRoutes());
 }
 
 export type AppType = ReturnType<typeof createApp>;
@@ -40,11 +41,4 @@ function accessContext(c: Context<AppEnv>): AccessContext | undefined {
 
 function isAccessContext(value: unknown): value is AccessContext {
   return typeof value === 'object' && value !== null && 'access' in value;
-}
-
-// RFC 9457 problem details.
-function problem(c: Context<AppEnv>, status: ContentfulStatusCode, title: string) {
-  return c.body(JSON.stringify({ type: 'about:blank', title, status }), status, {
-    'content-type': 'application/problem+json',
-  });
 }

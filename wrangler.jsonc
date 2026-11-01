@@ -22,6 +22,10 @@
   "vars": {
     "ACCESS_TEAM_DOMAIN": "yamat47.cloudflareaccess.com",
     "ACCESS_AUD": "462b3c5e4250c32653c929bb5f47600eb544d6e11b0c1747ea66bbe0615ab294",
+    // Web Push. The private half of this key pair is the secret VAPID_PRIVATE_KEY
+    // (wrangler secret put; .dev.vars locally).
+    "VAPID_PUBLIC_KEY": "BL6wJk6KFraF-5uHUz1I040RLzxyXp4QJWkyoO5-42-TQCMODP12waAI9BB1IkTVoqEU-Vkj39v0uHm1uzzeEJI",
+    "VAPID_SUBJECT": "mailto:yamat47.thirddown@gmail.com",
   },
   "triggers": {
     // Sunday 20:00 in Asia/Tokyo, written in UTC. Cloudflare numbers the days 1 to 7,
