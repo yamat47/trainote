@@ -8,13 +8,10 @@ import { jsonBody } from './body.ts';
 import { CoachError, type Coach, type Emit, type Reason } from './coach.ts';
 import { database, type Database } from './db/index.ts';
 import { messages, NOW, threads, type MessageRole, type ThreadKind } from './db/schema.ts';
+import { MAX_MESSAGE_LENGTH } from './message.ts';
 import { problem } from './problem.ts';
 import { tokyoDate, tokyoDayStart } from './week.ts';
 import { firstLine } from './words.ts';
-
-// A message is a few paragraphs at most; the ceiling keeps one request from carrying a
-// pasted document, as MAX_NOTE_LENGTH does for a note.
-export const MAX_MESSAGE_LENGTH = 4000;
 
 // How a weekly review opens, in the owner's language, by decision (docs/requirements.md).
 export const WEEKLY_REVIEW_OPENING =
