@@ -4,7 +4,7 @@ trainote の見た目は 1 つのデザインシステム (トークンと部品
 
 ## 正本と写し
 
-- 正本はこのリポジトリの `design/`。トークンは `design/system/tokens.json`、部品は `design/src/` の TSX と CSS、部品の説明は部品ごとの `README.md`、見本は Storybook のストーリー。
+- 正本はこのリポジトリの `design/`。トークンは `design/system/tokens.json`、部品は `design/src/` の TSX と CSS、部品の説明は隣の `<部品名>.md`、見本は Storybook のストーリー。
 - Claude Design 側のデザインシステム (https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k) は公開先で、正本の写しである。中身は `project/` 配下のファイル一式 (tokens.json、components/bundle.js、bundle.css、index.d.ts、部品ごとの README.md と preview.html) で、リポジトリのビルドが生成したものをそのまま送る。index に `editing: code` を入れてページを読み取り専用にし、ページ側の編集で写しがずれることをなくす。
 - 画面のアーティファクト (`trainote screens`、https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB) は、公開したデザインシステムの部品で画面を描く場所。こちらは編集してよい。
 
@@ -38,7 +38,7 @@ flowchart LR
    - `design/src/tokens.css` が `tokens.json` から生成したものと一致する (`tokens:check`)。
    - `design/project/` がビルドしたものと一致する (予定)。
    - Storybook がビルドできる (`storybook:build`)。
-   - `src/` に `.css` が無く、`src/` の JSX に `className` が無い (予定)。部品の外にクラスは存在しない。
+   - `src/` に `.css` が無く、`src/` の JSX に `className` が無い (`design:check`)。部品の外にクラスは存在しない。
 3. 公開する。main にマージしたあと、Claude Code のセッションで「デザインを公開して」。手順はスキル `design-publish` に固定する (yamat47/github-toolkit に置き、`gh skill install` で入れる。いまは未作成)。スキルがやること:
    1. アーティファクトの index (`project/design-system.json`) を読み、`lastChange.via` (`GitHub · yamat47/trainote@<sha>`) と main の HEAD を比べる。
    2. `design/project/` のうち変わったファイルだけを 1 回の publish で送る。
@@ -49,7 +49,7 @@ flowchart LR
 
 ## 部品の増やし方
 
-アプリに CSS を書きたくなったら、それはデザインシステムに部品が足りない印。`design/src/` に部品を足し、README と ストーリーを書き、タブはその部品を使う。アプリ側に残していた CSS から起こす部品は次のとおり (2026-11-01 時点、未実装):
+アプリに CSS を書きたくなったら、それはデザインシステムに部品が足りない印。`design/src/` に部品を足し、README と ストーリーを書き、タブはその部品を使う。アプリ側に残していた CSS から起こした部品は次のとおり (2026-11-01 に実装):
 
 | アプリ側にあったもの                                                           | 部品                                   |
 | ------------------------------------------------------------------------------ | -------------------------------------- |
@@ -63,10 +63,12 @@ flowchart LR
 | Mark の読み上げ文字、Week の ul/li                                             | Mark と Week で直す                    |
 | アイコン                                                                       | Icon を公開する                        |
 
+アーティファクトから移した説明文には、まだ移植していない props が残っている (Button の `tinted`、`destructive`、`bold`、`block`、Field の `label`、`numeric`、`unit`、Row の `mark`)。Weight と Coach を作るときに、使う部品から順に TSX と説明文を揃える。
+
 ## 進み具合
 
-| 段階 | 内容                                                                                                             | 状態    |
-| ---- | ---------------------------------------------------------------------------------------------------------------- | ------- |
-| 1    | 部品を `design/src/` に移し、Storybook (部品、トークンのページ、ライトとダークの切替) を入れる                   | この PR |
-| 2    | 上の表の部品を足し、タブを部品だけで書き直し、アプリの CSS を 0 行にして検査を入れる                             | 未着手  |
-| 3    | `design/project/` のビルドと最初の公開、`design-publish` スキル (github-toolkit)、`design/screens/` の扱いの整理 | 未着手  |
+| 段階 | 内容                                                                                                             | 状態            |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | --------------- |
+| 1    | 部品を `design/src/` に移し、Storybook (部品、トークンのページ、ライトとダークの切替) を入れる                   | この PR         |
+| 2    | 上の表の部品を足し、タブを部品だけで書き直し、アプリの CSS を 0 行にして検査を入れる                             | 済 (2026-11-01) |
+| 3    | `design/project/` のビルドと最初の公開、`design-publish` スキル (github-toolkit)、`design/screens/` の扱いの整理 | 未着手          |
