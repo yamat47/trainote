@@ -82,7 +82,7 @@ export function Profile() {
 
 // The error line sits directly under the row it concerns, as its second line.
 const failure = (failed: boolean, words: string) =>
-  failed ? <span className="app-error">{words}</span> : undefined;
+  failed ? <output className="app-error">{words}</output> : undefined;
 
 const afterTest = (outcome: TestOutcome): Failure | undefined => {
   if (outcome === 'sent') return undefined;

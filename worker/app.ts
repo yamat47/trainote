@@ -2,8 +2,10 @@ import { Hono, type Context } from 'hono';
 import { accessIdentity, type AccessContext, type IdentityResolver } from './auth/identity.ts';
 import { database } from './db/index.ts';
 import type { User } from './db/schema.ts';
+import { entryRoutes } from './entries.ts';
 import { problem } from './problem.ts';
 import { pushRoutes } from './push.ts';
+import { structureWithClaude, type Structure } from './structure.ts';
 import { findOrCreateUser } from './users.ts';
 
 export type AppEnv = {
@@ -11,7 +13,16 @@ export type AppEnv = {
   Variables: { user: User };
 };
 
-export function createApp(identity: IdentityResolver = accessIdentity()) {
+// What the app reaches outside itself; tests hand in their own.
+type Overrides = {
+  identity?: IdentityResolver | undefined;
+  structure?: Structure | undefined;
+};
+
+export function createApp({
+  identity = accessIdentity(),
+  structure = structureWithClaude(),
+}: Overrides = {}) {
   const api = new Hono<AppEnv>().basePath('/api');
 
   api.use(async (c, next) => {
@@ -22,7 +33,10 @@ export function createApp(identity: IdentityResolver = accessIdentity()) {
     return next();
   });
 
-  return api.get('/me', (c) => c.json(c.get('user'))).route('/push', pushRoutes());
+  return api
+    .get('/me', (c) => c.json(c.get('user')))
+    .route('/push', pushRoutes())
+    .route('/entries', entryRoutes(structure));
 }
 
 export type AppType = ReturnType<typeof createApp>;

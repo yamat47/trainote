@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavBar } from './components/NavBar.tsx';
 import { TabBar, type TabItem } from './components/TabBar.tsx';
+import { Notes } from './tabs/Notes.tsx';
 import { Profile } from './tabs/Profile.tsx';
 
 const TAB_KEYS = ['notes', 'weight', 'coach', 'profile'] as const;
@@ -57,6 +58,7 @@ export function App() {
     <div className={tab === 'profile' ? 'app app-grouped' : 'app'}>
       <main className="app-content">
         <NavBar title={tabs[tab].label} />
+        {tab === 'notes' ? <Notes /> : null}
         {tab === 'profile' ? <Profile /> : null}
       </main>
       <div className="app-tabbar">
