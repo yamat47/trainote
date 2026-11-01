@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Field } from './Field.tsx';
 import readme from './Group.md?raw';
 import { Group } from './Group.tsx';
 import { Row } from './Row.tsx';
@@ -16,13 +17,36 @@ type Story = StoryObj<typeof meta>;
 export const Goal: Story = {
   args: {
     header: 'Goal',
-    footer: 'Claude reads these before every reply.',
     children: (
       <>
-        <Row detail="Mar 31, 2027" accessory="disclosure" onClick={() => {}}>
-          Target date
-        </Row>
-        <Row detail="Gym">Where you train</Row>
+        <Field
+          label="Goal weight"
+          kind="numeric"
+          unit="kg"
+          value="60.0"
+          onChange={() => {}}
+          placeholder="0.0"
+        />
+        <Field label="By" kind="date" value="2027-03-31" onChange={() => {}} placeholder="" />
+      </>
+    ),
+  },
+};
+export const AboutYou: Story = {
+  args: {
+    header: 'About you',
+    children: (
+      <>
+        <Field
+          label="Height"
+          kind="numeric"
+          unit="cm"
+          value="172"
+          onChange={() => {}}
+          placeholder="0"
+        />
+        <Field label="Born" kind="whole" value="1990" onChange={() => {}} placeholder="Year" />
+        <Field label="Sex" value="" onChange={() => {}} placeholder="Not set" />
       </>
     ),
   },

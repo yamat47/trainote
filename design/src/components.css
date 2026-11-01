@@ -305,7 +305,8 @@ body {
   background: var(--grouped-cell);
   overflow: hidden;
 }
-.tn-group-body > .tn-row:last-child::after {
+.tn-group-body > .tn-row:last-child::after,
+.tn-group-body > .tn-field:last-child::after {
   display: none;
 }
 
@@ -389,6 +390,8 @@ body {
   color: var(--label);
   outline: none;
   resize: none;
+  /* A value wider than the row ends in an ellipsis until the field is edited. */
+  text-overflow: ellipsis;
 }
 .tn-field-grow {
   flex: 1;
