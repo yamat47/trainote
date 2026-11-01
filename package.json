@@ -17,6 +17,7 @@
     "test": "vitest run",
     "cf-typegen": "wrangler types",
     "tokens": "node scripts/tokens.ts",
+    "design:check": "node scripts/design-check.ts",
     "tokens:check": "pnpm tokens && test -z \"$(git status --porcelain -- design/src/tokens.css)\"",
     "storybook": "storybook dev --port 6006 --host 0.0.0.0 --no-open --ci",
     "storybook:build": "storybook build --output-dir dist-storybook",
