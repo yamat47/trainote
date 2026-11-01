@@ -13,8 +13,8 @@ else
   IN := $(COMPOSE) run --rm $(TTY) app
 endif
 
-.PHONY: help build install dev down logs shell lint typecheck test dist db-check tokens-check check \
-  migrate-local db-generate typegen tokens scheduled whoami secret pnpm wrangler
+.PHONY: help build install dev down logs shell storybook storybook-dist lint typecheck test dist db-check \
+  tokens-check check migrate-local db-generate typegen tokens scheduled whoami secret pnpm wrangler
 
 help: ## This list
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed -E 's/^([a-z-]+):.*## /\1\t/' | sort | column -t -s "$$(printf '\t')"
@@ -28,14 +28,20 @@ install: ## Install dependencies from the lockfile
 dev: ## Run the dev server on http://localhost:5173
 	$(COMPOSE) up
 
-down: ## Stop and remove the dev server container
-	$(COMPOSE) down
+down: ## Stop and remove the dev server and Storybook containers
+	$(COMPOSE) --profile storybook down
 
 logs: ## Follow the dev server output
 	$(COMPOSE) logs --follow app
 
 shell: ## A shell in the container
 	$(IN) bash
+
+storybook: ## Run Storybook on http://localhost:6006, beside the dev server or on its own
+	$(COMPOSE) up storybook
+
+storybook-dist: ## Build Storybook into dist-storybook/
+	$(IN) pnpm storybook:build
 
 lint: ## oxlint with type-aware rules, then prettier --check
 	$(IN) pnpm lint
@@ -52,10 +58,10 @@ dist: ## Build the app into dist/
 db-check: ## The committed migrations match worker/db/schema.ts
 	$(IN) pnpm db:check
 
-tokens-check: ## The committed src/tokens.css matches design/system/tokens.json
+tokens-check: ## The committed design/src/tokens.css matches design/system/tokens.json
 	$(IN) pnpm tokens:check
 
-check: lint typecheck test db-check tokens-check dist ## The checks CI runs, in CI's order
+check: lint typecheck test db-check tokens-check dist storybook-dist ## The checks CI runs, in CI's order
 
 migrate-local: ## Apply migrations/ to the local D1
 	$(IN) pnpm db:migrate:local
@@ -66,7 +72,7 @@ db-generate: ## Write a migration for the current schema
 typegen: ## Regenerate worker-configuration.d.ts from wrangler.jsonc
 	$(IN) pnpm cf-typegen
 
-tokens: ## Regenerate src/tokens.css from design/system/tokens.json
+tokens: ## Regenerate design/src/tokens.css from design/system/tokens.json
 	$(IN) pnpm tokens
 
 scheduled: ## Fire the Sunday cron against the running dev server

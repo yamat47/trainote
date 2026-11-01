@@ -69,6 +69,8 @@ jobs:
         with:
           node-version-file: .node-version
       - run: pnpm build
+      - name: Storybook builds
+        run: pnpm storybook:build
 
   zizmor:
     name: zizmor
