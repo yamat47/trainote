@@ -1,7 +1,4 @@
-import { hc } from 'hono/client';
-import type { AppType } from '../worker/app.ts';
-
-const client = hc<AppType>('/');
+import { client, expectOk } from './api.ts';
 
 export type ReminderState = 'unsupported' | 'denied' | 'off' | 'on';
 
@@ -24,9 +21,7 @@ export async function turnOn(): Promise<ReminderState> {
   if (permission !== 'granted') return permission === 'denied' ? 'denied' : 'off';
 
   const config = await client.api.push['vapid-public-key'].$get();
-  if (!config.ok) {
-    throw new Error(`GET /api/push/vapid-public-key answered ${String(config.status)}`);
-  }
+  expectOk(config, 'GET /api/push/vapid-public-key');
   const { vapidPublicKey } = await config.json();
 
   const registration = await navigator.serviceWorker.ready;
@@ -49,8 +44,8 @@ export async function turnOn(): Promise<ReminderState> {
   if (!saved.ok) {
     // Not stored on the server, so not kept in the browser either.
     await subscribed.unsubscribe();
-    throw new Error(`PUT /api/push/subscriptions answered ${String(saved.status)}`);
   }
+  expectOk(saved, 'PUT /api/push/subscriptions');
   return 'on';
 }
 
@@ -61,7 +56,7 @@ export type TestOutcome = 'sent' | 'nothing-to-send' | 'failed';
 // subscribes again by turning the reminder off and on.
 export async function sendTestReminder(): Promise<TestOutcome> {
   const response = await client.api.push.test.$post();
-  if (!response.ok) throw new Error(`POST /api/push/test answered ${String(response.status)}`);
+  expectOk(response, 'POST /api/push/test');
   const { sent, failed } = await response.json();
   if (sent > 0) return 'sent';
   return failed === 0 ? 'nothing-to-send' : 'failed';
@@ -73,9 +68,7 @@ export async function turnOff(): Promise<ReminderState> {
   const removed = await client.api.push.subscriptions[':endpoint'].$delete({
     param: { endpoint: encodeURIComponent(current.endpoint) },
   });
-  if (!removed.ok) {
-    throw new Error(`DELETE /api/push/subscriptions answered ${String(removed.status)}`);
-  }
+  expectOk(removed, 'DELETE /api/push/subscriptions');
   await current.unsubscribe();
   return 'off';
 }
