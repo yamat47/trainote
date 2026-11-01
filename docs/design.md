@@ -41,7 +41,7 @@ flowchart LR
    - `design/project/` が `make project` の出力と一致する (`design:project:check`)。部品に説明文かストーリーが無ければビルドが落ちる。
    - Storybook がビルドできる (`storybook:build`)。
    - `src/` に `.css` が無く、`src/` の JSX に `className` が無い (`design:check`)。部品の外にクラスは存在しない。
-3. 公開する。main にマージしたあと、Claude Code のセッションで「デザインを公開して」。手順はスキル `design-publish` (yamat47/github-toolkit。リリースが出たら `gh skill install yamat47/github-toolkit design-publish` で `.claude/skills/` に入れる) に固定してあり、`design/publish.json` (公開先、フォルダ、検査コマンド、写しを持つアーティファクト) を読んで動く。スキルがやること:
+3. 公開する。main にマージしたあと、Claude Code のセッションで「デザインを公開して」。手順はスキル `design-publish` (yamat47/github-toolkit v1.12.0 から。`.claude/skills/` に入れてある) に固定してあり、`design/publish.json` (公開先、フォルダ、検査コマンド、写しを持つアーティファクト) を読んで動く。スキルがやること:
    1. HEAD が push 済みで `design/project/` に差分が無く、`make project-check` が通ることを確かめる。公開は commit を記録するので、作業中の木からは公開しない。
    2. アーティファクトの index (`project/design-system.json`) を読み、`lastChange.via` (`GitHub · yamat47/trainote@<sha>`) の sha を基準にする。基準が無い (最初の公開、ページで保存された) ときは全部を送り、`design/project/` に無い部品や README をアーティファクトから消す (ページが作る api/ と manifest.json、アップロードされた assets/ には触れない)。
    3. `git diff --name-status <sha> HEAD -- design/project` で、送るファイルと消すファイルを決める。差分が無ければ何も書かずに終わる。
@@ -52,7 +52,7 @@ flowchart LR
 
 ## 最初の公開
 
-2026-11-01、`yamat47/trainote@2991250` から版 13 (1793530634-aec3) として公開した。送ったのは `design/project/` の 39 ファイル、消したのはアーティファクトにだけ残っていた Bubble、Segmented、Stat の README と preview。読み戻した一覧は 39 ファイルともサイズが一致し、index は `editing: code` と上の `lastChange` を持つ。tokens.css はページが前に作ったものとバイト単位で同じだった。画面のアーティファクトの写し (`ds/trainote/`) は bundle.js と bundle.css が古いままで、Stat、Segmented、Bubble を移植するまでそのままにする。スキルはまだ入っていないので、この回は手順を手でなぞった。
+2026-11-01、`yamat47/trainote@2991250` から版 13 (1793530634-aec3) として公開した。送ったのは `design/project/` の 39 ファイル、消したのはアーティファクトにだけ残っていた Bubble、Segmented、Stat の README と preview。読み戻した一覧は 39 ファイルともサイズが一致し、index は `editing: code` と上の `lastChange` を持つ。tokens.css はページが前に作ったものとバイト単位で同じだった。画面のアーティファクトの写し (`ds/trainote/`) は bundle.js と bundle.css が古いままで、Stat、Segmented、Bubble を移植するまでそのままにする。スキルはこの回のあとに入れたので、この回は手順を手でなぞった。
 
 ## 部品の増やし方
 
@@ -74,8 +74,8 @@ flowchart LR
 
 ## 進み具合
 
-| 段階 | 内容                                                                                                             | 状態                                                                                                |
-| ---- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 1    | 部品を `design/src/` に移し、Storybook (部品、トークンのページ、ライトとダークの切替) を入れる                   | 済 (2026-11-01)                                                                                     |
-| 2    | 上の表の部品を足し、タブを部品だけで書き直し、アプリの CSS を 0 行にして検査を入れる                             | 済 (2026-11-01)                                                                                     |
-| 3    | `design/project/` のビルドと最初の公開、`design-publish` スキル (github-toolkit)、`design/screens/` の扱いの整理 | この PR。残り: github-toolkit のリリース後に `gh skill install`、写し `ds/trainote/` の更新は移植後 |
+| 段階 | 内容                                                                                                             | 状態                                                |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1    | 部品を `design/src/` に移し、Storybook (部品、トークンのページ、ライトとダークの切替) を入れる                   | 済 (2026-11-01)                                     |
+| 2    | 上の表の部品を足し、タブを部品だけで書き直し、アプリの CSS を 0 行にして検査を入れる                             | 済 (2026-11-01)                                     |
+| 3    | `design/project/` のビルドと最初の公開、`design-publish` スキル (github-toolkit)、`design/screens/` の扱いの整理 | 済 (2026-11-01)。写し `ds/trainote/` の更新は移植後 |
