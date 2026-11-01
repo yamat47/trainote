@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavBar } from '../design/src/NavBar.tsx';
 import { Screen } from '../design/src/Screen.tsx';
 import { TabBar, type TabItem } from '../design/src/TabBar.tsx';
 import { Notes } from './tabs/Notes.tsx';
 import { Profile } from './tabs/Profile.tsx';
+import { WeightTab } from './tabs/Weight.tsx';
 
 const TAB_KEYS = ['notes', 'weight', 'coach', 'profile'] as const;
 type TabKey = (typeof TAB_KEYS)[number];
@@ -48,20 +49,71 @@ function rememberTab(key: TabKey) {
   }
 }
 
+// The screens pushed over a tab, by path. A pushed screen has a path, so a reload and the
+// notification's link (`/coach/weekly-review`, later) land on it; a tab has none.
+const ALL_WEIGHTS = '/weight/all';
+const PUSHED = {
+  [ALL_WEIGHTS]: { tab: 'weight', title: 'All entries' },
+} as const satisfies Record<string, { tab: TabKey; title: string }>;
+
+const isPushedPath = (path: string): path is keyof typeof PUSHED => path in PUSHED;
+
 export function App() {
-  const [tab, setTab] = useState<TabKey>(rememberedTab);
+  const [stored, setStored] = useState<TabKey>(rememberedTab);
+  const [path, setPath] = useState(() => location.pathname);
+
+  useEffect(() => {
+    const onPop = () => setPath(location.pathname);
+    addEventListener('popstate', onPop);
+    return () => removeEventListener('popstate', onPop);
+  }, []);
+
+  const pushed = isPushedPath(path) ? PUSHED[path] : undefined;
+  const tab: TabKey = pushed?.tab ?? stored;
+
+  const push = (next: string) => {
+    history.pushState({ pushed: true }, '', next);
+    setPath(next);
+  };
+  // Leaving a pushed screen pops what this app pushed; a screen opened by its address
+  // has nothing to pop to, so the address is replaced and its tab is kept (a tab tap
+  // replaces too, which leaves one spare `/` behind; docs/requirements.md).
+  const leave = () => {
+    const state: unknown = history.state;
+    if (typeof state === 'object' && state !== null && 'pushed' in state) history.back();
+    else {
+      history.replaceState(null, '', '/');
+      setPath('/');
+      if (pushed !== undefined) {
+        setStored(pushed.tab);
+        rememberTab(pushed.tab);
+      }
+    }
+  };
   const select = (key: TabKey) => {
-    setTab(key);
+    if (pushed !== undefined) {
+      history.replaceState(null, '', '/');
+      setPath('/');
+    }
+    setStored(key);
     rememberTab(key);
   };
+  const back = leave;
 
   return (
     <Screen
       tone={tab === 'profile' ? 'grouped' : 'plain'}
       tabBar={<TabBar items={items} active={tab} onChange={select} />}
     >
-      <NavBar title={tabs[tab].label} />
+      {pushed === undefined ? (
+        <NavBar title={tabs[tab].label} />
+      ) : (
+        <NavBar title={pushed.title} back={{ label: tabs[pushed.tab].label, onClick: back }} />
+      )}
       {tab === 'notes' ? <Notes /> : null}
+      {tab === 'weight' ? (
+        <WeightTab allEntries={path === ALL_WEIGHTS} onShowAll={() => push(ALL_WEIGHTS)} />
+      ) : null}
       {tab === 'profile' ? <Profile /> : null}
     </Screen>
   );
