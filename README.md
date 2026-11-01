@@ -8,25 +8,33 @@ Vite, React and TypeScript on one Cloudflare Worker that serves the app and a Ho
 
 ## Working on it
 
-Node 26 and pnpm 12 (`npm install -g pnpm`; the exact version is in `package.json`).
+The toolchain (Node 26, pnpm, wrangler, the tests) runs in a Docker container; the host needs git, gh and docker, nothing else. Every command goes through `make`, which reuses the dev server's container when it is running and starts a one-off one otherwise. `make help` lists the targets.
 
 ```sh
-pnpm install
-pnpm db:migrate:local   # applies migrations/ to the local D1
-pnpm dev                # Vite with the Worker and a local D1; Access is faked from wrangler.jsonc
+make build          # the toolchain image; again after Dockerfile or package.json change
+make install        # pnpm install from the lockfile, into a volume
+make migrate-local  # applies migrations/ to the local D1
+make dev            # Vite with the Worker and a local D1 on http://localhost:5173; Access is faked from wrangler.jsonc
 ```
+
+The container watches the source by polling, because colima's virtiofs mount passes no file change events; if your Docker runtime does pass them, drop `CHOKIDAR_USEPOLLING` from `compose.yaml`.
 
 Checks, the same ones CI runs:
 
 ```sh
-pnpm lint        # oxlint with type-aware rules, then prettier --check
-pnpm typecheck   # tsc -b over the app, the Worker and the config files
-pnpm test        # vitest
-pnpm build       # vite build
-pnpm db:check    # the committed migrations match worker/db/schema.ts
+make lint        # oxlint with type-aware rules, then prettier --check
+make typecheck   # tsc -b over the app, the Worker and the config files
+make test        # vitest
+make dist        # vite build
+make db-check    # the committed migrations match worker/db/schema.ts
+make check       # all five, in that order
 ```
 
-After changing `worker/db/schema.ts`, run `pnpm db:generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `pnpm cf-typegen` and commit `worker-configuration.d.ts`.
+Anything else: `make pnpm ARGS="add hono"` and `make wrangler ARGS="d1 info trainote"`.
+
+After changing `worker/db/schema.ts`, run `make db-generate` and commit the new file under `migrations/`. After changing bindings or vars in `wrangler.jsonc`, run `make typegen` and commit `worker-configuration.d.ts`.
+
+wrangler authenticates with the API token in `.env` (`CLOUDFLARE_API_TOKEN=...`, ignored by git; `docs/requirements.md` says which token). `make whoami` shows the account it reaches, and `make secret NAME=VAPID_PRIVATE_KEY < file` stores a Worker secret.
 
 ## Deploying
 

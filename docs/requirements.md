@@ -86,6 +86,8 @@
   - テーブルは users、profiles、entries、workout_items、weights、threads、messages、push_subscriptions
 - デプロイは GitHub Actions。main への push で migrate してから deploy する。PR では lint、typecheck、test だけ。actions は SHA ピン (github-toolkit の github-actions-workflows スキルに従う)
 - ローカルは `vite dev` (Cloudflare プラグイン経由でローカル D1 つき)
+  - 開発のツールチェーン (Node、pnpm、wrangler、テスト) は Docker コンテナで動かし、ホストに置くのは git、gh、docker だけ。入口は `make` (`compose.yaml` と `Makefile`)。`node_modules` はコンテナ側の名前付きボリュームに持つ。workerd や oxlint のネイティブバイナリがプラットフォーム別で、ホストのものと混ぜられないため
+    - colima の virtiofs マウントは inotify を通さないので、Vite はポーリングで変更を拾う (`CHOKIDAR_USEPOLLING`)
 - 日付は Asia/Tokyo 固定。Cron の時刻は UTC で書くので JST から引き直す。単位は kg、km、分
 - パッケージマネージャは pnpm。テストは vitest (API のツール関数と構造化の JSON スキーマが主な対象)
   - lint は oxlint。型を使う規則は tsgolint が TypeScript 7 の上で動かす。TypeScript 7 は typescript-eslint が読み込む compiler API を持たないので ESLint は使わない。整形は Prettier
@@ -114,6 +116,7 @@
   - `trainote_access_team_domain` = `yamat47.cloudflareaccess.com` (同じく issuer と証明書の取得先)
 - Zero Trust の Google ログイン方法は手で登録済み。IdP の id は `0a257bc8-2462-4567-b5c6-0943cb816183` (ダッシュボードの編集画面 URL の末尾)。Access アプリは `allowed_idps` にこの 1 件だけを持ち、ログイン画面を飛ばして Google に直行する
 - Worker 名は `trainote`。workers.dev のサブドメインは `yamat47.workers.dev`。Zero Trust のチームドメインは `yamat47.cloudflareaccess.com`
+- 手元のコンテナの wrangler が使う API トークン `trainote local wrangler`。権限はデプロイ用と同じテンプレート「Edit Cloudflare Workers」に D1 Edit を足したもので、アカウントは yamat47 のみ。値はリポジトリ直下の `.env` に `CLOUDFLARE_API_TOKEN` として置く (git 管理外)。`make whoami` で確かめられる
 
 ### デザイン (claude.ai の Design System アーティファクト)
 

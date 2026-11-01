@@ -1,0 +1,3 @@
+# The image copies nothing but package.json; the source is bind-mounted at run time.
+*
+!package.json
