@@ -4,3 +4,5 @@ Children are the text, set in `footnote` on `secondary-label` with `space-6` abo
 
 - Do: write it as a plain phrase in sentence case.
 - Don't: set it in capitals, add a count in parentheses, or use it as a title; the screen title is the `NavBar`.
+
+Above a run of plain rows use `List`, which carries the header; above the structured preview use `Inset`, which carries its own.

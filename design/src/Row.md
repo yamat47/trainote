@@ -4,3 +4,5 @@ Children are the text in `body`. Pass `kind` (`win` or `slip`) for an entry: the
 
 - Do: let long entries wrap; the row grows by whole lines. Inside a `Group`, the last row has no separator.
 - Don't: put two details in one row, colour the text, or add icons to the left of a row.
+
+Pass `error` for the red `caption-1` line directly under the text when what the row did failed ("Could not change the reminder. Try again."); it is an `<output>`, announced when it appears. `sub` stays for a second line of content.

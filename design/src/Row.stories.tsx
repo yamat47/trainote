@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import readme from '../system/components/Row/README.md?raw';
+import readme from './Row.md?raw';
 import { Row } from './Row.tsx';
 
 const meta = {
