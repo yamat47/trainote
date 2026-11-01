@@ -70,6 +70,10 @@
     - 書き込みツールは v1 では持たない。保存は記録ビューの確認フローに寄せる
   - 会話履歴はスレッド単位で D1 に保存する (`threads`、`messages`)。Claude にはスレッド全文を渡し、長くなったら先頭を落とす
     - API は `GET /api/threads` (一覧。最後の発言が新しい順。各行に Claude の最後の返答の 1 行目を `preview` として添える)、`POST /api/threads` (本文か `kind: weekly-review` で作る。作るだけで Claude は呼ばない)、`GET /api/threads/:id` (発言全部、古い順)、`POST /api/threads/:id/messages` (自分の発言を保存するだけ)、`POST /api/threads/:id/answer` (スレッドの今の状態に Claude が答える)。答えるのを保存と分けるのは、失敗後の Try again と Weekly review の最初の返答を同じ道で通すため。最後の発言が Claude のものなら 409
+      - 返答はスレッドの印 (`threads` の `answer_claim` と `answer_expires_at`) の下で書く。answer は条件つきの UPDATE 1 文で印を立てる (自分のスレッド、最後が自分の発言、印が無いか期限切れ)。立てられなければ 409 で、題は「The thread is being answered」か「Nothing to answer」。返答中に離れてすぐ戻ったときや日曜の通知を 2 度押したときに、返答が 2 つ並ばないため (2026-11-02)
+      - 返答中は Worker が 10 秒ごとに期限を今から 30 秒先へ延ばす。返答の保存と同じ batch で印を外し、印がもう自分のものでないか期限が切れていれば保存しない (失効した印はほかの要求が取れるので、その返答は後から来た発言を読まずに並びうる)。失敗したときも外してから error を送る。返答中の `POST /api/threads/:id/messages` も 409 で、発言を入れる文そのものが印の生きていないことを条件にする (書いている返答は新しい発言を読まずに答え、その発言が答えられないまま残るため)。`GET /api/threads/:id` の thread は `answering` (印があって期限内) を持つ
+      - 期限を延ばす形にするのは、印を外せずに Worker が止まることがあるため。`waitUntil` が延ばせるのは応答を返したあとやクライアントが切れたあと 30 秒までで、それを過ぎた処理は取り消される ([Workers Context](https://developers.cloudflare.com/workers/runtime-apis/context/))。延長が途切れれば 30 秒で印は失効し、次の answer が取り直す。dev で、返答の途中で期限が 10 秒先へ延び、保存とともに消えるのを確かめた
+      - 離れてから 30 秒で書き終わらない返答は Worker とともに止まり、保存されない。開き直したページが待ったあと Try again を出す。Queue に移して最後まで書かせることは v1 ではしない
     - 落とすのは文字数で、新しい方から数えて 3 万字に収まる分だけ送る。残す先頭は自分の発言にそろえ、最後の発言は長くても必ず送る
     - 発言は 4000 字まで (メモの 2000 字と同じく、貼り付けた文書を止める上限)。スレッドの題は自分の最初の発言の 1 行目を 40 字で切ったもの。一覧の preview は Claude の最後の返答の 1 行目を 120 字で切ったもの。Weekly review は固定で「Weekly review」。Claude には付けさせない (呼び出しが 1 つ増えるため)。削除は v1 では作らない
     - `threads` に `kind` (chat / weekly-review) を持つ。Weekly review の入口と通知の `/coach/weekly-review` は、その日 (Asia/Tokyo) に作った Weekly review があればそれを開き、なければ新しく作る (日曜の通知を 2 度押しても 2 本にならない)。最初の発言は固定で「今週の行動と体重を読んで、できたこと、つまずき、来週の方針を 1 つにまとめて」
@@ -94,7 +98,7 @@
   - Coach はスレッド一覧から単一ビュー (チャット) へ。一覧の先頭に Weekly review の入口を置く
     - 一覧の先頭は multiline の Field「Ask your coach」。文字があるときだけ下に plain の「Send」ボタンを出し、押すと `POST /api/threads` でスレッドを作って `/coach/:id` を重ねる。その下に tint の行「Start weekly review」(detail は「Sundays, 20:00」)。押すと `kind: weekly-review` で今日のものを開くか作り、同じく重ねる。続いてスレッドの行: 題、副行に Claude の最後の返答の 1 行目、detail に最後の発言の日付 (Asia/Tokyo、「Oct 18」)。送れなければボタンの下に「Could not send. Try again.」、Weekly review を開けなければ行の下に「Could not start the weekly review. Try again.」
     - スレッドの画面は inline の NavBar (題と Coach への戻り)、吹き出し、下部に Composer (Messages 風のカプセルと送信ボタン)。タブバーは出さず、Composer がその場所に付く。通知の `/coach/weekly-review` は今日の Weekly review を開くか作り、アドレスをそのスレッドの `/coach/:id` に置き換える
-    - 開いたとき最後の発言が自分のものなら (作った直後、通知から開いた Weekly review、前の返答が失敗したまま離れたスレッド) そのまま answer を呼ぶ。Try again も同じ answer。返答中は Composer を無効にする。送信は `POST /api/threads/:id/messages` で保存し、吹き出しを足してから answer。保存できなければ Composer の上に赤の 1 行「Could not send. Try again.」で本文は残す
+    - 開いたとき最後の発言が自分のものなら (作った直後、通知から開いた Weekly review、前の返答が失敗したまま離れたスレッド) そのまま answer を呼ぶ。Try again も同じ answer。返答中は Composer を無効にする。answer が 409 を返したら (別の要求が返答を書いているか、書き終えた) 待つ。すぐと、その後 2 秒ごとに `GET /api/threads/:id` で読み直し、thread の `answering` が消えるまで caption-1 の「Your coach is writing」を出して Composer を無効にする。返答が届いていれば出し、返答が無いまま印が消えれば「Could not reach your coach.」と Try again。送信は `POST /api/threads/:id/messages` で保存し、吹き出しを足してから answer。保存できなければ Composer の上に赤の 1 行「Could not send. Try again.」で本文は残す
     - 返答が流れる間は最新の発言が見えるように下までスクロールする。吹き出しごとの時刻や日付の行、題の下の日付は出さない (一覧の API はサーバーの today を返さず、端末の時計で Today を決めない方針のため)
   - Profile はデザインの画面の順に About you (Height cm、Born、Sex)、Goal (Goal weight、By)、Training (Where、Days a week、Equipment)、Notes for your coach (複数行の欄 1 つ)、Notifications。各グループに書き始めると右に Save が出て、保存できなければその下に「Could not save. Try again.」。プロフィールを読み込めなければグループの代わりに「Could not load your profile.」と Try again。Notes for your coach の footer は「Your coach reads everything above before every reply.」(Notifications は Claude が読まないので「above」)
 - 見た目は iOS の標準 (Human Interface Guidelines) に揃える。部品は平らな一般的なもので、Liquid Glass は真似しない
@@ -188,4 +192,3 @@
 - 行動の保存は entries と workout_items の 2 文で、間で失敗したあとの Try again は同じ entries をもう一度入れる。編集と削除が入るまでは許容し、一覧で見えて困るなら 1 つのバッチにまとめる (id を select で引き直す)
 - 初回に開くタブ
 - 増量の目標 (目標体重が今より重いとき)。いまは減量として読む
-- 返答中のスレッドをもう一度 answer すると返答が 2 つ並ぶ (返答中に離れてすぐ戻った、日曜の通知を 2 度押した)。Worker が返答中のスレッドに 409 を返すか、ページが待つか
