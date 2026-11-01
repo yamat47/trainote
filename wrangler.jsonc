@@ -26,9 +26,9 @@
     // (wrangler secret put; .dev.vars locally).
     "VAPID_PUBLIC_KEY": "BL6wJk6KFraF-5uHUz1I040RLzxyXp4QJWkyoO5-42-TQCMODP12waAI9BB1IkTVoqEU-Vkj39v0uHm1uzzeEJI",
     "VAPID_SUBJECT": "mailto:yamat47.thirddown@gmail.com",
-    // The model that splits a note into entries. The chat gets its own var when the
-    // Coach tab arrives.
+    // The model that splits a note into entries, and the one the coach answers with.
     "STRUCTURE_MODEL": "claude-sonnet-5-5",
+    "COACH_MODEL": "claude-opus-5-5",
   },
   "triggers": {
     // Sunday 20:00 in Asia/Tokyo, written in UTC. Cloudflare numbers the days 1 to 7,

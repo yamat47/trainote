@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { accessIdentity, type AccessContext, type IdentityResolver } from './auth/identity.ts';
+import { coachWithClaude, type Coach } from './coach.ts';
 import { database } from './db/index.ts';
 import type { User } from './db/schema.ts';
 import { entryRoutes } from './entries.ts';
@@ -7,6 +8,7 @@ import { problem } from './problem.ts';
 import { profileRoutes } from './profile.ts';
 import { pushRoutes } from './push.ts';
 import { structureWithClaude, type Structure } from './structure.ts';
+import { threadRoutes } from './threads.ts';
 import { findOrCreateUser } from './users.ts';
 import { weightRoutes } from './weights.ts';
 
@@ -19,11 +21,13 @@ export type AppEnv = {
 type Overrides = {
   identity?: IdentityResolver | undefined;
   structure?: Structure | undefined;
+  coach?: Coach | undefined;
 };
 
 export function createApp({
   identity = accessIdentity(),
   structure = structureWithClaude(),
+  coach = coachWithClaude(),
 }: Overrides = {}) {
   const api = new Hono<AppEnv>().basePath('/api');
 
@@ -40,7 +44,8 @@ export function createApp({
     .route('/push', pushRoutes())
     .route('/entries', entryRoutes(structure))
     .route('/weights', weightRoutes())
-    .route('/profile', profileRoutes());
+    .route('/profile', profileRoutes())
+    .route('/threads', threadRoutes(coach));
 }
 
 export type AppType = ReturnType<typeof createApp>;

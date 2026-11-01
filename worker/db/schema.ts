@@ -18,6 +18,11 @@ export type Category = (typeof CATEGORIES)[number];
 export const MESSAGE_ROLES = ['user', 'assistant'] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
 
+// A chat the person started, or the week's review the Coach tab and the Sunday
+// reminder open with a fixed first message.
+export const THREAD_KINDS = ['chat', 'weekly-review'] as const;
+export type ThreadKind = (typeof THREAD_KINDS)[number];
+
 // RFC 3339 in UTC with milliseconds, so rows sort by time as text.
 export const NOW = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
 
@@ -115,11 +120,16 @@ export const threads = sqliteTable(
     userId: integer()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    title: text(),
+    kind: text({ enum: THREAD_KINDS }).notNull().default('chat'),
+    title: text().notNull(),
     createdAt: timestamp(),
+    // The time of the last message, so the list orders by it.
     updatedAt: updatedAt(),
   },
-  (t) => [index('threads_user_id_updated_at_idx').on(t.userId, t.updatedAt)],
+  (t) => [
+    index('threads_user_id_updated_at_idx').on(t.userId, t.updatedAt),
+    check('threads_kind_check', sql`${t.kind} in (${oneOf(THREAD_KINDS)})`),
+  ],
 );
 
 export const messages = sqliteTable(

@@ -4,6 +4,7 @@ import { hc } from 'hono/client';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import { createApp, type AppType } from '../app.ts';
 import type { IdentityResolver } from '../auth/identity.ts';
+import type { Coach } from '../coach.ts';
 import { database } from '../db/index.ts';
 import type { Structure } from '../structure.ts';
 import { findOrCreateUser } from '../users.ts';
@@ -37,20 +38,26 @@ const identityOf =
   () =>
     Promise.resolve(email === undefined ? undefined : { email });
 
-// No test reaches Claude; a route that needs the structurer gets one from its test.
+// No test reaches Claude; a route that needs the structurer or the coach gets one from
+// its test.
 const noStructure: Structure = () => Promise.reject(new Error('no structurer in this test'));
+const noCoach: Coach = () => Promise.reject(new Error('no coach in this test'));
+
+export type Fakes = { structure?: Structure | undefined; coach?: Coach | undefined };
 
 // The id of the user a test speaks as, created on first use.
 export const userIdOf = async (env: Env, email: string) =>
   (await findOrCreateUser(database(env.DB), email)).id;
 
 // The app with Access replaced by a fixed identity (or none).
-export const appAs = (email: string | undefined, structure: Structure = noStructure) =>
-  createApp({ identity: identityOf(email), structure });
+export const appAs = (
+  email: string | undefined,
+  { structure = noStructure, coach = noCoach }: Fakes = {},
+) => createApp({ identity: identityOf(email), structure, coach });
 
 // The same typed client the page uses, pointed at the app instead of the network.
-export function clientAs(env: Env, email: string | undefined, structure?: Structure) {
-  const app = appAs(email, structure);
+export function clientAs(env: Env, email: string | undefined, fakes?: Fakes) {
+  const app = appAs(email, fakes);
   return hc<AppType>('https://trainote.test', {
     fetch: (input: RequestInfo | URL, init?: RequestInit) =>
       Promise.resolve(app.request(input, init, env)),

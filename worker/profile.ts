@@ -22,6 +22,9 @@ const shown = { goalWeightKg: profiles.goalWeightKg, goalDeadline: profiles.goal
 
 export type Profile = Pick<typeof profiles.$inferSelect, 'goalWeightKg' | 'goalDeadline'>;
 
+// Every field, for the coach's prompt; undefined before the person set anything.
+export type FullProfile = typeof profiles.$inferSelect;
+
 const EMPTY: Profile = { goalWeightKg: null, goalDeadline: null };
 
 export function profileRoutes() {
@@ -47,4 +50,12 @@ export async function saveGoal(db: Database, userId: number, goal: Goal): Promis
     .returning(shown);
   if (saved === undefined) throw new Error('the goal was not stored');
   return saved;
+}
+
+export async function readFullProfile(
+  db: Database,
+  userId: number,
+): Promise<FullProfile | undefined> {
+  const [row] = await db.select().from(profiles).where(eq(profiles.userId, userId));
+  return row;
 }

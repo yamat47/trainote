@@ -23,8 +23,15 @@ export function tokyoDate(instant: Date): string {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// The Monday-to-today range of the Tokyo week the instant falls in, as two dates.
-export function tokyoWeek(instant: Date): { from: string; to: string } {
+// Midnight of a Tokyo day as an instant, for comparing with the stored RFC 3339 times.
+// Japan keeps one offset all year, so the offset is a constant.
+export const tokyoDayStart = (date: string) => new Date(`${date}T00:00:00+09:00`);
+
+// A run of days, both ends inclusive.
+export type DayRange = { from: string; to: string };
+
+// The Monday-to-today range of the Tokyo week the instant falls in.
+export function tokyoWeek(instant: Date): DayRange {
   const to = tokyoDate(instant);
   const sinceMonday = MONDAY_FIRST[weekdayFormat.format(instant)];
   if (sinceMonday === undefined) throw new Error(`unexpected weekday for ${instant.toISOString()}`);

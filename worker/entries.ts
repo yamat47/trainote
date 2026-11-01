@@ -1,14 +1,15 @@
-import { and, count, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, type SQL } from 'drizzle-orm';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from './app.ts';
 import { jsonBody } from './body.ts';
 import { database, type Database } from './db/index.ts';
-import { entries, workoutItems } from './db/schema.ts';
+import { entries, workoutItems, type Category, type EntryKind } from './db/schema.ts';
 import { problem } from './problem.ts';
 import { MAX_NOTE_LENGTH } from './note.ts';
 import { DraftEntry, StructureError, type Structure } from './structure.ts';
-import { addDays, streak, tokyoDate, tokyoWeek, weekDates } from './week.ts';
+import { addDays, streak, tokyoDate, tokyoWeek, weekDates, type DayRange } from './week.ts';
 
 const Note = z.object({ text: z.string().trim().min(1).max(MAX_NOTE_LENGTH) });
 
@@ -96,21 +97,25 @@ function withItems(rows: (typeof entries.$inferSelect)[], items: Item[]): Entry[
   return rows.map((entry) => Object.assign(entry, { items: itemsOf.get(entry.id) ?? [] }));
 }
 
-// Every entry of the user, newest first, with its items in the order of the note. Two
-// queries in one round trip; the items join through entries rather than binding the
-// ids, which D1 caps at a hundred parameters.
-export async function listEntries(db: Database, userId: number): Promise<Entry[]> {
+// The entries that fit the condition with their items, in the given order. Two queries
+// in one round trip; the items join through entries rather than binding the ids, which
+// D1 caps at a hundred parameters.
+async function selectEntries(
+  db: Database,
+  condition: SQL | undefined,
+  order: (SQL | SQLiteColumn)[],
+): Promise<Entry[]> {
   const [rows, itemRows] = await db.batch([
     db
       .select()
       .from(entries)
-      .where(eq(entries.userId, userId))
-      .orderBy(desc(entries.date), desc(entries.id)),
+      .where(condition)
+      .orderBy(...order),
     db
       .select({ item: workoutItems })
       .from(workoutItems)
       .innerJoin(entries, eq(workoutItems.entryId, entries.id))
-      .where(eq(entries.userId, userId))
+      .where(condition)
       .orderBy(workoutItems.entryId, workoutItems.position),
   ]);
   return withItems(
@@ -118,6 +123,30 @@ export async function listEntries(db: Database, userId: number): Promise<Entry[]
     itemRows.map(({ item }) => item),
   );
 }
+
+// Every entry of the user, newest first, with its items in the order of the note.
+export const listEntries = (db: Database, userId: number) =>
+  selectEntries(db, eq(entries.userId, userId), [desc(entries.date), desc(entries.id)]);
+
+export type EntryFilter = DayRange & {
+  kind?: EntryKind | undefined;
+  category?: Category | undefined;
+};
+
+// The entries of the days in the range, oldest first, narrowed to a kind or a category
+// when one is given: what the coach reads.
+export const entriesBetween = (db: Database, userId: number, filter: EntryFilter) =>
+  selectEntries(
+    db,
+    and(
+      eq(entries.userId, userId),
+      gte(entries.date, filter.from),
+      lte(entries.date, filter.to),
+      filter.kind === undefined ? undefined : eq(entries.kind, filter.kind),
+      filter.category === undefined ? undefined : eq(entries.category, filter.category),
+    ),
+    [entries.date, entries.id],
+  );
 
 // How many wins and slips the user wrote on each day from `from` to `to`, both
 // inclusive: the one query behind the week strip and the Sunday reminder.
