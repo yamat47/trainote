@@ -24,7 +24,11 @@ export const THREAD_KINDS = ['chat', 'weekly-review'] as const;
 export type ThreadKind = (typeof THREAD_KINDS)[number];
 
 // RFC 3339 in UTC with milliseconds, so rows sort by time as text.
-export const NOW = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
+const STAMP = sql.raw(`'%Y-%m-%dT%H:%M:%fZ'`);
+export const NOW = sql`(strftime(${STAMP}, 'now'))`;
+// A time that many seconds from now, written as NOW is, so the two compare as text.
+export const secondsFromNow = (seconds: number) =>
+  sql`(strftime(${STAMP}, 'now', ${`+${String(seconds)} seconds`}))`;
 
 const timestamp = () => text().notNull().default(NOW);
 
@@ -122,9 +126,15 @@ export const threads = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     kind: text({ enum: THREAD_KINDS }).notNull().default('chat'),
     title: text().notNull(),
+    // The reply being written now: the claim its Worker took, and when the claim lapses
+    // unless that Worker renews it. Both null once the reply is stored or failed; a Worker
+    // that stopped leaves them set and lapsed until the next answer takes the thread.
+    answerClaim: text(),
+    answerExpiresAt: text(),
     createdAt: timestamp(),
-    // The time of the last message, so the list orders by it.
-    updatedAt: updatedAt(),
+    // The time of the last message, so the list orders by it: set where a message is
+    // stored, and left alone by the writes of a claim, which updatedAt() would move.
+    updatedAt: timestamp(),
   },
   (t) => [
     index('threads_user_id_updated_at_idx').on(t.userId, t.updatedAt),

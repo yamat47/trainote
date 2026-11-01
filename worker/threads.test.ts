@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import type { PlatformProxy } from 'wrangler';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { CoachError, type Coach, type Consultation } from './coach.ts';
 import { database } from './db/index.ts';
-import { messages } from './db/schema.ts';
+import { messages, threads } from './db/schema.ts';
 import { clientAs, platform, userIdOf } from './test/platform.ts';
 import { WEEKLY_REVIEW_OPENING, type Conversation } from './threads.ts';
 
@@ -47,6 +47,19 @@ const twoWords: Coach = async (_env, consultation, emit) => {
   return 'Nice start.';
 };
 
+// A coach that answers only when the test lets it, so the test can act while it writes.
+function heldCoach() {
+  let finish: (() => void) | undefined;
+  const finished = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  const coach: Coach = async () => {
+    await finished;
+    return 'Done.';
+  };
+  return { coach, finish: () => finish?.() };
+}
+
 // The path parameter that names a conversation's thread.
 const idOf = ({ thread }: Conversation) => ({ param: { id: String(thread.id) } });
 
@@ -74,6 +87,21 @@ describe('/api/threads', () => {
       .from(messages)
       .where(eq(messages.threadId, threadId))
       .orderBy(messages.id);
+
+  const claimOf = async (threadId: number) => {
+    const [row] = await database(proxy.env.DB)
+      .select({ claim: threads.answerClaim })
+      .from(threads)
+      .where(eq(threads.id, threadId));
+    return row?.claim;
+  };
+
+  // The thread's claim, as if its Worker had not renewed it for longer than it lasts.
+  const lapse = (threadId: number) =>
+    database(proxy.env.DB)
+      .update(threads)
+      .set({ answerExpiresAt: '2026-11-01T00:00:00.000Z' })
+      .where(eq(threads.id, threadId));
 
   describe('POST /', () => {
     it('starts a chat titled from the first line of the message, which is its first message', async () => {
@@ -227,7 +255,7 @@ describe('/api/threads', () => {
       expect(theirs.status).toBe(404);
     });
 
-    it('ends with an error event and stores nothing when the coach fails, even after some words', async () => {
+    it('ends with an error event and stores nothing when the coach fails, even after some words, and can be asked again', async () => {
       const started = await start('failing@example.com', 'Hi');
 
       const response = await api('failing@example.com', failing)[':id'].answer.$post(idOf(started));
@@ -238,6 +266,117 @@ describe('/api/threads', () => {
         data: { reason: 'unavailable' },
       });
       expect((await storedMessages(started.thread.id)).map((m) => m.role)).toEqual(['user']);
+      const again = await api('failing@example.com', twoWords)[':id'].answer.$post(idOf(started));
+      expect(again.status).toBe(200);
+    });
+
+    it('refuses a second answer and a new message while the reply is written, then stores the one reply', async () => {
+      const started = await start('twice@example.com', 'How was my week?');
+      const held = heldCoach();
+      const first = await api('twice@example.com', held.coach)[':id'].answer.$post(idOf(started));
+
+      const second = await api('twice@example.com', twoWords)[':id'].answer.$post(idOf(started));
+      const message = await api('twice@example.com')[':id'].messages.$post({
+        ...idOf(started),
+        json: { text: 'And sleep?' },
+      });
+      const during = await api('twice@example.com')[':id'].$get(idOf(started));
+
+      expect(second.status).toBe(409);
+      expect(await second.json()).toMatchObject({ title: 'The thread is being answered' });
+      expect(message.status).toBe(409);
+      expectOk(during);
+      expect((await during.json()).thread.answering).toBe(true);
+
+      held.finish();
+      expect(frames(await first.text()).at(-1)).toMatchObject({ event: 'done' });
+      const after = await api('twice@example.com')[':id'].$get(idOf(started));
+      expectOk(after);
+      expect((await after.json()).thread.answering).toBe(false);
+      expect((await storedMessages(started.thread.id)).map((m) => [m.role, m.content])).toEqual([
+        ['user', 'How was my week?'],
+        ['assistant', 'Done.'],
+      ]);
+    });
+
+    it('takes over a claim that its Worker stopped renewing', async () => {
+      const started = await start('lapsed@example.com', 'Hi');
+      await database(proxy.env.DB)
+        .update(threads)
+        .set({ answerClaim: 'stopped' })
+        .where(eq(threads.id, started.thread.id));
+      await lapse(started.thread.id);
+
+      const opened = await api('lapsed@example.com')[':id'].$get(idOf(started));
+      const response = await api('lapsed@example.com', twoWords)[':id'].answer.$post(idOf(started));
+
+      expectOk(opened);
+      expect((await opened.json()).thread.answering).toBe(false);
+      expect(response.status).toBe(200);
+      expect(frames(await response.text()).at(-1)).toMatchObject({ event: 'done' });
+      expect((await storedMessages(started.thread.id)).map((m) => m.role)).toEqual([
+        'user',
+        'assistant',
+      ]);
+    });
+
+    it('drops its reply when another answer took the claim over meanwhile', async () => {
+      const started = await start('overtaken@example.com', 'Hi');
+      const overtaken: Coach = async () => {
+        await database(proxy.env.DB)
+          .update(threads)
+          .set({ answerClaim: 'another' })
+          .where(eq(threads.id, started.thread.id));
+        return 'Too late.';
+      };
+
+      const response = await api('overtaken@example.com', overtaken)[':id'].answer.$post(
+        idOf(started),
+      );
+
+      expect(frames(await response.text()).at(-1)).toEqual({
+        event: 'error',
+        data: { reason: 'failed' },
+      });
+      expect((await storedMessages(started.thread.id)).map((m) => m.role)).toEqual(['user']);
+      expect(await claimOf(started.thread.id)).toBe('another');
+    });
+
+    it('drops its reply when its claim lapsed before the reply was done', async () => {
+      const started = await start('lapsing@example.com', 'Hi');
+      const lapsing: Coach = async () => {
+        await lapse(started.thread.id);
+        return 'Too late.';
+      };
+
+      const response = await api('lapsing@example.com', lapsing)[':id'].answer.$post(idOf(started));
+
+      expect(frames(await response.text()).at(-1)).toMatchObject({ event: 'error' });
+      expect((await storedMessages(started.thread.id)).map((m) => m.role)).toEqual(['user']);
+    });
+
+    it('renews its claim while the reply takes longer than a claim lasts', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+      try {
+        const started = await start('renewed@example.com', 'Hi');
+        const held = heldCoach();
+        const first = await api('renewed@example.com', held.coach)[':id'].answer.$post(
+          idOf(started),
+        );
+        await lapse(started.thread.id);
+
+        await vi.advanceTimersByTimeAsync(10_000);
+
+        await vi.waitFor(async () => {
+          const opened = await api('renewed@example.com')[':id'].$get(idOf(started));
+          expectOk(opened);
+          expect((await opened.json()).thread.answering).toBe(true);
+        });
+        held.finish();
+        expect(frames(await first.text()).at(-1)).toMatchObject({ event: 'done' });
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });
