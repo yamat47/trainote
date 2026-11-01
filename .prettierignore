@@ -1,11 +1,13 @@
 # Copied by hand from the design artifacts; reformatting would make the copies drift.
-design
+design/system
+design/screens
 # Generated.
 worker-configuration.d.ts
-src/tokens.css
+design/src/tokens.css
 migrations
 pnpm-lock.yaml
 dist
+dist-storybook
 .wrangler
 # Installed by `gh skill install`; reformatting would make every `gh skill update` a noisy diff.
 .claude/skills

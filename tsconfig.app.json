@@ -6,6 +6,6 @@
     "types": ["vite/client"],
     "jsx": "react-jsx"
   },
-  "include": ["src"],
+  "include": ["src", "design/src", ".storybook"],
   "references": [{ "path": "./tsconfig.worker.json" }]
 }

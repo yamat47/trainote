@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Category } from '../../worker/db/schema.ts';
 import { MAX_NOTE_LENGTH } from '../../worker/note.ts';
-import { addDays } from '../../worker/week.ts';
+import { addDays, WEEKDAYS } from '../../worker/week.ts';
 import { plural, weekPhrase } from '../../worker/words.ts';
-import { Button } from '../components/Button.tsx';
-import { Field } from '../components/Field.tsx';
-import { ListHeader } from '../components/ListHeader.tsx';
-import { Row } from '../components/Row.tsx';
-import { Week } from '../components/Week.tsx';
+import { Button } from '../../design/src/Button.tsx';
+import { Field } from '../../design/src/Field.tsx';
+import { ListHeader } from '../../design/src/ListHeader.tsx';
+import { Row } from '../../design/src/Row.tsx';
+import { Week, type WeekDay } from '../../design/src/Week.tsx';
 import {
   loadNotes,
   previewNote,
@@ -121,6 +121,23 @@ function weekSentence(week: Counts): string {
   // says what the person is keeping up.
   return week.streak >= 2 ? `${phrase}, ${plural(week.streak, 'day')} in a row.` : `${phrase}.`;
 }
+
+// The strip's seven columns from the server's week; empty until the counts arrive so the
+// page does not jump.
+const BLANK_WEEK: WeekDay[] = WEEKDAYS.map((label) => ({
+  label,
+  wins: 0,
+  slips: 0,
+  today: false,
+}));
+
+const weekDays = (week: Counts): WeekDay[] =>
+  week.days.map((day, i) => ({
+    label: WEEKDAYS[i] ?? '',
+    wins: day.wins,
+    slips: day.slips,
+    today: day.date === week.today,
+  }));
 
 // Entries are newest first already; consecutive rows of one day form a group.
 const byDay = (entries: Entry[]) => runs(entries, (a, b) => a.date === b.date);
@@ -242,7 +259,7 @@ function WeekBlock({ shown, onRetry }: WeekBlockProps) {
   if (shown.status === 'failed') {
     return (
       <>
-        <Week />
+        <Week days={BLANK_WEEK} />
         <output className="app-error app-week-error">Could not load your notes.</output>
         <div className="app-note-actions">
           <Button onClick={onRetry}>Try again</Button>
@@ -253,7 +270,7 @@ function WeekBlock({ shown, onRetry }: WeekBlockProps) {
   const week = shown.status === 'ready' ? shown.week : undefined;
   return (
     <>
-      <Week week={week} />
+      <Week days={week === undefined ? BLANK_WEEK : weekDays(week)} />
       <p className="app-week-sentence">{week === undefined ? '' : weekSentence(week)}</p>
     </>
   );

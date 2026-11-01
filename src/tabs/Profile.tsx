@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Group } from '../components/Group.tsx';
-import { Row } from '../components/Row.tsx';
+import { Group } from '../../design/src/Group.tsx';
+import { Row } from '../../design/src/Row.tsx';
 import {
   reminderState,
   sendTestReminder,
