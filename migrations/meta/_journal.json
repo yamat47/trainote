@@ -8,6 +8,13 @@
       "when": 1793439861347,
       "tag": "0000_tranquil_omega_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793542574658,
+      "tag": "0001_rapid_hellcat",
+      "breakpoints": true
     }
   ]
 }
