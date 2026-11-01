@@ -76,7 +76,9 @@ async function deliver(
     const payload = await buildPushPayload(
       {
         data: weeklyReminder(counts.win, counts.slip),
-        options: { ttl: TTL_SECONDS, urgency: 'normal', topic: 'weekly-review' },
+        // No Topic header: Apple's push service answers 400 BadWebPushTopic to any
+        // value. The tag in the payload already collapses duplicates on the device.
+        options: { ttl: TTL_SECONDS, urgency: 'normal' },
       },
       {
         endpoint: subscription.endpoint,
@@ -91,7 +93,9 @@ async function deliver(
       return 'removed';
     }
     if (response.ok) return 'sent';
-    console.error('push service answered', response.status, 'for', subscription.endpoint);
+    // Push services put the reason in the body ({"reason":"BadWebPushTopic"} and the like).
+    const reason = (await response.text()).slice(0, 200);
+    console.error('push service answered', response.status, reason, 'for', subscription.endpoint);
     return 'failed';
   } catch (error) {
     console.error('push to', subscription.endpoint, 'failed', error);

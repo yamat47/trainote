@@ -176,7 +176,8 @@ describe('sendWeeklyReminder', () => {
     expect(headers.get('authorization')).toMatch(/^vapid t=.+, k=.+$/);
     expect(headers.get('content-encoding')).toBe('aes128gcm');
     expect(headers.get('ttl')).toBe(String(6 * 60 * 60));
-    expect(headers.get('topic')).toBe('weekly-review');
+    // Apple rejects any Topic header, so none is sent.
+    expect(headers.has('topic')).toBe(false);
     expect(calls[0]?.init.body).toBeInstanceOf(Uint8Array);
   });
 

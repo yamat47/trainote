@@ -41,7 +41,7 @@
   - 毎週日曜 20:00 JST にプッシュ通知 (「Time for your weekly review?」) で知らせる。通知を押すと上と同じことが起きる
     - Web Push を使う。Worker の Cron Trigger (`triggers.crons` に UTC で `0 11 * * SUN`。Cloudflare の cron は曜日を 1 から 7 で数えるので 0 は通らない) が scheduled ハンドラで送る。購読は `push_subscriptions` (endpoint、p256dh、auth) に保存する。VAPID の秘密鍵は Worker の secret `VAPID_PRIVATE_KEY` (ローカルは `.dev.vars`)、公開鍵と subject は `wrangler.jsonc` の vars。鍵対は 1 組で、開発と本番で同じ
       - 購読は endpoint を識別子にして `PUT` と `DELETE /api/push/subscriptions/:endpoint` で出し入れする。公開鍵は `GET /api/push/vapid-public-key`
-      - 通知の本文は今週 (月曜から当日まで、Asia/Tokyo) の Win と Slip の数で「9 wins and 2 slips this week. Open to look back with your coach.」。1 件は単数形、片方が 0 でも「1 win and 0 slips」のまま、両方 0 なら後半の 1 文だけ。TTL は 6 時間。push サービスが 404 か 410 を返した購読は消す
+      - 通知の本文は今週 (月曜から当日まで、Asia/Tokyo) の Win と Slip の数で「9 wins and 2 slips this week. Open to look back with your coach.」。1 件は単数形、片方が 0 でも「1 win and 0 slips」のまま、両方 0 なら後半の 1 文だけ。TTL は 6 時間。push サービスが 404 か 410 を返した購読は消す。`Topic` ヘッダは付けない (Apple はどんな値にも 400 `BadWebPushTopic` を返す。実機で確認済み)。重複は payload の `tag` で端末側が畳む
       - `POST /api/push/test` が呼んだ人の購読にその場で同じ通知を送る。Profile の Notifications に「Send a reminder now」の行として置く。日曜を待たずに届くことを確かめるためで、通知の種類は増やさない
     - `web-push` パッケージは Node の crypto に依存して Worker で動かないので、WebCrypto で動く `@block65/webcrypto-web-push` を使う (aes128gcm と RFC 8292 の vapid。Apple が受け付ける組み合わせ)
     - iOS を想定する。アプリを PWA にし (manifest、アイコン、service worker)、ホーム画面に追加して使う。iOS ではホーム画面に追加したときだけ通知が届く。service worker は push だけを扱い、fetch には触らない。Access のログインリダイレクトを邪魔しないため
