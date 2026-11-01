@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Screen } from '../design/src/Screen.tsx';
 import { TabBar, type TabItem } from '../design/src/TabBar.tsx';
-import { NavBar } from '../design/src/NavBar.tsx';
+import { coachScreen } from './coach.ts';
+import { Coach } from './tabs/Coach.tsx';
 import { Notes } from './tabs/Notes.tsx';
 import { Profile } from './tabs/Profile.tsx';
 import { ALL_WEIGHTS, WeightTab } from './tabs/Weight.tsx';
@@ -50,10 +51,11 @@ function rememberTab(key: TabKey) {
 }
 
 // The tab a screen pushed over one belongs to. A pushed screen has a path, so a reload
-// and the notification's link (`/coach/weekly-review`, later) land on it; a tab has none,
-// and so has a path no tab knows.
+// and the notification's link (`/coach/weekly-review`) land on it; a tab has none, and
+// so has a path no tab knows.
 function tabOf(path: string): TabKey | undefined {
-  return path === ALL_WEIGHTS ? 'weight' : undefined;
+  if (path === ALL_WEIGHTS) return 'weight';
+  return coachScreen(path) === undefined ? undefined : 'coach';
 }
 
 export function App() {
@@ -69,8 +71,14 @@ export function App() {
   const pushed = tabOf(path);
   const tab: TabKey = pushed ?? stored;
 
-  const push = useCallback((next: string) => {
+  const push = (next: string) => {
     history.pushState({ pushed: true }, '', next);
+    setPath(next);
+  };
+  // The address of the screen changes under it: the weekly review's becomes its thread's.
+  // Kept the same across renders, since the weekly review's effect depends on it.
+  const replace = useCallback((next: string) => {
+    history.replaceState(history.state, '', next);
     setPath(next);
   }, []);
   // Leaving a pushed screen pops what this app pushed; a screen opened by its address
@@ -97,10 +105,15 @@ export function App() {
     rememberTab(key);
   };
 
+  const coach = tab === 'coach' ? coachScreen(path) : undefined;
+
   return (
     <Screen
       tone={tab === 'profile' ? 'grouped' : 'plain'}
-      tabBar={<TabBar items={items} active={tab} onChange={select} />}
+      // A thread has no tab bar: its composer holds the bottom, as in Messages.
+      tabBar={
+        coach === undefined ? <TabBar items={items} active={tab} onChange={select} /> : undefined
+      }
     >
       {tab === 'notes' ? <Notes /> : null}
       {tab === 'weight' ? (
@@ -110,7 +123,9 @@ export function App() {
           onBack={leave}
         />
       ) : null}
-      {tab === 'coach' ? <NavBar title="Coach" /> : null}
+      {tab === 'coach' ? (
+        <Coach screen={coach} onPush={push} onReplace={replace} onBack={leave} />
+      ) : null}
       {tab === 'profile' ? <Profile /> : null}
     </Screen>
   );
