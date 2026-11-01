@@ -6,3 +6,5 @@ migrations
 pnpm-lock.yaml
 dist
 .wrangler
+# Installed by `gh skill install`; reformatting would make every `gh skill update` a noisy diff.
+.claude/skills
