@@ -132,7 +132,7 @@
 
 ### 使うスキル (yamat47/github-toolkit)
 
-typescript-idioms、react-patterns、api-design、frontend-design、github-actions-workflows、writing-conventions、create-pr、review-pr。コミットメッセージと PR 本文は英語、Conventional Commits。AI の痕跡 (Co-Authored-By、session URL、Generated with) は残さない。
+`.claude/skills/` に `gh skill install yamat47/github-toolkit <name>` で入れてある: typescript-idioms、react-patterns、api-design、github-actions-workflows、writing-conventions、create-pr、review-pr、test-audit、review-dependency-bump、review-skill-update。frontend-design は同じものが Claude Code のプラグインとして入っているので、リポジトリには入れない (両方あると二重に効く)。更新は update-skills ワークフローが毎週 PR を開き、review-skill-update で見る。コミットメッセージと PR 本文は英語、Conventional Commits。AI の痕跡 (Co-Authored-By、session URL、Generated with) は残さない。
 
 ## 最初の一歩
 
