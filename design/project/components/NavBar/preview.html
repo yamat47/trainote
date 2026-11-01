@@ -1,4 +1,4 @@
-<!-- @dsCard group="Navigation" subtitle="Title, With Action" -->
+<!-- @dsCard group="Navigation" subtitle="Title, With Action, Inline" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,7 +12,8 @@ var T = window.Trainote, h = React.createElement;
 ReactDOM.createRoot(document.getElementById("root")).render(
   h(React.Fragment, null,
     h(T.NavBar, { "title": "Notes" }),
-    h(T.NavBar, { "title": "Notes", "trailing": h(T.Button, { "onClick": function () {} }, "Filter") })
+    h(T.NavBar, { "title": "Notes", "trailing": h(T.Button, { "onClick": function () {} }, "Filter") }),
+    h(T.NavBar, { "title": "All entries", "back": { "label": "Weight", "onClick": function () {} } })
   )
 );
 </script>

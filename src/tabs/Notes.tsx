@@ -212,6 +212,7 @@ export function Notes() {
     <>
       <WeekBlock shown={shown} onRetry={reload} />
       <Field
+        multiline
         value={draft.text}
         onChange={edit}
         placeholder="What did you do today?"
