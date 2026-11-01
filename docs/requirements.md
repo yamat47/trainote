@@ -116,7 +116,7 @@
   - `trainote_access_team_domain` = `yamat47.cloudflareaccess.com` (同じく issuer と証明書の取得先)
 - Zero Trust の Google ログイン方法は手で登録済み。IdP の id は `0a257bc8-2462-4567-b5c6-0943cb816183` (ダッシュボードの編集画面 URL の末尾)。Access アプリは `allowed_idps` にこの 1 件だけを持ち、ログイン画面を飛ばして Google に直行する
 - Worker 名は `trainote`。workers.dev のサブドメインは `yamat47.workers.dev`。Zero Trust のチームドメインは `yamat47.cloudflareaccess.com`
-- 手元のコンテナの wrangler が使う API トークン `trainote local wrangler`。権限はデプロイ用と同じテンプレート「Edit Cloudflare Workers」に D1 Edit を足したもので、アカウントは yamat47 のみ。値はリポジトリ直下の `.env` に `CLOUDFLARE_API_TOKEN` として置く (git 管理外)。`make whoami` で確かめられる
+- 手元のコンテナの wrangler が使う API トークン `trainote local wrangler`。ダッシュボードで手で作成。権限はデプロイ用と同じテンプレート「Edit Cloudflare Workers」に D1 Edit を足したもので、アカウントは yamat47 のみ。値はこの Mac のリポジトリ直下の `.env` にだけ `CLOUDFLARE_API_TOKEN` として置いてある (git 管理外)。別の機械で使うときは同じ要領でもう 1 つ作る。`make whoami` で確かめられる
 
 ### デザイン (claude.ai の Design System アーティファクト)
 

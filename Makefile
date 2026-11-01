@@ -37,13 +37,13 @@ logs: ## Follow the dev server output
 shell: ## A shell in the container
 	$(IN) bash
 
-lint:
+lint: ## oxlint with type-aware rules, then prettier --check
 	$(IN) pnpm lint
 
-typecheck:
+typecheck: ## tsc -b
 	$(IN) pnpm typecheck
 
-test:
+test: ## vitest
 	$(IN) pnpm test
 
 dist: ## Build the app into dist/

@@ -11,7 +11,7 @@ Vite, React and TypeScript on one Cloudflare Worker that serves the app and a Ho
 The toolchain (Node 26, pnpm, wrangler, the tests) runs in a Docker container; the host needs git, gh and docker, nothing else. Every command goes through `make`, which reuses the dev server's container when it is running and starts a one-off one otherwise. `make help` lists the targets.
 
 ```sh
-make build          # the toolchain image; again after Dockerfile or package.json change
+make build          # the toolchain image; again after Dockerfile or the packageManager field changes
 make install        # pnpm install from the lockfile, into a volume
 make migrate-local  # applies migrations/ to the local D1
 make dev            # Vite with the Worker and a local D1 on http://localhost:5173; Access is faked from wrangler.jsonc
@@ -25,8 +25,8 @@ Checks, the same ones CI runs:
 make lint        # oxlint with type-aware rules, then prettier --check
 make typecheck   # tsc -b over the app, the Worker and the config files
 make test        # vitest
-make dist        # vite build
 make db-check    # the committed migrations match worker/db/schema.ts
+make dist        # vite build
 make check       # all five, in that order
 ```
 

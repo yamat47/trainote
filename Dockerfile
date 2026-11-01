@@ -1,5 +1,6 @@
-# The development toolchain: Node, pnpm, git and everything under node_modules.
-# The source is bind-mounted at /workspace by compose.yaml, so nothing is copied in.
+# The development toolchain: Node, pnpm and git. node_modules comes from the compose
+# volume and the source is bind-mounted at /workspace by compose.yaml, so nothing is
+# copied in.
 FROM node:26-bookworm-slim@sha256:bc0a2afd3b74ce12222fc8bab99271e66257f021078f5f4a5d687a77d280c1d9
 
 # git: `pnpm db:check` reads `git status` to tell whether the migrations changed.
