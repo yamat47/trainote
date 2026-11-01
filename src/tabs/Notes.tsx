@@ -9,6 +9,7 @@ import { Field } from '../../design/src/Field.tsx';
 import { Inset } from '../../design/src/Inset.tsx';
 import { List } from '../../design/src/List.tsx';
 import { ListHeader } from '../../design/src/ListHeader.tsx';
+import { NavBar } from '../../design/src/NavBar.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { Text } from '../../design/src/Text.tsx';
 import { Week, type WeekDay } from '../../design/src/Week.tsx';
@@ -151,6 +152,7 @@ export function Notes() {
 
   return (
     <>
+      <NavBar title="Notes" />
       <WeekBlock shown={shown} onRetry={reload} />
       <Field
         kind="multiline"

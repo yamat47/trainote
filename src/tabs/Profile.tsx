@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Group } from '../../design/src/Group.tsx';
+import { NavBar } from '../../design/src/NavBar.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { useLoaded } from '../loaded.ts';
 import { loadProfile } from '../profile.ts';
@@ -71,6 +72,7 @@ export function Profile() {
 
   return (
     <>
+      <NavBar title="Profile" />
       <GoalGroup
         shown={profile.shown}
         onRetry={profile.reload}
