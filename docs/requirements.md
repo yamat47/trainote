@@ -89,6 +89,10 @@
   - Notes は「振り返り」の節の通り
   - Weight は iOS のヘルスケアと同じ構成。先頭に今日の入力行、期間のセグメンテッドコントロール (W、M、6M、Y)、今日の値と 1 週間の増減、グラフ (目標線つき)、目標までの 1 文、直近の数行、最後に「Show all entries」で全件のリストへ。リストとグラフの切替はこれで代える
   - Coach はスレッド一覧から単一ビュー (チャット) へ。一覧の先頭に Weekly review の入口を置く
+    - 一覧の先頭は multiline の Field「Ask your coach」。文字があるときだけ下に plain の「Send」ボタンを出し、押すと `POST /api/threads` でスレッドを作って `/coach/:id` を重ねる。その下に tint の行「Start weekly review」(detail は「Sundays, 20:00」)。押すと `kind: weekly-review` で今日のものを開くか作り、同じく重ねる。続いてスレッドの行: 題、副行に Claude の最後の返答の 1 行目、detail に最後の発言の日付 (Asia/Tokyo、「Oct 18」)。送れなければボタンの下に「Could not send. Try again.」、Weekly review を開けなければ行の下に「Could not start the weekly review. Try again.」
+    - スレッドの画面は inline の NavBar (題と Coach への戻り)、吹き出し、下部に Composer (Messages 風のカプセルと送信ボタン)。タブバーは出さず、Composer がその場所に付く。通知の `/coach/weekly-review` は今日の Weekly review を開くか作り、アドレスをそのスレッドの `/coach/:id` に置き換える
+    - 開いたとき最後の発言が自分のものなら (作った直後、通知から開いた Weekly review、前の返答が失敗したまま離れたスレッド) そのまま answer を呼ぶ。Try again も同じ answer。返答中は Composer を無効にする。送信は `POST /api/threads/:id/messages` で保存し、吹き出しを足してから answer。保存できなければ Composer の上に赤の 1 行「Could not send. Try again.」で本文は残す
+    - 返答が流れる間は最新の発言が見えるように下までスクロールする。吹き出しごとの時刻や日付の行、題の下の日付は出さない (一覧の API はサーバーの today を返さず、端末の時計で Today を決めない方針のため)
 - 見た目は iOS の標準 (Human Interface Guidelines) に揃える。部品は平らな一般的なもので、Liquid Glass は真似しない
   - 書体はシステムフォント。iOS では英数字が SF Pro、日本語が Hiragino Sans になる。テキストの Web フォントは読み込まない (読み込むのはアイコンフォントだけ)。サイズは iOS のテキストスタイル (本文 17、大見出し 34 など)。数字はタブラー
   - 色は iOS のシステムカラー (label、secondaryLabel、separator、systemBackground など) をライトもダークも Apple の値のまま使う。ダークモードは OS 設定に追従する
@@ -148,14 +152,14 @@
 
 - デザインシステム `trainote` = https://claude.ai/artifact/DsCPBeo51tExs5wGcYXe8k (非公開。所有者だけが開ける)
   - iOS のシステムカラー、システムフォントのテキストスタイル、余白と角丸をトークンにしてある。ライトとダークの値は Apple のものをそのまま使う
-  - 公開している部品は `design/src/index.ts` の 18 個 (Screen、NavBar、TabBar、ListHeader、List、Inset、Group、Row、Mark、Text、Field、Button、Actions、Segmented、Stat、Graph、Week、Icon)。Bubble は Coach を作るときに足す
+  - 公開している部品は `design/src/index.ts` の 20 個 (Screen、NavBar、TabBar、ListHeader、List、Inset、Group、Row、Mark、Text、Field、Button、Actions、Segmented、Stat、Graph、Week、Bubble、Composer、Icon)
   - 2026-11-01 から正本はリポジトリの `design/` (トークンは `design/system/tokens.json`、部品は `design/src/`)。このアーティファクトはそこから公開する写しになる。運用は `docs/design.md`。文書の「見た目」の行と食い違ったら文書を直す
   - アイコンフォント Framework7 Icons 5.0.5 (MIT) を `fonts/` に同梱している (写しは `design/system/fonts/`)。これはキャンバスとプレビュー用で、アプリは npm の `framework7-icons@5.0.5` から同じファイルを配る
 - 画面 `trainote screens` = https://claude.ai/artifact/2uZYx9fL9R1WBsEFD8jhHB (非公開。上のデザインシステムの部品をそのまま載せている)
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
 - 部品は Storybook (`make storybook`) で見る。部品とトークンの変更はリポジトリで行い、`make project` が作る `design/project/` を `design-publish` スキルでアーティファクトへ届ける (`docs/design.md`)。`design/screens/` は 2026-10 に画面のアーティファクトから手で写したもの
-  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は Bubble を移植するまで古いまま (`docs/design.md`)
+  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は古いままで、更新は頼んだときだけ (`docs/design.md`)
 
 ### 使うスキル (yamat47/github-toolkit)
 
@@ -180,3 +184,4 @@
 - 行動の保存は entries と workout_items の 2 文で、間で失敗したあとの Try again は同じ entries をもう一度入れる。編集と削除が入るまでは許容し、一覧で見えて困るなら 1 つのバッチにまとめる (id を select で引き直す)
 - 初回に開くタブ
 - 増量の目標 (目標体重が今より重いとき)。いまは減量として読む
+- 返答中のスレッドをもう一度 answer すると返答が 2 つ並ぶ (返答中に離れてすぐ戻った、日曜の通知を 2 度押した)。Worker が返答中のスレッドに 409 を返すか、ページが待つか
