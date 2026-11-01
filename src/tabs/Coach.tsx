@@ -19,6 +19,7 @@ import { NavBar } from '../../design/src/NavBar.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { Text } from '../../design/src/Text.tsx';
 import {
+  AnsweredElsewhere,
   answers,
   loadThread,
   loadThreads,
@@ -196,11 +197,13 @@ async function openReview(
   }
 }
 
-// The coach's reply as the thread shows it: none wanted, one being written (the text so
-// far, and whether the coach is reading the records right now), or one that did not come.
+// The coach's reply as the thread shows it: none wanted, one being written here (the text
+// so far, and whether the coach is reading the records right now), one another request is
+// writing, or one that did not come.
 type Reply =
   | { status: 'idle' }
   | { status: 'answering'; text: string; reading: boolean }
+  | { status: 'waiting' }
   | { status: 'failed' };
 type Answering = Extract<Reply, { status: 'answering' }>;
 
@@ -211,11 +214,12 @@ type Opened =
 
 const FAILED: Reply = { status: 'failed' };
 
-// The reply starts being written, whatever came of the one before.
-const answering = (prev: Opened): Opened =>
-  prev.status === 'ready'
-    ? { ...prev, reply: { status: 'answering', text: '', reading: false } }
-    : prev;
+// The reply moves on, whatever came of the one before: it starts being written, or the
+// thread waits for another request's.
+const withReply =
+  (reply: Reply) =>
+  (prev: Opened): Opened =>
+    prev.status === 'ready' ? { ...prev, reply } : prev;
 
 // A change to the reply while it is being written; one that arrives after it was given up
 // on changes nothing.
@@ -244,11 +248,47 @@ const withMessage =
 // The thread on the screen: which one, the attempt that is current, and where it is shown.
 type Shown = { id: number; run: Run; setOpened: Dispatch<SetStateAction<Opened>> };
 
-// A reply that did not arrive whole is shown no further: the Worker stores nothing of
-// it either, so the thread reads the same after a reload.
-async function answer({ id, run, setOpened }: Shown, mine: number) {
+// How often a thread whose reply another request is writing is read again.
+const REREAD_MS = 2000;
+
+const pause = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+// A reply another request is writing (the thread was left and opened again, the reminder
+// tapped twice) cannot be followed as it is written, so the thread is read until no one is
+// writing it any more: then the reply is there, or it did not come. The first read is at
+// once, since the refusal may mean the reply was stored already.
+async function wait({ id, run, setOpened }: Shown, mine: number) {
   const live = () => run.current === mine;
-  setOpened(answering);
+  setOpened(withReply({ status: 'waiting' }));
+  try {
+    /* eslint-disable no-await-in-loop -- each read waits for the one before */
+    for (;;) {
+      const conversation = await loadThread(id);
+      if (!live()) return;
+      if (!conversation.thread.answering) {
+        const reply: Reply = unanswered(conversation) ? FAILED : { status: 'idle' };
+        setOpened({ status: 'ready', conversation, reply });
+        return;
+      }
+      await pause(REREAD_MS);
+      if (!live()) return;
+    }
+    /* eslint-enable no-await-in-loop */
+  } catch {
+    if (live()) setOpened(withReply(FAILED));
+  }
+}
+
+// A reply that did not arrive whole is shown no further: the Worker stores nothing of
+// it either, so the thread reads the same after a reload. A thread another request is
+// answering is waited for instead.
+async function answer(shown: Shown, mine: number) {
+  const { id, run, setOpened } = shown;
+  const live = () => run.current === mine;
+  setOpened(withReply({ status: 'answering', text: '', reading: false }));
   try {
     for await (const event of answers(id)) {
       if (!live()) return;
@@ -275,8 +315,10 @@ async function answer({ id, run, setOpened }: Shown, mine: number) {
     }
     // The stream ended without the reply: the connection was lost on the way.
     if (live()) setOpened(whileAnswering(() => FAILED));
-  } catch {
-    if (live()) setOpened(whileAnswering(() => FAILED));
+  } catch (error) {
+    if (!live()) return;
+    if (error instanceof AnsweredElsewhere) await wait(shown, mine);
+    else setOpened(whileAnswering(() => FAILED));
   }
 }
 
@@ -363,6 +405,7 @@ function Thread({ id, back }: { id: number; back: Back }) {
       {reply.status === 'answering' && reply.reading ? (
         <Text variant="caption-1">Reading your notes</Text>
       ) : null}
+      {reply.status === 'waiting' ? <Text variant="caption-1">Your coach is writing</Text> : null}
       {reply.status === 'failed' ? (
         <Failed
           message="Could not reach your coach."
@@ -373,7 +416,7 @@ function Thread({ id, back }: { id: number; back: Back }) {
         value={draft.text}
         onChange={(text) => setDraft(typed(text))}
         onSend={() => void send()}
-        disabled={reply.status === 'answering' || draft.sending}
+        disabled={reply.status === 'answering' || reply.status === 'waiting' || draft.sending}
         error={draft.failed ? SEND_FAILED : undefined}
         maxLength={MAX_MESSAGE_LENGTH}
       />
