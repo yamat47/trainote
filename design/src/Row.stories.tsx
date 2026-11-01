@@ -29,7 +29,7 @@ export const WithError: Story = {
   args: {
     tone: 'tint',
     onClick: fn(),
-    sub: <output className="app-error">Could not change the reminder. Try again.</output>,
+    error: 'Could not change the reminder. Try again.',
     children: 'Turn on the Sunday reminder',
   },
 };
