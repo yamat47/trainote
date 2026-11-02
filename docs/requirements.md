@@ -22,10 +22,16 @@
   - 入力は自由文だけ。種目を選ぶ UI も回数を入れる欄も作らない。1 回の入力に複数の行動を雑に書いてよい
     - Claude が Structured Outputs で 1 件ずつに分け、種別とカテゴリを付け、運動なら読み取れた範囲で種目と数値を切り出し、プレビューを出し、利用者が保存か修正を選ぶ
       - API は `POST /api/entries/preview` (構造化だけ。何も保存しない) と `POST /api/entries` (プレビューの行をそのまま送って保存)。サーバーはプレビューを覚えない。書き直した原文はただの次のプレビューになる。保存の日付は今日 (Asia/Tokyo) で、過去日付は未決のまま
+        - 保存は entries と workout_items を 1 つの batch で入れる。D1 の batch はトランザクションで、1 文が失敗すれば全部戻る ([D1](https://developers.cloudflare.com/d1/worker-api/d1-database/)) ので、失敗のあとの Try again で同じ行が 2 度入らない。item の `entry_id` は entries 全体の最大の id を select で引く。AUTOINCREMENT の id は増える一方で batch は 1 つのトランザクションなので、それが直前に入れた行になる (`last_insert_rowid()` は直前に入れた item を指すため使えない)。items は 1 件ずつ入れる。8 列の複数行 INSERT は 13 行で D1 の 1 文 100 パラメータを超える。15 セットの懸垂を保存するテストは、複数行 INSERT のままだとローカルの D1 で `too many SQL variables` になる (2026-11-02)
+        - 保存が通って応答だけ届かなかったときの Try again は今も 2 度入るが、削除で消せるので Idempotency-Key は入れない
       - スキーマは zod で 1 つ書き、`zodOutputFormat` で Structured Outputs に渡し、保存の検証にも同じものを使う。Structured Outputs は全項目を必須にするので、原文に無い数値は null
       - 本文はその行動を本人の言葉で短く書いたもの。`workout_items` に移した数値は本文から外す (「ベンチ60kg10回3セット」は本文「ベンチ」、行の下に「ベンチプレス 60 kg × 10 × 3」)。原文のままだと同じ数字が 2 回出るため
       - 入力欄 (textarea) には送信キーが無いので、文字があるときだけ入力欄の下に plain の「Read as entries」ボタンを出す。デザインの Notes 画面にはこの操作が無い。読めなかったときはボタンの上に赤の 1 行「Could not read your note. Try again.」、保存できなかったときはボタンの下に「Could not save. Try again.」
     - 修正は原文を書き直して構造化をやり直す。項目を直接直す画面は作らない。プレビュー中に入力欄を触っても同じ (プレビューが消えて書き直しに戻る)
+      - 保存した行動も書き直して読み直す (2026-11-02)。Notes の行を押すと、その場所が複数行の Field に変わり、カーソルが入る。中身は本文と、項目があれば 2 行目に一覧と同じ数値の行。下に赤の「Delete」、「Cancel」、「Read as entry」。読むとその 1 件と一言が出て、「Edit text」と prominent の「Save changes」。保存は種別、カテゴリ、本文、items を置き換え、日付と id は残す (過去日付の入力が未決でも、昨日の行は昨日のまま直る)。開けるのは 1 行ずつで、別の行を開けば前の行は閉じる (送った保存や削除はそのまま終わり、一覧を読み直す)。失敗の文はメモと同じ「Could not read your note. Try again.」と「Could not save. Try again.」
+        - 書き直した文は 1 件の行動として読む。Structured Outputs に entries の配列ではなく entry 1 つのスキーマを渡すので、件数はいつも 1。本文だけを直す方式にしないのは、それでは数値の誤りが直らず、推移の元が数値だから
+        - 削除は 2 段階。Delete を押すとボタンが「Cancel」と赤の「Delete entry」に替わり、それを押して消す。モーダルは作らない (インライン作成と同じ考え)。どちらの列も先頭のボタンだけを左端に、残りを右端に置く (Actions の `split`)。Delete の場所に替わって来るのは Cancel なので、同じ場所を続けて 2 度押しても消えない。失敗はボタンの下に「Could not delete. Try again.」
+        - API は `POST /api/entries/preview` に任意の `single: true` (返す形は同じで entries がちょうど 1 件)、`PUT /api/entries/:id` (DraftEntry 1 件で全置換。200 と保存した 1 件。items は消して入れ直し、全体を 1 つの batch で)、`DELETE /api/entries/:id` (204。他人の行と 2 回目は 404。items は外部キーの cascade で消える。D1 は既定で外部キーを強制する ([D1](https://developers.cloudflare.com/d1/sql-api/foreign-keys/)))。利用者が 1 人なので ETag と If-Match は使わない
     - プレビューには Claude の一言 (1 文まで) を添える。構造化と同じ呼び出しの JSON に 1 項目足すだけなので往復は増えない。2026-11-01 に実測した。`claude-sonnet-5-5` の effort low で、メモ 5 件のプレビューが 1.5 から 2.6 秒 (dev サーバー起動後の初回だけ 4.2 秒。Vite の初回変換を含む)。3 秒に収まるので一言は残し、モデルは `wrangler.jsonc` の var `STRUCTURE_MODEL` で差し替えられるようにした
   - 原文が一次記録。構造化した行は推移を出すためのもので、原文から取れなければ無くてよい
   - 運動は頑張ったことの一種で、種目ごとの数値を持てる
@@ -163,7 +169,7 @@
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
 - 部品は Storybook (`make storybook`) で見る。部品とトークンの変更はリポジトリで行い、`make project` が作る `design/project/` を `design-publish` スキルでアーティファクトへ届ける (`docs/design.md`)。`design/screens/` は 2026-10 に画面のアーティファクトから手で写したもの
-  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は古いままで、更新は頼んだときだけ (`docs/design.md`)
+  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン、保存した行を開いた編集欄と削除の確かめの列。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は古いままで、更新は頼んだときだけ (`docs/design.md`)
 
 ### 使うスキル (yamat47/github-toolkit)
 
@@ -182,10 +188,8 @@
 決まったら該当する行に書き写し、ここから消す。
 
 - Access のセッションが 24h のままだと、ホーム画面の PWA でも毎日 Google へのリダイレクトが挟まる。延ばすなら infra-yamat47 の Access アプリの `session_duration` を変える
-- 行動の保存後の編集と削除
 - 種目で絞ったときの推移の指標 (最大重量、総量、有酸素は距離か時間か)
 - 過去日付の記録を入れられるか
-- 行動の保存は entries と workout_items の 2 文で、間で失敗したあとの Try again は同じ entries をもう一度入れる。編集と削除が入るまでは許容し、一覧で見えて困るなら 1 つのバッチにまとめる (id を select で引き直す)
 - 初回に開くタブ
 - 増量の目標 (目標体重が今より重いとき)。いまは減量として読む
 - 返答中のスレッドをもう一度 answer すると返答が 2 つ並ぶ (返答中に離れてすぐ戻った、日曜の通知を 2 度押した)。Worker が返答中のスレッドに 409 を返すか、ページが待つか
