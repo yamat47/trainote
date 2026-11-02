@@ -1,5 +1,5 @@
 import type { Answer, Conversation, Message, ThreadSummary } from '../worker/threads.ts';
-import { client, expectOk } from './api.ts';
+import { client, expectOk, param } from './api.ts';
 import { frames, type Frame } from './sse.ts';
 
 export type { Conversation, Message, ThreadSummary };
@@ -39,8 +39,6 @@ export async function openWeeklyReview(): Promise<Conversation> {
   expectOk(response, 'POST /api/threads');
   return response.json();
 }
-
-const param = (id: number) => ({ param: { id: String(id) } });
 
 export async function loadThread(id: number): Promise<Conversation> {
   const response = await client.api.threads[':id'].$get(param(id));

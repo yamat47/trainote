@@ -6,6 +6,9 @@ import type { AppType } from '../worker/app.ts';
 // Coach's answer stream is fetched at) is built from an absolute base only.
 export const client = hc<AppType>(location.origin);
 
+// The path parameter that names a row of a collection.
+export const param = (id: number) => ({ param: { id: String(id) } });
+
 // Throws on anything but a success, so the caller reads the body of the route's own
 // response and never a problem's.
 export function expectOk<R extends { ok: boolean; status: number }>(
