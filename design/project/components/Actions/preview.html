@@ -1,4 +1,4 @@
-<!-- @dsCard group="Actions" subtitle="Fill, End, With Error" -->
+<!-- @dsCard group="Actions" subtitle="Fill, Split, End, With Error" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,6 +12,7 @@ var T = window.Trainote, h = React.createElement;
 ReactDOM.createRoot(document.getElementById("root")).render(
   h(React.Fragment, null,
     h(T.Actions, null, h(React.Fragment, null, h(T.Button, { "onClick": function () {} }, "Edit text"), h(T.Button, { "variant": "prominent", "onClick": function () {} }, "Save 3 entries"))),
+    h(T.Actions, { "align": "split" }, h(React.Fragment, null, h(T.Button, { "variant": "destructive", "onClick": function () {} }, "Delete"), h(T.Button, { "onClick": function () {} }, "Cancel"), h(T.Button, { "onClick": function () {} }, "Read as entry"))),
     h(T.Actions, { "align": "end" }, h(T.Button, { "onClick": function () {} }, "Read as entries")),
     h(T.Actions, { "align": "end", "error": "Could not read your note. Try again." }, h(T.Button, { "onClick": function () {} }, "Read as entries"))
   )

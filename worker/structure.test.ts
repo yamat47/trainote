@@ -66,6 +66,22 @@ describe('structureWithClaude', () => {
     });
   });
 
+  it('reads the text of a rewritten entry as exactly one entry', async () => {
+    const [entry] = PREVIEW.entries;
+    const { fetch, calls } = fakeFetch(() =>
+      answer([{ type: 'text', text: JSON.stringify({ entry, comment: '重さが上がりました。' }) }]),
+    );
+
+    const result = await structureWithClaude(fetch)(env, 'ベンチ 60kg 10回 3セット', 'entry');
+
+    expect(result).toEqual({ entries: [entry], comment: '重さが上がりました。' });
+    expect(calls[0]?.body).toMatchObject({
+      output_config: {
+        format: { type: 'json_schema', schema: { required: ['entry', 'comment'] } },
+      },
+    });
+  });
+
   it('throws a refusal when the model declines the note', async () => {
     const { fetch } = fakeFetch(() => answer([], 'refusal'));
 

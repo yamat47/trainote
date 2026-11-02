@@ -70,7 +70,7 @@ flowchart LR
 | Mark の読み上げ文字、Week の ul/li                                             | Mark と Week で直す                    |
 | アイコン                                                                       | Icon を公開する                        |
 
-アーティファクトから移した説明文には、まだ移植していない props が残っている (Button の `tinted`、`destructive`、`bold`、`block`、Row の `mark`)。Weight で Field の `label`、`numeric`、`unit`、Stat、Segmented を移植し、Graph を足した。Coach で Bubble を移植し、Composer を足した (2026-11-02)。残りは使う画面ができたときに揃える。
+アーティファクトから移した説明文には、まだ移植していない props が残っている (Button の `tinted`、`bold`、`block`、Row の `mark`)。Weight で Field の `label`、`numeric`、`unit`、Stat、Segmented を移植し、Graph を足した。Coach で Bubble を移植し、Composer を足した (2026-11-02)。Notes の編集で Button の `destructive` を移植し、Actions に `split`、Field に `autoFocus` を足した (2026-11-02)。残りは使う画面ができたときに揃える。
 
 ## 進み具合
 

@@ -589,12 +589,16 @@ body {
   color: var(--on-tint);
   font-weight: 600;
 }
-.tn-btn-plain {
+.tn-btn-plain,
+.tn-btn-destructive {
   height: var(--row);
   padding: 0 var(--space-2);
   border-radius: var(--radius-control);
   background: none;
   color: var(--tint);
+}
+.tn-btn-destructive {
+  color: var(--red);
 }
 .tn-btn:active {
   opacity: 0.6;
@@ -648,6 +652,10 @@ body {
 }
 .tn-actions-row > .tn-btn-prominent {
   flex: 1;
+}
+/* Split: the first button at the leading edge, the rest at the trailing one */
+.tn-actions-split .tn-actions-row > :first-child {
+  margin-right: auto;
 }
 .tn-actions-end .tn-actions-row {
   justify-content: flex-end;

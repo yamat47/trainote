@@ -1,6 +1,6 @@
 import type { Entry, Week } from '../worker/entries.ts';
 import type { DraftEntry, DraftItem, Preview } from '../worker/structure.ts';
-import { client, expectOk } from './api.ts';
+import { client, expectOk, param } from './api.ts';
 
 export type { DraftItem, Entry, Preview, Week };
 
@@ -9,6 +9,25 @@ export async function previewNote(text: string): Promise<Preview> {
   const response = await client.api.entries.preview.$post({ json: { text } });
   expectOk(response, 'POST /api/entries/preview');
   return response.json();
+}
+
+// Claude's reading of a saved entry's rewritten text, as the one entry it becomes.
+export async function previewEntry(text: string): Promise<Preview> {
+  const response = await client.api.entries.preview.$post({ json: { text, single: true } });
+  expectOk(response, 'POST /api/entries/preview');
+  return response.json();
+}
+
+// A saved entry replaced by the reading of its rewritten text, on the day it belongs to.
+export async function replaceEntry(id: number, entry: DraftEntry): Promise<Entry> {
+  const response = await client.api.entries[':id'].$put({ ...param(id), json: entry });
+  expectOk(response, 'PUT /api/entries/:id');
+  return (await response.json()).entry;
+}
+
+export async function deleteEntry(id: number): Promise<void> {
+  const response = await client.api.entries[':id'].$delete(param(id));
+  expectOk(response, 'DELETE /api/entries/:id');
 }
 
 // The previewed entries, stored as they were shown.

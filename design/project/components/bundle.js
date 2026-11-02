@@ -84,7 +84,7 @@ var Trainote = (function(exports) {
 		numeric: "decimal",
 		whole: "numeric"
 	};
-	function Field({ value, onChange, placeholder, label, ariaLabel, kind = "text", unit, maxLength, disabled }) {
+	function Field({ value, onChange, placeholder, label, ariaLabel, kind = "text", unit, maxLength, disabled, autoFocus }) {
 		const shared = {
 			className: "tn-field-input",
 			value,
@@ -92,6 +92,7 @@ var Trainote = (function(exports) {
 			"aria-label": label === void 0 ? ariaLabel : void 0,
 			maxLength,
 			disabled,
+			autoFocus,
 			onChange: (event) => onChange(event.target.value)
 		};
 		return /* @__PURE__ */ React.createElement("label", { className: classes("tn-field", (kind === "numeric" || kind === "whole") && "tn-field-numeric") }, label === void 0 ? null : /* @__PURE__ */ React.createElement("span", { className: "tn-field-label" }, label), kind === "multiline" ? /* @__PURE__ */ React.createElement("span", {
@@ -117,7 +118,7 @@ var Trainote = (function(exports) {
 	}
 	// design/src/Actions.tsx
 	function Actions({ align = "fill", error, children }) {
-		return /* @__PURE__ */ React.createElement("div", { className: align === "end" ? "tn-actions tn-actions-end" : "tn-actions" }, /* @__PURE__ */ React.createElement("div", { className: "tn-actions-row" }, children), error === void 0 ? null : /* @__PURE__ */ React.createElement(Text, {
+		return /* @__PURE__ */ React.createElement("div", { className: align === "fill" ? "tn-actions" : `tn-actions tn-actions-${align}` }, /* @__PURE__ */ React.createElement("div", { className: "tn-actions-row" }, children), error === void 0 ? null : /* @__PURE__ */ React.createElement(Text, {
 			variant: "caption-1",
 			tone: "error"
 		}, error));

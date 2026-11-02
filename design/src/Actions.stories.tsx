@@ -26,6 +26,20 @@ export const Fill: Story = {
     ),
   },
 };
+export const Split: Story = {
+  args: {
+    align: 'split',
+    children: (
+      <>
+        <Button variant="destructive" onClick={fn()}>
+          Delete
+        </Button>
+        <Button onClick={fn()}>Cancel</Button>
+        <Button onClick={fn()}>Read as entry</Button>
+      </>
+    ),
+  },
+};
 export const End: Story = {
   args: { align: 'end', children: <Button onClick={fn()}>Read as entries</Button> },
 };
