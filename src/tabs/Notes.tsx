@@ -18,8 +18,11 @@ import { Failed } from '../Failed.tsx';
 import { runs } from '../groups.ts';
 import { useLoaded, type Shown } from '../loaded.ts';
 import {
+  deleteEntry,
   loadNotes,
+  previewEntry,
   previewNote,
+  replaceEntry,
   saveEntries,
   type DraftItem,
   type Entry,
@@ -33,6 +36,17 @@ type Draft =
   | { status: 'reading'; text: string }
   | { status: 'previewed'; text: string; preview: Preview; failed: boolean }
   | { status: 'saving'; text: string; preview: Preview };
+
+// A saved entry rewritten in place of its row goes through a note's states, and two more
+// for deleting it. Each keeps the text, so a failure leaves it as it was written.
+type Edit =
+  | Draft
+  | { status: 'confirming'; text: string; failed: boolean }
+  | { status: 'deleting'; text: string };
+
+const READ_FAILED = 'Could not read your note. Try again.';
+const SAVE_FAILED = 'Could not save. Try again.';
+const DELETE_FAILED = 'Could not delete. Try again.';
 
 const CATEGORY_LABELS: Record<Category, string> = {
   exercise: 'Exercise',
@@ -111,13 +125,21 @@ const weekDays = (week: Counts): WeekDay[] =>
     today: day.date === week.today,
   }));
 
+// A saved entry as text to rewrite: the body, and under it the numbers as the row shows
+// them, since the body leaves them out.
+const editableText = (entry: Entry) =>
+  [entry.body, measures(entry.items)].filter((line) => line !== undefined).join('\n');
+
 // Entries are newest first already; consecutive rows of one day form a group.
 const byDay = (entries: Entry[]) => runs(entries, (a, b) => a.date === b.date);
 
 export function Notes() {
   const [draft, setDraft] = useState<Draft>({ status: 'writing', text: '', failed: false });
   // Reloaded after a save, so the new rows and the week's counts show up.
-  const { shown, reload } = useLoaded(loadNotes);
+  const { shown, reload, replace } = useLoaded(loadNotes);
+  // The saved entry open in place of its row. Opening another closes it; a save or a delete
+  // it sent still finishes, and reloads the list.
+  const [openId, setOpenId] = useState<number>();
 
   // Typing after a preview starts over: the preview belonged to the old text.
   const edit = (text: string) => setDraft({ status: 'writing', text, failed: false });
@@ -166,11 +188,7 @@ export function Notes() {
       {draft.status === 'writing' || draft.status === 'reading' ? (
         <Actions
           align="end"
-          error={
-            draft.status === 'writing' && draft.failed
-              ? 'Could not read your note. Try again.'
-              : undefined
-          }
+          error={draft.status === 'writing' && draft.failed ? READ_FAILED : undefined}
         >
           {hasText ? (
             <Button disabled={draft.status === 'reading'} onClick={() => void read()}>
@@ -181,6 +199,8 @@ export function Notes() {
       ) : (
         <PreviewBlock
           preview={draft.preview}
+          header={`Read as ${entriesWord(draft.preview.entries.length)}`}
+          saveLabel={`Save ${entriesWord(draft.preview.entries.length)}`}
           saving={draft.status === 'saving'}
           failed={draft.status === 'previewed' && draft.failed}
           onEdit={() => edit(draft.text)}
@@ -190,11 +210,30 @@ export function Notes() {
       {shown.status === 'ready'
         ? byDay(shown.entries).map((group) => (
             <List key={group[0].date} header={dayLabel(group[0].date, shown.week.today)}>
-              {group.map((entry) => (
-                <Row key={entry.id} kind={entry.kind} sub={measures(entry.items)}>
-                  {entry.body}
-                </Row>
-              ))}
+              {group.map((entry) =>
+                openId === entry.id ? (
+                  <EntryEditor
+                    key={entry.id}
+                    entry={entry}
+                    onClose={() => setOpenId(undefined)}
+                    onDone={(after) => {
+                      setOpenId((open) => (open === entry.id ? undefined : open));
+                      // The list changes at once; the reload brings the week's counts.
+                      replace((loaded) => ({ ...loaded, entries: after(loaded.entries) }));
+                      reload();
+                    }}
+                  />
+                ) : (
+                  <Row
+                    key={entry.id}
+                    kind={entry.kind}
+                    sub={measures(entry.items)}
+                    onClick={() => setOpenId(entry.id)}
+                  >
+                    {entry.body}
+                  </Row>
+                ),
+              )}
             </List>
           ))
         : null}
@@ -224,45 +263,169 @@ function WeekBlock({ shown, onRetry }: WeekBlockProps) {
 
 type PreviewBlockProps = {
   preview: Preview;
+  // The header over the rows in their inset group; an entry read again in place of its
+  // row has none, and its row stays in the list.
+  header?: string;
+  saveLabel: string;
   saving: boolean;
   failed: boolean;
   onEdit: () => void;
   onSave: () => void;
 };
 
-function PreviewBlock({ preview, saving, failed, onEdit, onSave }: PreviewBlockProps) {
-  const count = preview.entries.length;
+function PreviewBlock({
+  preview,
+  header,
+  saveLabel,
+  saving,
+  failed,
+  onEdit,
+  onSave,
+}: PreviewBlockProps) {
+  const empty = preview.entries.length === 0;
+  const rows = preview.entries.map((entry, i) => (
+    <Row
+      // The preview has no ids; a row is its place in the list.
+      // oxlint-disable-next-line react/no-array-index-key
+      key={i}
+      kind={entry.kind}
+      detail={CATEGORY_LABELS[entry.category]}
+      sub={measures(entry.items)}
+    >
+      {entry.body}
+    </Row>
+  ));
   return (
     <>
-      {count === 0 ? (
-        <ListHeader>Nothing to save</ListHeader>
-      ) : (
-        <Inset header={`Read as ${entriesWord(count)}`}>
-          {preview.entries.map((entry, i) => (
-            <Row
-              // The preview has no ids; a row is its place in the list.
-              // oxlint-disable-next-line react/no-array-index-key
-              key={i}
-              kind={entry.kind}
-              detail={CATEGORY_LABELS[entry.category]}
-              sub={measures(entry.items)}
-            >
-              {entry.body}
-            </Row>
-          ))}
-        </Inset>
-      )}
+      {empty ? <ListHeader>Nothing to save</ListHeader> : null}
+      {!empty && header !== undefined ? <Inset header={header}>{rows}</Inset> : null}
+      {!empty && header === undefined ? rows : null}
       <Text variant="subheadline">{preview.comment}</Text>
-      <Actions error={failed ? 'Could not save. Try again.' : undefined}>
+      <Actions error={failed ? SAVE_FAILED : undefined}>
         <Button disabled={saving} onClick={onEdit}>
           Edit text
         </Button>
-        {count === 0 ? null : (
+        {empty ? null : (
           <Button variant="prominent" disabled={saving} onClick={onSave}>
-            Save {entriesWord(count)}
+            {saveLabel}
           </Button>
         )}
       </Actions>
+    </>
+  );
+}
+
+type EntryEditorProps = {
+  entry: Entry;
+  onClose: () => void;
+  // The entry was saved or deleted; the list as it is now.
+  onDone: (after: (entries: Entry[]) => Entry[]) => void;
+};
+
+// The row of a saved entry opened for rewriting: its text in the field, read again as one
+// entry before it replaces the saved one, or deleted after a second tap that is not where
+// the first one was.
+function EntryEditor({ entry, onClose, onDone }: EntryEditorProps) {
+  const { id } = entry;
+  const [edit, setEdit] = useState<Edit>(() => ({
+    status: 'writing',
+    text: editableText(entry),
+    failed: false,
+  }));
+  const { text } = edit;
+  const write = (written: string) => setEdit({ status: 'writing', text: written, failed: false });
+
+  const read = async () => {
+    setEdit({ status: 'reading', text });
+    try {
+      setEdit({ status: 'previewed', text, preview: await previewEntry(text), failed: false });
+    } catch {
+      setEdit({ status: 'writing', text, failed: true });
+    }
+  };
+
+  const save = async (preview: Preview) => {
+    setEdit({ status: 'saving', text, preview });
+    try {
+      const [rewritten] = preview.entries;
+      if (rewritten === undefined) throw new Error('the preview holds no entry');
+      const saved = await replaceEntry(id, rewritten);
+      onDone((entries) => entries.map((shown) => (shown.id === id ? saved : shown)));
+    } catch {
+      setEdit({ status: 'previewed', text, preview, failed: true });
+    }
+  };
+
+  const remove = async () => {
+    setEdit({ status: 'deleting', text });
+    try {
+      await deleteEntry(id);
+      onDone((entries) => entries.filter((shown) => shown.id !== id));
+    } catch {
+      setEdit({ status: 'confirming', text, failed: true });
+    }
+  };
+
+  const waiting =
+    edit.status === 'reading' || edit.status === 'saving' || edit.status === 'deleting';
+  return (
+    <>
+      <Field
+        kind="multiline"
+        value={text}
+        onChange={write}
+        placeholder="What did you do?"
+        ariaLabel="Edit entry"
+        maxLength={MAX_NOTE_LENGTH}
+        disabled={waiting}
+        // The row was tapped to rewrite it, so the caret goes there; nothing takes focus
+        // that the person did not ask for.
+        // oxlint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus
+      />
+      {edit.status === 'writing' || edit.status === 'reading' ? (
+        <Actions
+          align="split"
+          error={edit.status === 'writing' && edit.failed ? READ_FAILED : undefined}
+        >
+          <Button
+            variant="destructive"
+            disabled={waiting}
+            onClick={() => setEdit({ status: 'confirming', text, failed: false })}
+          >
+            Delete
+          </Button>
+          <Button disabled={waiting} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button disabled={waiting || text.trim() === ''} onClick={() => void read()}>
+            Read as entry
+          </Button>
+        </Actions>
+      ) : null}
+      {edit.status === 'confirming' || edit.status === 'deleting' ? (
+        <Actions
+          align="split"
+          error={edit.status === 'confirming' && edit.failed ? DELETE_FAILED : undefined}
+        >
+          <Button disabled={waiting} onClick={() => write(text)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" disabled={waiting} onClick={() => void remove()}>
+            Delete entry
+          </Button>
+        </Actions>
+      ) : null}
+      {edit.status === 'previewed' || edit.status === 'saving' ? (
+        <PreviewBlock
+          preview={edit.preview}
+          saveLabel="Save changes"
+          saving={edit.status === 'saving'}
+          failed={edit.status === 'previewed' && edit.failed}
+          onEdit={() => write(text)}
+          onSave={() => void save(edit.preview)}
+        />
+      ) : null}
     </>
   );
 }
