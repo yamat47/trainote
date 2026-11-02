@@ -4,7 +4,8 @@ import { ListHeader } from './ListHeader.tsx';
 type InsetProps = { header?: string; children: ReactNode };
 
 // The one raised block on a plain page: rows on secondary-background with the group
-// radius, under an optional list header. Notes shows the structured preview in it.
+// radius, under an optional list header. Notes shows the structured preview in it, and
+// Weight today's weight while the day has none.
 export function Inset({ header, children }: InsetProps) {
   return (
     <section className="tn-inset">

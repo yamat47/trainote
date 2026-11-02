@@ -305,8 +305,8 @@ body {
   background: var(--grouped-cell);
   overflow: hidden;
 }
-.tn-group-body > .tn-row:last-child::after,
-.tn-group-body > .tn-field:last-child::after {
+/* The last row or field of a block draws no separator; nothing else in it has an ::after. */
+.tn-group-body > :last-child::after {
   display: none;
 }
 
@@ -639,7 +639,7 @@ body {
   background: var(--secondary-background);
   overflow: hidden;
 }
-.tn-inset-body > .tn-row:last-child::after {
+.tn-inset-body > :last-child::after {
   display: none;
 }
 

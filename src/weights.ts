@@ -26,10 +26,22 @@ export async function saveToday(body: Measurement): Promise<Weight> {
   return (await response.json()).weight;
 }
 
-// The fields as the stored day fills them, "" for a value the day has not got.
-export const measurementFields = (row: Weight | undefined) => ({
-  weight: row === undefined ? '' : row.weightKg.toFixed(1),
-  bodyFat: typeof row?.bodyFatPct === 'number' ? row.bodyFatPct.toFixed(1) : '',
+// A stored day corrected: its weight, and its body fat, cleared when the body leaves it out.
+export async function correctDay(date: string, body: Measurement): Promise<Weight> {
+  const response = await client.api.weights[':date'].$put({ param: { date }, json: body });
+  expectOk(response, 'PUT /api/weights/:date');
+  return (await response.json()).weight;
+}
+
+export async function deleteDay(date: string): Promise<void> {
+  const response = await client.api.weights[':date'].$delete({ param: { date } });
+  expectOk(response, 'DELETE /api/weights/:date');
+}
+
+// The fields as the stored day fills them, "" for a body fat the day has not got.
+export const measurementFields = (row: Weight) => ({
+  weight: row.weightKg.toFixed(1),
+  bodyFat: row.bodyFatPct === null ? '' : row.bodyFatPct.toFixed(1),
 });
 
 // The request the two fields make, or nothing while they do not hold a measurement the
@@ -42,7 +54,7 @@ export function measurement(weight: string, bodyFat: string): Measurement | unde
   return bodyFatPct === undefined ? undefined : { weightKg, bodyFatPct };
 }
 
-// The list with the saved day in it, newest first: today's row replaced, or put first.
+// The list with the saved day in it, newest first: the day's row replaced, or put first.
 export const withSaved = (rows: Weight[], saved: Weight): Weight[] =>
   rows.some((row) => row.date === saved.date)
     ? rows.map((row) => (row.date === saved.date ? saved : row))

@@ -13,8 +13,9 @@ import { NavBar } from '../../design/src/NavBar.tsx';
 import { Row } from '../../design/src/Row.tsx';
 import { Text } from '../../design/src/Text.tsx';
 import { Week, type WeekDay } from '../../design/src/Week.tsx';
+import { ConfirmDelete } from '../ConfirmDelete.tsx';
 import { dayLabel } from '../dates.ts';
-import { Failed } from '../Failed.tsx';
+import { Failed, SAVE_FAILED } from '../Failed.tsx';
 import { runs } from '../groups.ts';
 import { useLoaded, type Shown } from '../loaded.ts';
 import {
@@ -45,8 +46,6 @@ type Edit =
   | { status: 'deleting'; text: string };
 
 const READ_FAILED = 'Could not read your note. Try again.';
-const SAVE_FAILED = 'Could not save. Try again.';
-const DELETE_FAILED = 'Could not delete. Try again.';
 
 const CATEGORY_LABELS: Record<Category, string> = {
   exercise: 'Exercise',
@@ -404,17 +403,12 @@ function EntryEditor({ entry, onClose, onDone }: EntryEditorProps) {
         </Actions>
       ) : null}
       {edit.status === 'confirming' || edit.status === 'deleting' ? (
-        <Actions
-          align="split"
-          error={edit.status === 'confirming' && edit.failed ? DELETE_FAILED : undefined}
-        >
-          <Button disabled={waiting} onClick={() => write(text)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" disabled={waiting} onClick={() => void remove()}>
-            Delete entry
-          </Button>
-        </Actions>
+        <ConfirmDelete
+          deleting={edit.status === 'deleting'}
+          failed={edit.status === 'confirming' && edit.failed}
+          onCancel={() => write(text)}
+          onDelete={() => void remove()}
+        />
       ) : null}
       {edit.status === 'previewed' || edit.status === 'saving' ? (
         <PreviewBlock
