@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, max, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, max, not, sql, type SQL } from 'drizzle-orm';
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
@@ -6,8 +6,15 @@ import type { AppEnv } from './app.ts';
 import { idParamOr404, jsonBody } from './body.ts';
 import { CoachError, type Coach, type Emit, type Reason } from './coach.ts';
 import { database, type Database } from './db/index.ts';
-import { messages, NOW, threads, type MessageRole, type ThreadKind } from './db/schema.ts';
-import { MAX_MESSAGE_LENGTH } from './message.ts';
+import {
+  messages,
+  NOW,
+  secondsFromNow,
+  threads,
+  type MessageRole,
+  type ThreadKind,
+} from './db/schema.ts';
+import { MAX_MESSAGE_LENGTH, unanswered } from './message.ts';
 import { problem } from './problem.ts';
 import { tokyoDate, tokyoDayStart } from './week.ts';
 import { firstLine } from './words.ts';
@@ -21,6 +28,15 @@ const WEEKLY_REVIEW_TITLE = 'Weekly review';
 const TITLE_LENGTH = 40;
 const PREVIEW_LENGTH = 120;
 
+// A reply is written under a claim on its thread, so a second answer asked for meanwhile
+// (the thread left and opened again, the reminder tapped twice) is refused instead of
+// written beside the first. The Worker renews the claim while it works; a Worker stopped
+// without letting go, as happens 30 seconds after the phone goes away (the most
+// waitUntil allows), leaves a claim that lapses on its own.
+const CLAIM_SECONDS = 30;
+const RENEW_MS = 10_000;
+const BEING_ANSWERED = 'The thread is being answered';
+
 const Text = z.object({ text: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH) });
 const NewThread = z.union([Text, z.object({ kind: z.literal('weekly-review') })]);
 
@@ -29,14 +45,22 @@ const newThreadBody = jsonBody(NewThread, 'Body must carry a text, or the kind w
 
 const idParam = idParamOr404('Thread not found');
 
-// What the page reads of a thread and a message; the owner and the thread's id stay in
-// the database.
-const shownThread = {
+// A reply is being written: the thread is claimed, and the claim has not lapsed.
+const claimLive = sql`(${threads.answerClaim} is not null and ${threads.answerExpiresAt} > ${NOW})`;
+const released = { answerClaim: null, answerExpiresAt: null };
+
+// What the page reads of a thread and a message; the owner, the claim and the thread's id
+// stay in the database.
+const threadColumns = {
   id: threads.id,
   kind: threads.kind,
   title: threads.title,
   createdAt: threads.createdAt,
   updatedAt: threads.updatedAt,
+};
+const shownThread = {
+  ...threadColumns,
+  answering: sql<boolean>`${claimLive}`.mapWith(Boolean),
 };
 const shownMessage = {
   id: messages.id,
@@ -45,7 +69,9 @@ const shownMessage = {
   createdAt: messages.createdAt,
 };
 
-export type Thread = Pick<typeof threads.$inferSelect, keyof typeof shownThread>;
+export type Thread = Pick<typeof threads.$inferSelect, keyof typeof threadColumns> & {
+  answering: boolean;
+};
 export type Message = Pick<typeof messages.$inferSelect, keyof typeof shownMessage>;
 // A thread in the list, with the first line of the coach's last reply under its title.
 export type ThreadSummary = Thread & { preview: string | null };
@@ -92,36 +118,55 @@ export function threadRoutes(coach: Coach) {
       if ((await findThread(db, c.get('user').id, id)) === undefined) {
         return problem(c, 404, 'Thread not found');
       }
-      const message = await storeMessage(db, id, 'user', c.req.valid('json').text);
+      const message = await storeMessage(db, id, c.req.valid('json').text);
+      if (message === undefined) return problem(c, 409, BEING_ANSWERED);
       return c.json({ message }, 201);
     })
     .post('/:id/answer', idParam, async (c) => {
       const db = database(c.env.DB);
+      const userId = c.get('user').id;
       const { id } = c.req.valid('param');
-      const found = await readThread(db, c.get('user').id, id);
-      if (found === undefined) return problem(c, 404, 'Thread not found');
-      if (found.messages.at(-1)?.role !== 'user') return problem(c, 409, 'Nothing to answer');
+      const claim = crypto.randomUUID();
+      // The claim goes first, so the thread read after it in the same batch is the one
+      // this request answers.
+      const [claimed, [thread], history] = await db.batch([
+        claimAnswer(db, userId, id, claim),
+        ...conversationQueries(db, userId, id),
+      ]);
+      if (thread === undefined) return problem(c, 404, 'Thread not found');
+      if (claimed.length === 0) {
+        return problem(
+          c,
+          409,
+          unanswered({ messages: history }) ? BEING_ANSWERED : 'Nothing to answer',
+        );
+      }
       return streamSSE(c, (stream) => {
         const write = (answer: Answer) =>
           stream.writeSSE({ event: answer.event, data: JSON.stringify(answer.data) });
         // A write after the phone went away is dropped by the stream; the reply is
-        // finished and stored all the same, and the thread shows it when opened next.
+        // finished and stored all the same when it is done within the 30 seconds the
+        // Worker is given after that, and the thread shows it when opened next. A longer
+        // one is stopped with the Worker, and its claim lapses.
         const emit: Emit = (event) =>
           write(
             event.type === 'reading'
               ? { event: 'reading', data: {} }
               : { event: 'text', data: { text: event.text } },
           );
-        const consultation = {
-          db,
-          userId: c.get('user').id,
-          history: found.messages,
-          now: new Date(),
-        };
+        const consultation = { db, userId, history, now: new Date() };
         const answered = (async () => {
+          const renewal = setInterval(() => {
+            renewClaim(db, id, claim).catch((error: unknown) => {
+              console.error('the claim on the thread could not be renewed', error);
+            });
+          }, RENEW_MS);
           try {
-            const reply = await coach(c.env, consultation, emit);
-            const message = await storeMessage(db, id, 'assistant', reply);
+            const reply = await coach(c.env, consultation, emit).finally(() => {
+              clearInterval(renewal);
+            });
+            const message = await storeReply(db, id, claim, reply);
+            if (message === undefined) throw new Error('the claim lapsed before the reply');
             await write({ event: 'done', data: { message } });
           } catch (error) {
             const reason = error instanceof CoachError ? error.reason : 'failed';
@@ -130,6 +175,10 @@ export function threadRoutes(coach: Coach) {
               reason,
               error instanceof CoachError ? error.cause : error,
             );
+            // Let go before saying so, so the page's Try again finds the thread free.
+            await releaseClaim(db, id, claim).catch((dropError: unknown) => {
+              console.error('the claim on the thread could not be dropped', dropError);
+            });
             await write({ event: 'error', data: { reason } });
           }
         })();
@@ -185,13 +234,10 @@ async function findThread(db: Database, userId: number, id: number): Promise<Thr
   return thread;
 }
 
-// The thread and its messages oldest first, or nothing when it is not the caller's.
-export async function readThread(
-  db: Database,
-  userId: number,
-  id: number,
-): Promise<Conversation | undefined> {
-  const [[thread], list] = await db.batch([
+// The thread and its messages oldest first, as two queries for one batch; neither finds
+// anything when the thread is not the caller's.
+const conversationQueries = (db: Database, userId: number, id: number) =>
+  [
     db.select(shownThread).from(threads).where(mine(userId, id)),
     db
       .select(shownMessage)
@@ -199,7 +245,14 @@ export async function readThread(
       .innerJoin(threads, eq(messages.threadId, threads.id))
       .where(mine(userId, id))
       .orderBy(messages.id),
-  ]);
+  ] as const;
+
+export async function readThread(
+  db: Database,
+  userId: number,
+  id: number,
+): Promise<Conversation | undefined> {
+  const [[thread], list] = await db.batch(conversationQueries(db, userId, id));
   return thread === undefined ? undefined : { thread, messages: list };
 }
 
@@ -253,18 +306,103 @@ async function startThread(
   return { thread, messages: [message] };
 }
 
-// A message moves its thread to the top of the list: the thread's updatedAt is set by
-// hand, since no column of the thread itself changes.
-async function storeMessage(
+// A message stored on its thread where the condition holds. An insert from a select names
+// every column of the table in order; the id and the time are left to SQLite as they are
+// on a plain insert.
+const messageWhere = (
   db: Database,
   threadId: number,
   role: MessageRole,
   content: string,
-): Promise<Message> {
+  condition: SQL,
+) =>
+  db
+    .insert(messages)
+    .select(
+      db
+        .select({
+          id: sql<number>`null`.as('id'),
+          threadId: threads.id,
+          role: sql<MessageRole>`${role}`.as('role'),
+          content: sql<string>`${content}`.as('content'),
+          createdAt: sql<string>`${NOW}`.as('created_at'),
+        })
+        .from(threads)
+        .where(and(eq(threads.id, threadId), condition)),
+    )
+    .returning(shownMessage);
+
+// A message moves its thread to the top of the list: the thread's updatedAt is set by
+// hand, since no column of the thread itself changes. Nothing is stored while a reply is
+// being written, which would answer the thread without this message and leave it
+// unanswered behind.
+async function storeMessage(
+  db: Database,
+  threadId: number,
+  content: string,
+): Promise<Message | undefined> {
   const [[message]] = await db.batch([
-    db.insert(messages).values({ threadId, role, content }).returning(shownMessage),
-    db.update(threads).set({ updatedAt: NOW }).where(eq(threads.id, threadId)),
+    messageWhere(db, threadId, 'user', content, not(claimLive)),
+    db
+      .update(threads)
+      .set({ updatedAt: NOW })
+      .where(and(eq(threads.id, threadId), not(claimLive))),
   ]);
-  if (message === undefined) throw new Error('the message was not stored');
+  return message;
+}
+
+const held = (threadId: number, claim: string) =>
+  and(eq(threads.id, threadId), eq(threads.answerClaim, claim));
+
+// The thread taken for one reply: the caller's, ending with their message, and with no
+// claim alive on it. One statement, so of two answers asked for at once only one gets it.
+function claimAnswer(db: Database, userId: number, threadId: number, claim: string) {
+  const lastRole = db
+    .select({ role: messages.role })
+    .from(messages)
+    .where(eq(messages.threadId, threadId))
+    .orderBy(desc(messages.id))
+    .limit(1);
+  return db
+    .update(threads)
+    .set({ answerClaim: claim, answerExpiresAt: secondsFromNow(CLAIM_SECONDS) })
+    .where(and(mine(userId, threadId), not(claimLive), eq(sql`(${lastRole})`, 'user')))
+    .returning({ id: threads.id });
+}
+
+async function renewClaim(db: Database, threadId: number, claim: string) {
+  await db
+    .update(threads)
+    .set({ answerExpiresAt: secondsFromNow(CLAIM_SECONDS) })
+    .where(held(threadId, claim));
+}
+
+async function releaseClaim(db: Database, threadId: number, claim: string) {
+  await db.update(threads).set(released).where(held(threadId, claim));
+}
+
+// The reply is stored while its claim holds, and the claim is let go in the same batch.
+// A claim taken over means another answer is writing the reply, and a lapsed one could be
+// taken at any moment and a message stored meanwhile, so either way this reply is dropped
+// rather than stored beside or after what it did not read.
+async function storeReply(
+  db: Database,
+  threadId: number,
+  claim: string,
+  content: string,
+): Promise<Message | undefined> {
+  const [[message]] = await db.batch([
+    messageWhere(
+      db,
+      threadId,
+      'assistant',
+      content,
+      sql`${eq(threads.answerClaim, claim)} and ${claimLive}`,
+    ),
+    db
+      .update(threads)
+      .set({ ...released, updatedAt: NOW })
+      .where(held(threadId, claim)),
+  ]);
   return message;
 }

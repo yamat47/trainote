@@ -53,6 +53,15 @@ export async function sendMessage(id: number, text: string): Promise<Message> {
   return (await response.json()).message;
 }
 
+// The answer was refused because the thread is not waiting for one from this request:
+// another is writing its reply, or wrote it already.
+export class AnsweredElsewhere extends Error {
+  constructor() {
+    super('POST /api/threads/:id/answer answered 409');
+    this.name = 'AnsweredElsewhere';
+  }
+}
+
 // The Worker writes each frame from an Answer (worker/threads.ts); reading one back is
 // the trust a typed response.json() is.
 function answerOf(frame: Frame): Answer {
@@ -62,17 +71,18 @@ function answerOf(frame: Frame): Answer {
 }
 
 // The coach's answer to the thread as it is written: reading notices, pieces of text,
-// then the stored reply or the failure. Throws when the stream cannot be opened or breaks.
+// then the stored reply or the failure. Throws AnsweredElsewhere when the thread is not
+// this request's to answer, and another error when the stream cannot be opened or breaks.
 // The route is called with fetch at the client's URL, since the answer is a stream the
 // client's response type does not know.
 export async function* answers(id: number): AsyncGenerator<Answer> {
   const response = await fetch(client.api.threads[':id'].answer.$url(param(id)), {
     method: 'POST',
   });
+  if (response.status === 409) throw new AnsweredElsewhere();
   expectOk(response, 'POST /api/threads/:id/answer');
   if (response.body === null) throw new Error('POST /api/threads/:id/answer answered no body');
   for await (const frame of frames(response.body)) yield answerOf(frame);
 }
 
-// The last message is the person's: a thread just started, or one whose reply failed.
-export const unanswered = ({ messages }: Conversation) => messages.at(-1)?.role === 'user';
+export { unanswered } from '../worker/message.ts';
