@@ -29,7 +29,15 @@ export const Preview = z.object({
 });
 export type Preview = z.infer<typeof Preview>;
 
-export type Structure = (env: Env, text: string) => Promise<Preview>;
+// One entry rewritten, read back as exactly one: the same rules, and a schema with a
+// single entry where the note's has a list, so Structured Outputs can return no other count.
+const EntryPreview = z.object({ entry: DraftEntry, comment: z.string() });
+
+// What the text is: a note of any number of acts, or the text of one saved entry being
+// rewritten, which is read as that one entry.
+export type Reading = 'note' | 'entry';
+
+export type Structure = (env: Env, text: string, reading?: Reading) => Promise<Preview>;
 
 // Why a note came back without a preview. All three are "could not read it now" to the
 // page; the reason and the cause are for the log the route writes.
@@ -45,43 +53,55 @@ export class StructureError extends Error {
   }
 }
 
-const INSTRUCTIONS = `You read one note that the owner of trainote, a personal body-make journal, wrote about what they did. Split it into separate acts and return them as entries.
+const NOTE_TASK = `You read one note that the owner of trainote, a personal body-make journal, wrote about what they did. Split it into separate acts and return them as entries. Never merge two acts into one entry. If the note records nothing, return no entries and say so in the comment.`;
 
-Each entry is one act. Its kind is "win" when the act was an effort toward their body-make goal (training, resisting a snack, sleeping early) and "slip" when it was a lapse (skipping the gym, eating sweets, staying up late). A slip is a single slip, never a failure; describe it without blame. Its category is "exercise", "food", "sleep" or "life".
+const ENTRY_TASK = `You read the text of one entry that the owner of trainote, a personal body-make journal, saved earlier and is now rewriting. Return it as the single entry, even when it names more than one exercise: those are items of that entry.`;
 
-The body is the act in the writer's own words and language, trimmed to a few words. Leave out the numbers you move into items, and add nothing the note does not say. Never merge two acts into one entry.
+const RULES = `Each entry is one act. Its kind is "win" when the act was an effort toward their body-make goal (training, resisting a snack, sleeping early) and "slip" when it was a lapse (skipping the gym, eating sweets, staying up late). A slip is a single slip, never a failure; describe it without blame. Its category is "exercise", "food", "sleep" or "life".
+
+The body is the act in the writer's own words and language, trimmed to a few words. Leave out the numbers you move into items, and add nothing the note does not say.
 
 Items are for exercise only. Give one item per line of numbers as the note states them: "60kg 10回 3セット" is one item with weightKg 60, reps 10 and sets 3; "60kg で 10、8、6" is three items with reps 10, 8 and 6 and sets null; a run of 2.5 km is one item with distanceKm 2.5. Normalize the exercise to its full common name in the note's language, so "ベンチ" becomes "ベンチプレス". A note like "ジム行った" has no numbers and gets no items.
 
-The comment is a single short sentence to the writer in the language of the note, ending at its first full stop: warm, specific to this note, and never advice. If the note records nothing, return no entries and say so in the comment.`;
+The comment is a single short sentence to the writer in the language of the note, ending at its first full stop: warm, specific to this note, and never advice.`;
 
 const PREVIEW_FORMAT = zodOutputFormat(Preview);
+const ENTRY_FORMAT = zodOutputFormat(EntryPreview);
 
 // Low effort: this is extraction, and the preview has a three-second budget. No retry
 // and a short timeout for the same reason: a slow call is not run twice behind the
 // person's back; the page shows the failure and they tap again.
 export function structureWithClaude(fetch: typeof globalThis.fetch = globalThis.fetch): Structure {
-  return async (env, text) => {
+  return async (env, text, reading = 'note') => {
     const client = new Anthropic({
       apiKey: env.ANTHROPIC_API_KEY,
       maxRetries: 0,
       timeout: 10_000,
       fetch,
     });
+    // Room for the longest preview a note of MAX_NOTE_LENGTH can produce (the 50 entries
+    // entries.ts accepts, at about 100 tokens each), so a cut-off answer is never the
+    // reason a note cannot be read.
+    const request = { model: env.STRUCTURE_MODEL, max_tokens: 8192 };
+    const messages = [{ role: 'user' as const, content: text }];
     try {
+      if (reading === 'entry') {
+        const response = await client.messages.parse({
+          ...request,
+          system: `${ENTRY_TASK}\n\n${RULES}`,
+          messages,
+          output_config: { effort: 'low', format: ENTRY_FORMAT },
+        });
+        const read = parsedOf(response);
+        return { entries: [read.entry], comment: read.comment };
+      }
       const response = await client.messages.parse({
-        model: env.STRUCTURE_MODEL,
-        // Room for the longest preview a note of MAX_NOTE_LENGTH can produce (the 50
-        // entries entries.ts accepts, at about 100 tokens each), so a cut-off answer is
-        // never the reason a note cannot be read.
-        max_tokens: 8192,
-        system: INSTRUCTIONS,
-        messages: [{ role: 'user', content: text }],
+        ...request,
+        system: `${NOTE_TASK}\n\n${RULES}`,
+        messages,
         output_config: { effort: 'low', format: PREVIEW_FORMAT },
       });
-      if (response.stop_reason === 'refusal') throw new StructureError('refused');
-      if (response.parsed_output === null) throw new StructureError('unparsed');
-      return response.parsed_output;
+      return parsedOf(response);
     } catch (error) {
       // The SDK throws an APIError for a timeout, a dropped connection and every non-2xx
       // answer, and its base error, wrapping zod's, when the JSON is not the preview.
@@ -90,4 +110,11 @@ export function structureWithClaude(fetch: typeof globalThis.fetch = globalThis.
       throw error;
     }
   };
+}
+
+// The structured answer, or the reason there is none.
+function parsedOf<T>(response: { stop_reason: string | null; parsed_output: T | null }): T {
+  if (response.stop_reason === 'refusal') throw new StructureError('refused');
+  if (response.parsed_output === null) throw new StructureError('unparsed');
+  return response.parsed_output;
 }

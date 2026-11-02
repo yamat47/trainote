@@ -3,7 +3,7 @@ import type { PlatformProxy } from 'wrangler';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { database } from './db/index.ts';
 import { entries, workoutItems } from './db/schema.ts';
-import { StructureError, type DraftItem, type Structure } from './structure.ts';
+import { StructureError, type DraftItem, type Reading, type Structure } from './structure.ts';
 import { appAs, clientAs, platform, userIdOf as idOf } from './test/platform.ts';
 import { NOTE, PREVIEW } from './test/preview.ts';
 import { addDays, tokyoDate, weekDates } from './week.ts';
@@ -24,6 +24,9 @@ const itemOf = (exercise: string, numbers: Partial<DraftItem>): DraftItem => ({
   distanceKm: null,
   ...numbers,
 });
+
+// The path parameter that names an entry.
+const param = (id: number) => ({ param: { id: String(id) } });
 
 const storedItems = (d1: D1Database, entryId: number) =>
   database(d1)
@@ -146,6 +149,20 @@ describe('/api/entries', () => {
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual(PREVIEW);
       expect(notes).toEqual([NOTE]);
+    });
+
+    it('asks for a single entry when the text rewrites one, and for a note otherwise', async () => {
+      const readings: (Reading | undefined)[] = [];
+      const structure: Structure = (_env, _text, reading) => {
+        readings.push(reading);
+        return Promise.resolve(PREVIEW);
+      };
+      const preview = clientAs(proxy.env, 'owner@example.com', { structure }).api.entries.preview;
+
+      await preview.$post({ json: { text: 'ベンチ 62.5kg 10回 3セット', single: true } });
+      await preview.$post({ json: { text: NOTE } });
+
+      expect(readings).toEqual(['entry', 'note']);
     });
 
     it('refuses a blank note without asking the structurer', async () => {
@@ -282,6 +299,109 @@ describe('/api/entries', () => {
       expect(unknown.status).toBe(400);
       expect(unknown.headers.get('content-type')).toBe('application/problem+json');
       expect(await storedEntries(proxy.env.DB, 'x')).toHaveLength(0);
+    });
+  });
+
+  // An entry of yesterday with two items, owned by the given person.
+  const savedYesterday = async (email: string, body: string) => {
+    const [entry] = await database(proxy.env.DB)
+      .insert(entries)
+      .values({
+        userId: await userIdOf(email),
+        date: addDays(tokyoDate(new Date()), -1),
+        kind: 'win',
+        category: 'exercise',
+        body,
+      })
+      .returning();
+    if (entry === undefined) throw new Error('the entry was not inserted');
+    await database(proxy.env.DB)
+      .insert(workoutItems)
+      .values([
+        { entryId: entry.id, position: 0, exercise: 'ベンチプレス', weightKg: 60, reps: 10 },
+        { entryId: entry.id, position: 1, exercise: 'ベンチプレス', weightKg: 60, reps: 8 },
+      ]);
+    return entry;
+  };
+
+  describe('PUT /:id', () => {
+    it("rewrites the entry's kind, category, body and items, and keeps its day", async () => {
+      const saved = await savedYesterday('edit@example.com', 'ベンチ (edit)');
+      const draft = {
+        kind: 'slip' as const,
+        category: 'life' as const,
+        body: 'ベンチ (edited)',
+        items: [itemOf('ベンチプレス', { weightKg: 62.5, reps: 10, sets: 3 })],
+      };
+
+      const response = await clientAs(proxy.env, 'edit@example.com').api.entries[':id'].$put({
+        ...param(saved.id),
+        json: draft,
+      });
+
+      expect(response.status).toBe(200);
+      if (!response.ok) throw new Error(`answered ${String(response.status)}`);
+      const { entry } = await response.json();
+      expect(entry).toMatchObject({
+        id: saved.id,
+        date: saved.date,
+        kind: 'slip',
+        category: 'life',
+        body: 'ベンチ (edited)',
+      });
+      expect(entry.items).toMatchObject([{ position: 0, weightKg: 62.5, reps: 10, sets: 3 }]);
+      expect(
+        (await storedItems(proxy.env.DB, saved.id)).map((row) => [row.weightKg, row.reps]),
+      ).toEqual([[62.5, 10]]);
+    });
+
+    it("knows nothing of another person's entry, and changes nothing of it", async () => {
+      const theirs = await savedYesterday('owner-of-it@example.com', 'ベンチ (theirs)');
+
+      const response = await clientAs(proxy.env, 'not-owner@example.com').api.entries[':id'].$put({
+        ...param(theirs.id),
+        json: { kind: 'slip', category: 'food', body: 'お菓子', items: [] },
+      });
+
+      expect(response.status).toBe(404);
+      expect(await storedEntries(proxy.env.DB, 'ベンチ (theirs)')).toHaveLength(1);
+      expect(await storedItems(proxy.env.DB, theirs.id)).toHaveLength(2);
+    });
+
+    it('answers 404 for an id that is not a number', async () => {
+      const response = await clientAs(proxy.env, 'owner@example.com').api.entries[':id'].$put({
+        param: { id: 'abc' },
+        json: { kind: 'slip', category: 'food', body: 'x', items: [] },
+      });
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('DELETE /:id', () => {
+    it('deletes the entry with its items, and answers 404 the second time', async () => {
+      const saved = await savedYesterday('delete@example.com', 'ベンチ (delete)');
+      const remove = () =>
+        clientAs(proxy.env, 'delete@example.com').api.entries[':id'].$delete(param(saved.id));
+
+      const first = await remove();
+      const second = await remove();
+
+      expect(first.status).toBe(204);
+      expect(second.status).toBe(404);
+      expect(await storedEntries(proxy.env.DB, 'ベンチ (delete)')).toHaveLength(0);
+      expect(await storedItems(proxy.env.DB, saved.id)).toHaveLength(0);
+    });
+
+    it("refuses to delete another person's entry", async () => {
+      const theirs = await savedYesterday('keeper@example.com', 'ベンチ (kept)');
+
+      const response = await clientAs(proxy.env, 'stranger@example.com').api.entries[':id'].$delete(
+        param(theirs.id),
+      );
+
+      expect(response.status).toBe(404);
+      expect(await storedEntries(proxy.env.DB, 'ベンチ (kept)')).toHaveLength(1);
     });
   });
 });

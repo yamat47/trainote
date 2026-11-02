@@ -3,7 +3,7 @@ import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from './app.ts';
-import { jsonBody } from './body.ts';
+import { idParamOr404, jsonBody } from './body.ts';
 import { database, type Database } from './db/index.ts';
 import { entries, workoutItems, type Category, type EntryKind } from './db/schema.ts';
 import { problem } from './problem.ts';
@@ -11,7 +11,11 @@ import { MAX_NOTE_LENGTH } from './note.ts';
 import { DraftEntry, StructureError, type Structure } from './structure.ts';
 import { addDays, streak, tokyoDate, tokyoWeek, weekDates, type DayRange } from './week.ts';
 
-const Note = z.object({ text: z.string().trim().min(1).max(MAX_NOTE_LENGTH) });
+// A note, or with `single` the rewritten text of one saved entry, read as that one entry.
+const Note = z.object({
+  text: z.string().trim().min(1).max(MAX_NOTE_LENGTH),
+  single: z.boolean().optional(),
+});
 
 // More entries than a note of MAX_NOTE_LENGTH can hold, one act per 40 characters; a
 // guard against a hand-made request, not a limit the page can reach.
@@ -21,6 +25,10 @@ const Drafts = z.object({ entries: z.array(DraftEntry).min(1).max(MAX_ENTRIES) }
 
 const noteBody = jsonBody(Note, 'Body must carry a non-empty text');
 const draftsBody = jsonBody(Drafts, 'Body must carry one or more entries');
+const draftBody = jsonBody(DraftEntry, 'Body must carry an entry');
+
+const NOT_FOUND = 'Entry not found';
+const idParam = idParamOr404(NOT_FOUND);
 
 export type Item = typeof workoutItems.$inferSelect;
 export type Entry = typeof entries.$inferSelect & { items: Item[] };
@@ -28,32 +36,55 @@ export type Entry = typeof entries.$inferSelect & { items: Item[] };
 // The preview is what the page shows before saving and what it sends back to save, so
 // nothing is kept between the two calls and a rewritten note is just another preview.
 export function entryRoutes(structure: Structure) {
-  return new Hono<AppEnv>()
-    .get('/', async (c) => {
-      const found = await listEntries(database(c.env.DB), c.get('user').id);
-      return c.json({ entries: found });
-    })
-    .get('/week', async (c) =>
-      c.json(await weekOf(database(c.env.DB), c.get('user').id, new Date())),
-    )
-    .post('/preview', noteBody, async (c) => {
-      const { text } = c.req.valid('json');
-      try {
-        return c.json(await structure(c.env, text));
-      } catch (error) {
-        if (error instanceof StructureError) {
-          console.error('note could not be structured', error.reason, error.cause);
-          return problem(c, 502, 'The note could not be read');
+  return (
+    new Hono<AppEnv>()
+      .get('/', async (c) => {
+        const found = await listEntries(database(c.env.DB), c.get('user').id);
+        return c.json({ entries: found });
+      })
+      .get('/week', async (c) =>
+        c.json(await weekOf(database(c.env.DB), c.get('user').id, new Date())),
+      )
+      .post('/preview', noteBody, async (c) => {
+        const { text, single = false } = c.req.valid('json');
+        try {
+          return c.json(await structure(c.env, text, single ? 'entry' : 'note'));
+        } catch (error) {
+          if (error instanceof StructureError) {
+            console.error('note could not be structured', error.reason, error.cause);
+            return problem(c, 502, 'The note could not be read');
+          }
+          throw error;
         }
-        throw error;
-      }
-    })
-    .post('/', draftsBody, async (c) => {
-      const drafts = c.req.valid('json').entries;
-      const saved = await saveEntries(database(c.env.DB), c.get('user').id, drafts, new Date());
-      return c.json({ entries: saved }, 201);
-    });
+      })
+      .post('/', draftsBody, async (c) => {
+        const drafts = c.req.valid('json').entries;
+        const saved = await saveEntries(database(c.env.DB), c.get('user').id, drafts, new Date());
+        return c.json({ entries: saved }, 201);
+      })
+      // A saved entry rewritten whole: its kind, category, body and items are replaced, and
+      // its day stays, so an entry of yesterday is still yesterday's.
+      .put('/:id', idParam, draftBody, async (c) => {
+        const db = database(c.env.DB);
+        const entry = await replaceEntry(
+          db,
+          c.get('user').id,
+          c.req.valid('param').id,
+          c.req.valid('json'),
+        );
+        return entry === undefined ? problem(c, 404, NOT_FOUND) : c.json({ entry });
+      })
+      .delete('/:id', idParam, async (c) => {
+        const [deleted] = await database(c.env.DB)
+          .delete(entries)
+          .where(mine(c.get('user').id, c.req.valid('param').id))
+          .returning({ id: entries.id });
+        return deleted === undefined ? problem(c, 404, NOT_FOUND) : c.body(null, 204);
+      })
+  );
 }
+
+const mine = (userId: number, id: number) => and(eq(entries.userId, userId), eq(entries.id, id));
 
 // The id of the entry the batch inserted last. The items of an entry need its id before
 // any row of the batch comes back; last_insert_rowid() would name the item inserted just
@@ -94,6 +125,29 @@ export async function saveEntries(
     else saved.push(row);
   }
   return withItems(saved, items);
+}
+
+// The entry rewritten with the draft, or nothing when it is not the caller's. Its items
+// are replaced in the same batch, so the entry never shows the old numbers beside the new.
+async function replaceEntry(
+  db: Database,
+  userId: number,
+  id: number,
+  draft: DraftEntry,
+): Promise<Entry | undefined> {
+  const [found] = await db.select({ id: entries.id }).from(entries).where(mine(userId, id));
+  if (found === undefined) return undefined;
+  const [[entry], , ...items] = await db.batch([
+    db
+      .update(entries)
+      .set({ kind: draft.kind, category: draft.category, body: draft.body })
+      .where(eq(entries.id, id))
+      .returning(),
+    db.delete(workoutItems).where(eq(workoutItems.entryId, id)),
+    ...insertItems(db, id, draft.items),
+  ]);
+  if (entry === undefined) throw new Error('the entry was not stored');
+  return Object.assign(entry, { items: items.flat() });
 }
 
 // Each entry with its items, in the order the items were stored.
