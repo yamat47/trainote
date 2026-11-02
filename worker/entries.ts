@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, lte, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -55,10 +55,23 @@ export function entryRoutes(structure: Structure) {
     });
 }
 
-// Two statements, not one transaction: the item rows need the entry ids, which D1 only
-// hands back after the first batch. An entry without its items is still a true record,
-// and a save retried after a failure in between stores the entries twice; accepted for
-// now (docs/requirements.md, 未決).
+// The id of the entry the batch inserted last. The items of an entry need its id before
+// any row of the batch comes back; last_insert_rowid() would name the item inserted just
+// before. The batch is one transaction and ids only grow, so the newest entry is the one.
+const LAST_ENTRY = sql<number>`(select max(${entries.id}) from ${entries})`;
+
+// One statement per item: a multi-row insert of eight columns passes D1's hundred bound
+// parameters at thirteen items.
+const insertItems = (db: Database, entryId: number | SQL<number>, items: DraftEntry['items']) =>
+  items.map((item, position) =>
+    db
+      .insert(workoutItems)
+      .values({ entryId, position, ...item })
+      .returning(),
+  );
+
+// One batch, which D1 runs as a transaction: a save that fails stores nothing, so Try
+// again cannot store the entries twice.
 export async function saveEntries(
   db: Database,
   userId: number,
@@ -66,24 +79,21 @@ export async function saveEntries(
   now: Date,
 ): Promise<Entry[]> {
   const date = tokyoDate(now);
-  const [first, ...rest] = drafts.map((draft) =>
+  const [first, ...rest] = drafts.flatMap((draft) => [
     db
       .insert(entries)
       .values({ userId, date, kind: draft.kind, category: draft.category, body: draft.body })
       .returning(),
-  );
+    ...insertItems(db, LAST_ENTRY, draft.items),
+  ]);
   if (first === undefined) return [];
-  const inserted = (await db.batch([first, ...rest])).flat();
-
-  const itemRows = inserted.flatMap((entry, i) =>
-    (drafts[i]?.items ?? []).map((item, position) =>
-      Object.assign({ entryId: entry.id, position }, item),
-    ),
-  );
-  const items =
-    itemRows.length === 0 ? [] : await db.insert(workoutItems).values(itemRows).returning();
-
-  return withItems(inserted, items);
+  const saved: (typeof entries.$inferSelect)[] = [];
+  const items: Item[] = [];
+  for (const row of (await db.batch([first, ...rest])).flat()) {
+    if ('exercise' in row) items.push(row);
+    else saved.push(row);
+  }
+  return withItems(saved, items);
 }
 
 // Each entry with its items, in the order the items were stored.

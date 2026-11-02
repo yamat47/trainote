@@ -3,7 +3,7 @@ import type { PlatformProxy } from 'wrangler';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { database } from './db/index.ts';
 import { entries, workoutItems } from './db/schema.ts';
-import { StructureError, type Structure } from './structure.ts';
+import { StructureError, type DraftItem, type Structure } from './structure.ts';
 import { appAs, clientAs, platform, userIdOf as idOf } from './test/platform.ts';
 import { NOTE, PREVIEW } from './test/preview.ts';
 import { addDays, tokyoDate, weekDates } from './week.ts';
@@ -13,6 +13,17 @@ const refusing: Structure = () => Promise.reject(new StructureError('refused'));
 // Each test owns its bodies, so the rows one test stores never decide another.
 const storedEntries = (d1: D1Database, body: string) =>
   database(d1).select().from(entries).where(eq(entries.body, body)).orderBy(entries.id);
+
+// An exercise item with the numbers it was given and the rest null, as Claude returns it.
+const itemOf = (exercise: string, numbers: Partial<DraftItem>): DraftItem => ({
+  exercise,
+  weightKg: null,
+  reps: null,
+  sets: null,
+  durationMin: null,
+  distanceKm: null,
+  ...numbers,
+});
 
 const storedItems = (d1: D1Database, entryId: number) =>
   database(d1)
@@ -222,6 +233,19 @@ describe('/api/entries', () => {
         [1, 8],
         [2, 6],
       ]);
+    });
+
+    it('saves an entry with more items than one insert could bind', async () => {
+      // Fifteen sets of eight columns pass D1's hundred bound parameters per statement.
+      const sets = Array.from({ length: 15 }, (_, i) => itemOf('懸垂', { reps: 15 - i }));
+      const response = await clientAs(proxy.env, 'owner@example.com').api.entries.$post({
+        json: { entries: [{ kind: 'win', category: 'exercise', body: '懸垂', items: sets }] },
+      });
+
+      expect(response.status).toBe(201);
+      const [pullUps] = await storedEntries(proxy.env.DB, '懸垂');
+      if (pullUps === undefined) throw new Error('the pull-up entry was not stored');
+      expect(await storedItems(proxy.env.DB, pullUps.id)).toHaveLength(15);
     });
 
     it('stores the entries under the caller, not under whoever else exists', async () => {
