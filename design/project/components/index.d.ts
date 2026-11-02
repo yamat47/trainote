@@ -115,12 +115,13 @@ type FieldProps = Named & {
     unit?: string;
     maxLength?: number;
     disabled?: boolean;
+    autoFocus?: boolean;
 };
-export declare function Field({ value, onChange, placeholder, label, ariaLabel, kind, unit, maxLength, disabled, }: FieldProps): import("react").JSX.Element;
+export declare function Field({ value, onChange, placeholder, label, ariaLabel, kind, unit, maxLength, disabled, autoFocus, }: FieldProps): import("react").JSX.Element;
 
 // Button.tsx
 type ButtonProps = {
-    variant?: 'plain' | 'prominent';
+    variant?: 'plain' | 'prominent' | 'destructive';
     disabled?: boolean;
     onClick: () => void;
     children: ReactNode;
@@ -129,7 +130,7 @@ export declare function Button({ variant, disabled, onClick, children }: ButtonP
 
 // Actions.tsx
 type ActionsProps = {
-    align?: 'fill' | 'end';
+    align?: 'fill' | 'end' | 'split';
     error?: string | undefined;
     children: ReactNode;
 };

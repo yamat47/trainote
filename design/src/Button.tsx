@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 type ButtonProps = {
-  variant?: 'plain' | 'prominent';
+  variant?: 'plain' | 'prominent' | 'destructive';
   disabled?: boolean;
   onClick: () => void;
   children: ReactNode;

@@ -16,6 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Prominent: Story = { args: { variant: 'prominent', children: 'Save 3 entries' } };
 export const Plain: Story = { args: { variant: 'plain', children: 'Edit text' } };
+export const Destructive: Story = { args: { variant: 'destructive', children: 'Delete' } };
 export const Disabled: Story = {
   args: { variant: 'prominent', disabled: true, children: 'Save 3 entries' },
 };

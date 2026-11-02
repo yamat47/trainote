@@ -25,6 +25,8 @@ type FieldProps = Named & {
   unit?: string;
   maxLength?: number;
   disabled?: boolean;
+  // Focused when shown, for a field the person opened in order to write in it.
+  autoFocus?: boolean;
 };
 
 // An entry row with no border and no underline; the row's separator is the only line.
@@ -42,6 +44,7 @@ export function Field({
   unit,
   maxLength,
   disabled,
+  autoFocus,
 }: FieldProps) {
   const shared = {
     className: 'tn-field-input',
@@ -50,6 +53,7 @@ export function Field({
     'aria-label': label === undefined ? ariaLabel : undefined,
     maxLength,
     disabled,
+    autoFocus,
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       onChange(event.target.value),
   };
