@@ -8,7 +8,7 @@ import {
   MAX_SHORT_TEXT_LENGTH,
 } from '../../worker/profile-fields.ts';
 import { useDraft, type Saving } from '../draft.ts';
-import { Failed } from '../Failed.tsx';
+import { Failed, SAVE_FAILED } from '../Failed.tsx';
 import type { Shown } from '../loaded.ts';
 import {
   about,
@@ -62,7 +62,7 @@ type GroupProps = { profile: Profile | undefined; onSaved: (fields: Partial<Prof
 function Save({ draft }: { draft: Saving }) {
   if (!draft.offered) return null;
   return (
-    <Actions align="end" error={draft.failed ? 'Could not save. Try again.' : undefined}>
+    <Actions align="end" error={draft.failed ? SAVE_FAILED : undefined}>
       <Button disabled={!draft.ready || draft.saving} onClick={() => void draft.submit()}>
         Save
       </Button>
