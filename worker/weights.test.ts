@@ -62,6 +62,60 @@ describe('/api/weights', () => {
     });
   });
 
+  describe('PUT /:date', () => {
+    it("corrects a day's weight in place, and makes no day that has none", async () => {
+      const mine = await userIdOf(proxy.env, 'correct@example.com');
+      const other = await userIdOf(proxy.env, 'correct-other@example.com');
+      const yesterday = addDays(tokyoDate(new Date()), -1);
+      await database(proxy.env.DB)
+        .insert(weights)
+        .values([
+          { userId: mine, date: yesterday, weightKg: 64.4, bodyFatPct: 18.4 },
+          { userId: other, date: yesterday, weightKg: 80.0 },
+        ]);
+      const day = clientAs(proxy.env, 'correct@example.com').api.weights[':date'];
+
+      // A body fat left out clears the day's, as the emptied field does on the page.
+      const corrected = await day.$put({ param: { date: yesterday }, json: { weightKg: 64.6 } });
+      expect(corrected.status).toBe(200);
+      expect(await corrected.json()).toEqual({
+        weight: { date: yesterday, weightKg: 64.6, bodyFatPct: null },
+      });
+
+      const before = addDays(yesterday, -1);
+      const missing = await Promise.all(
+        [before, 'yesterday', '2026-02-30'].map((date) =>
+          day.$put({ param: { date }, json: { weightKg: 64.6 } }),
+        ),
+      );
+      expect(missing.map((response) => response.status)).toEqual([404, 404, 404]);
+      expect((await stored(mine)).map((row) => [row.date, row.weightKg])).toEqual([
+        [yesterday, 64.6],
+      ]);
+      expect((await stored(other)).map((row) => row.weightKg)).toEqual([80.0]);
+    });
+  });
+
+  describe('DELETE /:date', () => {
+    it("deletes the caller's day once, and nobody else's", async () => {
+      const mine = await userIdOf(proxy.env, 'delete-weight@example.com');
+      const other = await userIdOf(proxy.env, 'delete-other@example.com');
+      const today = tokyoDate(new Date());
+      await database(proxy.env.DB)
+        .insert(weights)
+        .values([
+          { userId: mine, date: today, weightKg: 64.2 },
+          { userId: other, date: today, weightKg: 80.0 },
+        ]);
+      const day = clientAs(proxy.env, 'delete-weight@example.com').api.weights[':date'];
+
+      expect((await day.$delete({ param: { date: today } })).status).toBe(204);
+      expect((await day.$delete({ param: { date: today } })).status).toBe(404);
+      expect(await stored(mine)).toEqual([]);
+      expect((await stored(other)).map((row) => row.weightKg)).toEqual([80.0]);
+    });
+  });
+
   describe('GET /', () => {
     it("lists the caller's weights newest first with today's date, and nobody else's", async () => {
       const mine = await userIdOf(proxy.env, 'list-weights@example.com');
