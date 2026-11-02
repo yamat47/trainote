@@ -1,10 +1,9 @@
 import { and, desc, eq, gte, max, sql } from 'drizzle-orm';
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { validator } from 'hono/validator';
 import { z } from 'zod';
 import type { AppEnv } from './app.ts';
-import { jsonBody } from './body.ts';
+import { idParamOr404, jsonBody } from './body.ts';
 import { CoachError, type Coach, type Emit, type Reason } from './coach.ts';
 import { database, type Database } from './db/index.ts';
 import { messages, NOW, threads, type MessageRole, type ThreadKind } from './db/schema.ts';
@@ -28,12 +27,7 @@ const NewThread = z.union([Text, z.object({ kind: z.literal('weekly-review') })]
 const textBody = jsonBody(Text, 'Body must carry a non-empty text');
 const newThreadBody = jsonBody(NewThread, 'Body must carry a text, or the kind weekly-review');
 
-// An id that is not a positive integer names no thread, the same as one that is not
-// the caller's.
-const idParam = validator('param', (value, c) => {
-  const id = Number(value['id']);
-  return Number.isSafeInteger(id) && id > 0 ? { id } : problem(c, 404, 'Thread not found');
-});
+const idParam = idParamOr404('Thread not found');
 
 // What the page reads of a thread and a message; the owner and the thread's id stay in
 // the database.
