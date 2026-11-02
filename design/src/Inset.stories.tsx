@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import readme from './Inset.md?raw';
+import { Field } from './Field.tsx';
 import { Inset } from './Inset.tsx';
 import { Row } from './Row.tsx';
 
@@ -27,6 +28,31 @@ export const Preview: Story = {
         <Row kind="slip" detail="Sleep">
           夜更かしした
         </Row>
+      </>
+    ),
+  },
+};
+
+export const TodaysWeight: Story = {
+  args: {
+    children: (
+      <>
+        <Field
+          label="Today"
+          kind="numeric"
+          unit="kg"
+          value=""
+          onChange={() => {}}
+          placeholder="0.0"
+        />
+        <Field
+          label="Body fat"
+          kind="numeric"
+          unit="%"
+          value=""
+          onChange={() => {}}
+          placeholder="0.0"
+        />
       </>
     ),
   },

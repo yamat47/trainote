@@ -1,4 +1,4 @@
-<!-- @dsCard group="Lists" subtitle="Preview" -->
+<!-- @dsCard group="Lists" subtitle="Preview, Todays Weight" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,7 +11,8 @@
 var T = window.Trainote, h = React.createElement;
 ReactDOM.createRoot(document.getElementById("root")).render(
   h(React.Fragment, null,
-    h(T.Inset, { "header": "Read as 3 entries" }, h(React.Fragment, null, h(T.Row, { "kind": "win", "detail": "Exercise", "sub": "ベンチプレス 60 kg × 10 × 3" }, "ベンチ"), h(T.Row, { "kind": "win", "detail": "Food" }, "お菓子を我慢した"), h(T.Row, { "kind": "slip", "detail": "Sleep" }, "夜更かしした")))
+    h(T.Inset, { "header": "Read as 3 entries" }, h(React.Fragment, null, h(T.Row, { "kind": "win", "detail": "Exercise", "sub": "ベンチプレス 60 kg × 10 × 3" }, "ベンチ"), h(T.Row, { "kind": "win", "detail": "Food" }, "お菓子を我慢した"), h(T.Row, { "kind": "slip", "detail": "Sleep" }, "夜更かしした"))),
+    h(T.Inset, null, h(React.Fragment, null, h(T.Field, { "label": "Today", "kind": "numeric", "unit": "kg", "value": "", "onChange": function () {}, "placeholder": "0.0" }), h(T.Field, { "label": "Body fat", "kind": "numeric", "unit": "%", "value": "", "onChange": function () {}, "placeholder": "0.0" })))
   )
 );
 </script>
