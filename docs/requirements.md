@@ -44,8 +44,10 @@
     - 行の粒度は原文に合わせて Claude が決める。「60kg 10 回 3 セット」は 1 行、「60kg で 10、8、6」は 3 行、「ジム行った」は行なし
     - 種目名は Claude が正規化する (「ベンチ」を「ベンチプレス」に)。種目マスタは v1 では持たない
   - 体重は行動とは別のオブジェクト。1 日 1 件 (日付で upsert)、kg 小数 1 桁。体脂肪率は任意列 (% 小数 1 桁)。行動の入力欄では体重を受けない
-    - API は `PUT /api/weights/today` (今日の体重と任意の体脂肪率。同じ日にもう一度送ると上書き。日付はサーバーの Asia/Tokyo) と `GET /api/weights` (全件、新しい順、今日の日付つき)
-    - Weight の先頭は Today (kg) と Body fat (%) の 2 行。今日の値があれば 2 行に入れておき (再入力は上書き)、どちらかに書き始めると右に Save が出て、体重が入っていれば押せる。読み込みが終わる前は Save を出さない (今朝の体脂肪率を知らずに消さないため)
+    - API は `PUT /api/weights/today` (今日の体重と任意の体脂肪率。同じ日にもう一度送ると上書き。日付はサーバーの Asia/Tokyo)、`GET /api/weights` (全件、新しい順、今日の日付つき)、`PUT /api/weights/:date` (その日の値を直す。体脂肪率を省けば消える。200 と保存した 1 件) と `DELETE /api/weights/:date` (204)。1 日 1 件なので日付を識別子にする。`:date` で直せるのは値のある日だけで、無い日、他人の日、日付でない値は 404 (過去日付の入力が未決なので、新しい日は作らない)
+    - 今日の値がまだ無いときだけ、Weight の先頭に Inset のカードを出す (2026-11-03)。中は Today (kg) と Body fat (%) の 2 行で、カードの下に prominent の Save を置く。Save ははじめから見せ、体重が入れば押せる。保存するとカードは消え、今日は一覧の行になる。前は先頭の 2 行が一覧の行と同じ見た目で、入力欄だと気づきにくかった
+      - 読み込みが終わるまでは、タイトルの下に何も出さない (カードは今日の値の有無で決まるので、出てから消えると押す場所が動く)。読み込めなかったときは赤の 1 行「Could not load your weights.」と「Try again」のボタンだけを出し、カードも出さない
+      - 今日の分を含め、入れた値は一覧の行を押して直す。Weight の直近 2 行と All entries の行を押すと、その場所が 2 行の Field (その行の日付のラベルの kg と Body fat の %) に変わり、カーソルが入る。下に赤の「Delete」、「Cancel」、「Save」。削除は Notes と同じ 2 段階で、Delete を押すと「Cancel」と赤の「Delete entry」に替わる。開けるのは 1 行ずつ。失敗の文は「Could not save. Try again.」と「Could not delete. Try again.」
     - 今日の値の横の「−0.8 kg this week」は、直近 7 日の平均と、その前 7 日の平均の差 (1 日の揺れで文が振れないように)。どちらかの 7 日に値が無ければ出さず、差が 0.0 なら「No change this week」。その下に「Averaging 64.5 kg and 18.5 % body fat over the last 7 days.」の 1 行 (直近 7 日に 2 件以上あるとき)
     - 期間は Segmented の W (7 日)、M (30 日)、6M (182 日)、Y (365 日)。グラフは期間内の日ごとの点をそのまま結ぶ (間引かない)。体重は `tint` の線で右の目盛、体脂肪率があれば `secondary-label` の細い線で左の目盛。目盛は丸い刻みで 5 本ほど。期間内に 2 日以上無ければグラフの代わりに「Weigh in on another day to see the graph.」
     - 目標体重と期限は Profile の Goal グループ (Goal weight の kg の行と By の日付の行、空にすれば消える)。目標があればグラフに `red` の破線「Goal 60.0」と、その下に「Goal 60.0 kg by Mar 31, 2027. 4.2 kg to go.」(届いていれば「Reached.」、期限が無ければ by を省く)。目標は減量の目標として読む (最新の体重が目標以下なら届いたとみなす)。増量の目標は未決。API は `GET /api/profile` と `PUT /api/profile/goal`
@@ -93,7 +95,7 @@
     - イベントは `reading` (tool_use が始まるたび)、`text` (返答の断片)、`done` (保存した `assistant` の発言)、`error` (理由はログ用。画面の文言は 1 つ)。`text` を全部つなげたものがそのまま保存される。ツールの往復をはさんだ文はひとつ空行を挟む
     - 自分の発言は返答を求める前に保存する。返答に失敗したとき (API のエラー、refusal、max_tokens で切れた、何も言わなかった、オフライン) は最後の吹き出しの下に赤の 1 行「Could not reach your coach.」と Try again (answer をもう一度)。途中まで届いた返答は保存せず、画面からも消す
 - プロフィールは毎回システムプロンプトに入れる。項目は身長、生年、性別、目標体重と期限、運動環境 (ジムか自宅か、器具、週回数)、制約メモ (自由文)。入っている項目だけを、今日の日付とともに指示文の後ろに置く (前半が日によって変わらないので prompt cache が効く)
-  - API は `GET /api/profile` (全項目、未設定は null) と、Profile のグループごとの `PUT /api/profile/about` (身長、生年、性別)、`/goal`、`/training` (場所、週回数、器具)、`/notes` (制約メモ)。グループの全項目を送り、空にした項目は null で消す。どの PUT もプロフィール全体を返し、ページはそのうち保存したグループの項目だけを取り込む (2 つのグループを続けて保存したとき、後から着いた答えがもう一方を古い値に戻さないため)。グループ単位にするのは、読み込みが終わる前は Save を出さない体重の決定 (上の「記録するもの」) と同じく、見ていない項目を保存で消さないため
+  - API は `GET /api/profile` (全項目、未設定は null) と、Profile のグループごとの `PUT /api/profile/about` (身長、生年、性別)、`/goal`、`/training` (場所、週回数、器具)、`/notes` (制約メモ)。グループの全項目を送り、空にした項目は null で消す。どの PUT もプロフィール全体を返し、ページはそのうち保存したグループの項目だけを取り込む (2 つのグループを続けて保存したとき、後から着いた答えがもう一方を古い値に戻さないため)。グループ単位にするのは、見ていない項目を保存で消さないため。同じ理由で、Save は読み込んだ値の上でしか出さない
   - 範囲は身長 50 以上 250 未満 cm (小数 1 桁)、生年 1900 から今年 (Asia/Tokyo) まで、週回数 0 から 14 の整数。性別と場所は 50 字、器具は 200 字、制約メモはメモと同じ 2000 字。文字は前後の空白を落とし、空なら null。境界はページとサーバーで 1 つの定義 (`worker/profile-fields.ts`) を読む
   - 性別、場所、器具は自由文の行。デザインの Profile 画面は選択画面へ進む disclosure の行で描いているが、Claude は文字列をそのまま読むので選択肢を決める必要がなく、Profile に重ねる画面を増やさない (2026-11-02)
 - システムプロンプトでボディメイクを軸に置く。頑張ったことと頑張れなかったことを踏まえて、運動と食事の両方について助言する
@@ -105,7 +107,7 @@
   - タブの上に重ねる画面 (All entries、後のスレッド) はパスを持つ (`/weight/all`、`/coach/weekly-review`)。History API の pushState で重ね、戻るは popstate。アドレスから直接開いたときは戻る先が無いので `/` に置き換え、その画面のタブを開く。重ねた画面で別のタブを押したときも `/` に置き換える (履歴に `/` が 1 つ余り、ブラウザの戻る 1 回が空振りする。iOS が root を差し替えるのと同じで、許容)。タブ自体にパスは無い
   - 各コレクションの先頭にインライン作成を置く。モーダルもウィザードも作らない
   - Notes は「振り返り」の節の通り
-  - Weight は iOS のヘルスケアと同じ構成。先頭に今日の入力行、期間のセグメンテッドコントロール (W、M、6M、Y)、今日の値と 1 週間の増減、グラフ (目標線つき)、目標までの 1 文、直近の数行、最後に「Show all entries」で全件のリストへ。リストとグラフの切替はこれで代える
+  - Weight は iOS のヘルスケアと同じ構成。先頭に今日の入力のカード (今日の値がまだ無いときだけ)、期間のセグメンテッドコントロール (W、M、6M、Y)、今日の値と 1 週間の増減、グラフ (目標線つき)、目標までの 1 文、直近の数行、最後に「Show all entries」で全件のリストへ。リストとグラフの切替はこれで代える
   - Coach はスレッド一覧から単一ビュー (チャット) へ。一覧の先頭に Weekly review の入口を置く
     - 一覧の先頭は multiline の Field「Ask your coach」。文字があるときだけ下に plain の「Send」ボタンを出し、押すと `POST /api/threads` でスレッドを作って `/coach/:id` を重ねる。その下に tint の行「Start weekly review」(detail は「Sundays, 20:00」)。押すと `kind: weekly-review` で今日のものを開くか作り、同じく重ねる。続いてスレッドの行: 題、副行に Claude の最後の返答の 1 行目、detail に最後の発言の日付 (Asia/Tokyo、「Oct 18」)。送れなければボタンの下に「Could not send. Try again.」、Weekly review を開けなければ行の下に「Could not start the weekly review. Try again.」
     - スレッドの画面は inline の NavBar (題と Coach への戻り)、吹き出し、下部に Composer (Messages 風のカプセルと送信ボタン)。タブバーは出さず、Composer がその場所に付く。通知の `/coach/weekly-review` は今日の Weekly review を開くか作り、アドレスをそのスレッドの `/coach/:id` に置き換える
@@ -178,7 +180,7 @@
   - iPhone 幅 (390 × 844) で 8 枚。Notes、Notes の構造化プレビュー、Weight、Weight の全件リスト、Coach のスレッド一覧、週の振り返りのスレッド、Profile、日曜の通知
   - 各画面の Tweaks でライトとダークを切り替えられる
 - 部品は Storybook (`make storybook`) で見る。部品とトークンの変更はリポジトリで行い、`make project` が作る `design/project/` を `design-publish` スキルでアーティファクトへ届ける (`docs/design.md`)。`design/screens/` は 2026-10 に画面のアーティファクトから手で写したもの
-  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン、保存した行を開いた編集欄と削除の確かめの列。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は古いままで、更新は頼んだときだけ (`docs/design.md`)
+  - 画面のアーティファクトにまだ無いもの: Profile の Notifications グループ (Sunday reminder の行、Send a reminder now の行、footer)、Notes の「Read as entries」ボタン、保存した行を開いた編集欄と削除の確かめの列、Weight の今日の入力のカードと、行を開いた編集欄。画面のアーティファクトが持つデザインシステムの写し (`ds/trainote/`) は古いままで、更新は頼んだときだけ (`docs/design.md`)
 
 ### 使うスキル (yamat47/github-toolkit)
 
