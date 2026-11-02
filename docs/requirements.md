@@ -13,6 +13,11 @@
     - Worker は Access が付けた identity (メール) で users に upsert する。ログイン画面もセッション管理も書かない
     - ローカルでは wrangler の `access.dev` ブロックで identity を偽装する
     - Access の検証は `ctx.access.getIdentity()` を第一候補にし、hostname ベースの Access アプリで取れなければ `CF_Authorization` の JWT を `https://yamat47.cloudflareaccess.com/cdn-cgi/access/certs` で検証する (AUD は後述の outputs)
+    - Access アプリのセッションは 730h。Access が許す最長の 1 か月で、Google を通るのは月に 1 回になる (2026-11-02、infra-yamat47 #72)
+      - ホーム画面の Web アプリは Cookie とストレージを Safari と分けて持つ ([WWDC23 What's new in web apps](https://developer.apple.com/videos/play/wwdc2023/10120/))。Safari で Google にログインしていても PWA には効かず、トークンが切れるたびに PWA の中で Google を通る。24h のころは毎日 1 回挟まった
+      - アプリドメインの `CF_Authorization` は、ポリシーに設定が無ければアプリのセッションに従う ([authorization cookie](https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/))。トークンの期限は発行時に決まり、使っても延びない。チームドメインのグローバルセッションは既定の 24h のまま Terraform の外に置く。アプリのトークンが切れてもグローバルが生きていれば Google を通らずに出し直される ([session management](https://developers.cloudflare.com/cloudflare-one/identity/users/session-management/)) が、アプリ側が 1 か月もつので延ばしても変わらない
+      - Cookie は Access の応答の Set-Cookie で付くので、ITP が `document.cookie` の Cookie にかける 7 日の上限は届かない ([ITP 2.1](https://webkit.org/blog/8613/intelligent-tracking-prevention-2-1/))。24h のころリダイレクトが 1 日 1 回だったので、アプリを閉じても Cookie が期限まで残ることも観測している
+      - 端末を失くすと最長 1 か月ログインしたままになる。Zero Trust のダッシュボードでアプリのトークンを失効させて切る
 
 ### 記録するもの
 
@@ -138,12 +143,12 @@
 - Actions 環境 `deploy` があり、使えるブランチは main だけ。Cloudflare のデプロイ用トークンが環境 secret `CLOUDFLARE_API_TOKEN` として入っている。権限は公式テンプレート「Edit Cloudflare Workers」に D1 Edit を足したもので、アカウントは yamat47 のみ。最初のデプロイが通ったら、使っていない権限を外してこの行を実際の構成に合わせる
 - デプロイのワークフローは `deploy` 環境を名乗り、トークンを `secrets.CLOUDFLARE_API_TOKEN`、アカウント ID を `vars.CLOUDFLARE_ACCOUNT_ID` (secret ではなく変数) から読む
 - Actions 変数 `CLOUDFLARE_ACCOUNT_ID` = `24a305c930f17853bb811c18bee6074a`
-- `required_checks` は未設定。CI のジョブ名は lint、typecheck、test、build、zizmor に決まった。infra-github の `terraform/owners/yamat47/locals.tf` の trainote エントリに足す作業は infra-github #34 (default branch の管理は infra-github #33 で済んでいる)
+- main の必須チェックは CI のジョブ名で lint、build、typecheck、zizmor、test。infra-github #35 (2026-10-31) が `terraform/owners/yamat47/locals.tf` の trainote エントリに `required_checks` として足した (default branch の管理は infra-github #33)
 
 ### Cloudflare (yamat47/infra-yamat47 の `terraform/accounts/yamat47/cloudflare` で管理)
 
 - D1 データベース `trainote` (apac)。`prevent_destroy` つき
-- Access アプリ `trainote` (self_hosted、`trainote.yamat47.workers.dev`、セッション 24h) と、上記メール 1 件を allow するポリシー
+- Access アプリ `trainote` (self_hosted、`trainote.yamat47.workers.dev`、セッション 730h。理由は「利用者と認証」) と、上記メール 1 件を allow するポリシー
 - Terraform の outputs は次の 3 つ。`wrangler.jsonc` と Worker のコードにそのまま書く。どれも secret ではない
   - `trainote_d1_database_id` = `7f0a88bc-9c70-414e-84f8-0964400dab4b` (D1 バインディングの `database_id`)
   - `trainote_access_aud` = `462b3c5e4250c32653c929bb5f47600eb544d6e11b0c1747ea66bbe0615ab294` (Access の JWT を検証するときの audience)
@@ -174,14 +179,13 @@
 1. (済) `npm create cloudflare@latest -- trainote --framework=react` 相当の構成を pnpm で起こし、Hono と Drizzle を足す
 2. (済) `wrangler.jsonc` に D1 バインディング (`DB`)、`run_worker_first`、`not_found_handling`、`access.dev`、`triggers.crons` を書く
 3. (済) Drizzle のスキーマと最初のマイグレーション
-4. (済) CI (lint、typecheck、test、main で migrate と deploy)。infra-github に `required_checks` を足す作業は infra-github #34
+4. (済) CI (lint、typecheck、test、main で migrate と deploy)。main の必須チェックは infra-github #35
 5. (済) PWA (manifest、アイコン、service worker) と Web Push の購読と送信
 
 ## 未決
 
 決まったら該当する行に書き写し、ここから消す。
 
-- Access のセッションが 24h のままだと、ホーム画面の PWA でも毎日 Google へのリダイレクトが挟まる。延ばすなら infra-yamat47 の Access アプリの `session_duration` を変える
 - 行動の保存後の編集と削除
 - 種目で絞ったときの推移の指標 (最大重量、総量、有酸素は距離か時間か)
 - 過去日付の記録を入れられるか
