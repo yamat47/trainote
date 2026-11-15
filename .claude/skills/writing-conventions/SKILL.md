@@ -3,9 +3,9 @@ description: House style for everything written around code, meaning code commen
 license: MIT
 metadata:
     github-path: skills/writing-conventions
-    github-ref: refs/tags/v1.11.0
+    github-ref: refs/tags/v1.14.0
     github-repo: https://github.com/yamat47/github-toolkit
-    github-tree-sha: 079f10b568f81f75972912de9e67f25ff8c0b32c
+    github-tree-sha: a9aad4c73b89c933821df5f0c4862fb9bef35a59
 name: writing-conventions
 ---
 # Writing conventions
@@ -29,6 +29,6 @@ Before committing, commenting, or opening a pull request:
 - Does the comment explain why the obvious approach was not taken, rather than what the code does?
 - Does the test name read as a specification of behavior, with input and outcome?
 - Does the commit subject use the imperative and does the body contain only the Why (or nothing, when the Why is obvious)?
-- Is the pull request written about what changes for the user, with only background, things deliberately not done, and places to look at?
+- Is the pull request written about what changes for the user, with only background, what it looks like (only when there are screenshots), things deliberately not done, and places to look at?
 - Is every section that has nothing to say deleted rather than filled with "none"?
 - Is there no trailer, footer, link, or signature saying an AI took part? The work is the author's own.
